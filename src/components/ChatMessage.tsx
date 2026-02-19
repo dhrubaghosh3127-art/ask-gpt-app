@@ -1,0 +1,84 @@
+import React, { useState } from 'react';
+import { Message, Role } from '../types';
+
+interface ChatMessageProps {
+  message: Message;
+  onDelete: (id: string) => void;
+  onEdit: (id: string, newContent: string) => void;
+  onRegenerate?: () => void;
+}
+
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, onRegenerate }) => {
+  const isUser = message.role === Role.USER;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(message.content);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(message.content);
+    alert('Copied to clipboard!');
+  };
+
+  const handleSaveEdit = () => {
+    onEdit(message.id, editValue);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className={`py-8 group ${isUser ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800/50'}`}>
+      <div className="max-w-3xl mx-auto px-4 flex gap-4 sm:gap-6">
+        <div className={`w-8 h-8 rounded shrink-0 flex items-center justify-center text-white text-sm font-bold ${isUser ? 'bg-blue-600' : 'bg-green-600'}`}>
+          {isUser ? 'U' : 'G'}
+        </div>
+        
+        <div className="flex-1 space-y-4">
+          <div className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-tight">
+            {isUser ? 'You' : 'ASK-GPT'}
+          </div>
+          
+          <div className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+            {isEditing ? (
+              <div className="flex flex-col gap-2">
+                <textarea 
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="w-full p-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
+                  rows={3}
+                />
+                <div className="flex gap-2">
+                  <button onClick={handleSaveEdit} className="px-3 py-1 bg-blue-600 text-white rounded text-xs">Save</button>
+                  <button onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-500 text-white rounded text-xs">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              message.content
+            )}
+          </div>
+          
+          <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={handleCopy} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center gap-1">
+              📋 Copy
+            </button>
+            {isUser && !isEditing && (
+              <button onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center gap-1">
+                ✏️ Edit
+              </button>
+            )}
+            {!isUser && onRegenerate && (
+              <button onClick={onRegenerate} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center gap-1">
+                🔄 Regenerate
+              </button>
+            )}
+            <button onClick={() => onDelete(message.id)} className="text-gray-400 hover:text-red-500 text-xs flex items-center gap-1">
+              🗑️ Delete
+            </button>
+            <button className="text-gray-400 hover:text-blue-500 text-xs">👍</button>
+            <button className="text-gray-400 hover:text-red-500 text-xs">👎</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChatMessage;
+                                  
