@@ -1,0 +1,7 @@
+{
+  "name": "ASK-GPT (v1) – Pro Free",
+  "description": "A premium AI assistant powered by Gemini for writing, translation, study help, and coding.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
