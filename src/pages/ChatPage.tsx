@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
-import Header from '../components/Header';
-import ChatInput from '../components/ChatInput';
-import ChatMessage from '../components/ChatMessage';
-import { Conversation, Message, Role } from '../types';
-import { getConversations, saveConversations } from '../utils/storage';
-import { getGeminiResponse } from '../services/geminiService';
-import { MODELS } from '../constants';
+import React { useState, useEffect useRef } from react
+import { useParams, useNavigate } from 'react-router-dom
+import { ChevronRight } from lucide-react
+import Header from /components/Header
+import ChatInput from /components/ChatInput
+import ChatMessage from /components/ChatMessage
+import { Conversation, Message, Role } from /types
+import { getConversations, saveConversations } from '../utils/storage
+import { getGeminiResponse } from '../services/geminiService
+import { MODELS } from /constants
 
 interface ChatPageProps {
   toggleSidebar: () => void;
@@ -48,7 +48,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
       ? { ...conversation, messages: newMessages, lastUpdated: Date.now() }
       : { 
           id: currentId, 
-          title: newMessages[0].content.slice(0, 30) + (newMessages[0].content.length > 30 ? '...' : ''), 
+          title: newMessages[0].content.slice(0, 30) + (newMessages[0].content.length > 30
           messages: newMessages, 
           lastUpdated: Date.now() 
         };
@@ -86,7 +86,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: Role.MODEL,
-        content: "Error: Could not connect to Gemini API. Please check your network or API key configuration.",
+        content: "Error: Could not connect to Gemini API. Please check your network or API key configuration
         timestamp: Date.now()
       };
       updateConversation([...updatedMessages, errorMessage]);
