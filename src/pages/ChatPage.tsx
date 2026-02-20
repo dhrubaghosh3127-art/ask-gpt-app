@@ -153,7 +153,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-xl">
               A
             </div>
-            <div>
+            <div className="max-w-2xl mx-auto flex flex-col gap-4">
               <h1 className="text-[32px] font-bold text-gray-900 tracking-tight">Welcome to ASK-GPT</h1>
               <p className="mt-2 text-[17px] text-gray-500 font-medium">
                 I'm ASK-GPT, your multi-talented AI assistant. Try asking me for writing help, translations, or coding advice.
