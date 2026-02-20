@@ -147,7 +147,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
         setSelectedModel={setSelectedModel} 
       />
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pt-8">
         {(!conversation || conversation.messages.length === 0) ? (
           <div className="h-full flex flex-col items-center justify-center p-8 space-y-6 text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-xl">
