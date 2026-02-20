@@ -149,7 +149,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-10 pb-40">
         {(!conversation || conversation.messages.length === 0) ? (
-          <div className="h-full flex flex-col items-center justify-center px-6 text-center">
+          <div className="flex flex-col items-center justify-center px-6 text-center py-10">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-xl">
               A
             </div>
