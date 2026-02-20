@@ -283,4 +283,3 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
 };
 
 export default ChatPage;
-```0
