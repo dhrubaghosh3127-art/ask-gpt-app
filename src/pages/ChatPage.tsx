@@ -1,5 +1,4 @@
-
-        import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import ChatInput from '../components/ChatInput';
@@ -149,7 +148,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
       />
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <>
   {/* Permanent Welcome Section (always visible) */}
   <div className="flex flex-col items-center justify-center px-6 text-center py-10">
     <h1 className="text-[32px] font-bold text-gray-900 tracking-tight">
@@ -188,17 +186,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
         <div className="max-w-3xl mx-auto px-4 flex gap-6">
           <div className="w-8 h-8 rounded shrink-0 bg-white border border-gray-200" />
           <div className="flex gap-1">
-            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-          </div>
+                  <div ref={messagesEndRef} />
         </div>
       </div>
-    )}
-
-    <div ref={messagesEndRef} />
-  </div>
-
 
       <ChatInput onSend={handleSend} isLoading={isLoading} />
     </div>
