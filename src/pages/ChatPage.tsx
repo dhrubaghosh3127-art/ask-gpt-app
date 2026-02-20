@@ -141,7 +141,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
+    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#F3F0FF]">
       <Header 
         toggleSidebar={toggleSidebar} 
         selectedModel={selectedModel} 
