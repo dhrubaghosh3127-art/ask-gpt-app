@@ -185,4 +185,4 @@ const ChatPage: React.FC<ChatPageProps> = ({ id: propId }) => {
   );
 };
 
-export default ChatPage;
+export default ChatPage
