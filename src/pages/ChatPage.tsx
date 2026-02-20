@@ -149,63 +149,56 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
       />
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        {(!conversation || conversation.messages.length === 0) ? (
-          <div className="h-full flex flex-col items-center justify-center p-8 space-y-6 text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-xl">
-              A
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">How can I help you today?</h2>
-              <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md">
-                I'm ASK-GPT, your multi-talented AI assistant. Try asking me for writing help, translations, or coding advice.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
-              <button onClick={() => handleSend("Explain quantum physics to a 5-year old.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Explain quantum physics to a 5-year old."
-              </button>
-              <button onClick={() => handleSend("Write a professional email for a job application.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Write a professional email for a job application."
-              </button>
-              <button onClick={() => handleSend("Translate 'Hello, how are you?' to Bangla.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Translate 'Hello, how are you?' to Bangla."
-              </button>
-              <button onClick={() => handleSend("Write a Python script to scrape a website.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Write a Python script to scrape a website."
-              </button>
-            </div>
+        <>
+  {/* Permanent Welcome Section (always visible) */}
+  <div className="flex flex-col items-center justify-center px-6 text-center py-10">
+    <h1 className="text-[32px] font-bold text-gray-900 tracking-tight">
+      Welcome to ASK-GPT
+    </h1>
+    <p className="mt-2 text-[17px] text-gray-500 font-medium">
+      How can I assist you today?
+    </p>
+
+    <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/60 px-4 py-1.5 shadow-sm backdrop-blur">
+      <span className="text-sm">👑</span>
+      <span className="text-[13px] font-semibold text-gray-600">
+        Developer: Prohor (Boss)
+      </span>
+    </div>
+  </div>
+
+  {/* Messages Section */}
+  <div className="pb-20">
+    {conversation?.messages?.map((msg, idx) => (
+      <ChatMessage
+        key={msg.id}
+        message={msg}
+        onDelete={handleDeleteMessage}
+        onEdit={handleEditMessage}
+        onRegenerate={
+          idx === (conversation?.messages?.length || 0) - 1 && msg.role === Role.MODEL
+            ? handleRegenerate
+            : undefined
+        }
+      />
+    ))}
+
+    {isLoading && (
+      <div className="py-8">
+        <div className="max-w-3xl mx-auto px-4 flex gap-6">
+          <div className="w-8 h-8 rounded shrink-0 bg-white border border-gray-200" />
+          <div className="flex gap-1">
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
           </div>
-        ) : (
-          <div className="pb-20">
-            {conversation.messages.map((msg, idx) => (
-              <ChatMessage 
-                key={msg.id} 
-                message={msg} 
-                onDelete={handleDeleteMessage}
-                onEdit={handleEditMessage}
-                onRegenerate={idx === conversation.messages.length - 1 && msg.role === Role.MODEL ? handleRegenerate : undefined}
-              />
-            ))}
-            {isLoading && (
-              <div className="py-8 bg-gray-50 dark:bg-gray-800/50">
-                <div className="max-w-3xl mx-auto px-4 flex gap-6">
-                  <div className="w-8 h-8 rounded shrink-0 bg-green-600 flex items-center justify-center text-white text-sm font-bold">
-                    G
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        )}
+        </div>
       </div>
+    )}
+
+    <div ref={messagesEndRef} />
+  </div>
+
 
       <ChatInput onSend={handleSend} isLoading={isLoading} />
     </div>
