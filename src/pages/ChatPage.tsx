@@ -1,40 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
-import Header from '../components/Header';
-import ChatInput from '../components/ChatInput';
-import ChatMessage from '../components/ChatMessage';
 import { Conversation, Message, Role } from '../types';
 import { getConversations, saveConversations } from '../utils/storage';
 import { getGeminiResponse } from '../services/geminiService';
 import { MODELS } from '../constants';
+import { IoSend, IoAttachOutline, IoChevronForward } from 'react-icons/io5';
 
 interface ChatPageProps {
   toggleSidebar: () => void;
   isSidebarOpen: boolean;
 }
 
-const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => {
-  const { id } = useParams();
+const ChatPage: React.FC<ChatPageProps> = ({ id: propId }) => {
+  const { id: urlId } = useParams();
+  const id = urlId || propId;
   const navigate = useNavigate();
+  
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
+  const [inputText, setInputText] = useState('');
+  const [selectedModel] = useState(MODELS[0].id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const conversations = getConversations();
     if (id) {
-      const found = conversations.find((c) => c.id === id);
-      if (found) {
-        setConversation(found);
-      } else {
-        navigate('/');
-      }
+      const found = conversations.find(c => c.id === id);
+      if (found) setConversation(found);
     } else {
       setConversation(null);
     }
-  }, [id, navigate]);
+  }, [id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,241 +39,148 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
   const updateConversation = (newMessages: Message[]) => {
     const conversations = getConversations();
     const currentId = id || Date.now().toString();
-
-    const updatedConv: Conversation = conversation
+    
+    const updatedConv: Conversation = conversation 
       ? { ...conversation, messages: newMessages, lastUpdated: Date.now() }
-      : {
-          id: currentId,
-          title:
-            newMessages[0].content.slice(0, 30) +
-            (newMessages[0].content.length > 30 ? '...' : ''),
-          messages: newMessages,
-          lastUpdated: Date.now(),
+      : { 
+          id: currentId, 
+          title: newMessages[0].content.slice(0, 30), 
+          messages: newMessages, 
+          lastUpdated: Date.now() 
         };
 
-    const updatedList = conversations.filter((c) => c.id !== currentId);
+    const updatedList = conversations.filter(c => c.id !== currentId);
     saveConversations([updatedConv, ...updatedList]);
     setConversation(updatedConv);
-    if (!id) navigate(`/${currentId}`);
+    if (!id) navigate(`/chat/${currentId}`);
   };
 
-  const handleSend = async (content: string) => {
+  const handleSend = async () => {
+    if (!inputText.trim() || isLoading) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: Role.USER,
-      content,
-      timestamp: Date.now(),
+      content: inputText,
+      timestamp: Date.now()
     };
 
     const updatedMessages = [...(conversation?.messages || []), userMessage];
     updateConversation(updatedMessages);
+    setInputText('');
     setIsLoading(true);
 
     try {
-      const response = await getGeminiResponse(content, updatedMessages, selectedModel);
-
+      const response = await getGeminiResponse(inputText, updatedMessages, selectedModel);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: Role.MODEL,
         content: response,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
-
       updateConversation([...updatedMessages, botMessage]);
     } catch (error) {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: Role.MODEL,
-        content:
-          'Error: Could not connect to Gemini API. Please check your network or API key configuration.',
-        timestamp: Date.now(),
-      };
-      updateConversation([...updatedMessages, errorMessage]);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isEmpty = !conversation || conversation.messages.length === 0;
-
   return (
-    <div className="relative flex-1 flex flex-col h-screen overflow-hidden bg-transparent">
-      {/* Soft iOS-like background */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-blue-100 to-purple-200" />
-        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-purple-300/40 blur-3xl" />
-        <div className="absolute -top-16 -right-24 h-72 w-72 rounded-full bg-blue-300/40 blur-3xl" />
-        <div className="absolute bottom-0 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-purple-200/40 blur-3xl" />
-        <div className="absolute inset-0 backdrop-blur-[2px]" />
-      </div>
-
-      <Header toggleSidebar={toggleSidebar} selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
-
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        <div className="max-w-3xl mx-auto py-12 flex flex-col items-center">
-          {isEmpty ? (
-            <div className="w-full px-4">
-              {/* Welcome (ONLY empty state) */}
-              <div className="text-center mb-8 px-2">
-                <h1 className="text-[32px] font-bold text-gray-900 tracking-tight mb-2">
-                  Welcome to ASK-GPT
-                </h1>
-                <p className="text-[17px] text-gray-500 font-medium mb-5">
-                  How can I assist you today?
-                </p>
-
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 backdrop-blur-sm border border-white/60 rounded-full shadow-sm">
-                  <span className="text-sm">👑</span>
-                  <span className="text-[13px] font-semibold text-gray-600">
-                    Developer: Prohor (Boss)
-                  </span>
-                </div>
-              </div>
-
-              {/* Demo bubbles (ONLY empty state) */}
-              <div className="w-full space-y-5 pb-44">
-                {/* USER 1 */}
-                <div className="flex justify-end">
-                  <div className="max-w-[78%]">
-                    <div className="rounded-2xl rounded-br-md bg-blue-500/25 text-gray-900 px-5 py-3 shadow-sm backdrop-blur-sm border border-white/40">
-                      Hello! How are you?
-                    </div>
-                    <div className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-500">
-                      <span>Just now</span>
-                      <span className="text-blue-500">✓✓</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI 1 */}
-                <div className="flex justify-start">
-                  <div className="max-w-[78%]">
-                    <div className="mb-1 ml-1 text-xs font-semibold text-gray-600">ASK-GPT</div>
-                    <div className="rounded-2xl rounded-tl-md bg-white/70 text-gray-900 px-5 py-3 shadow-sm backdrop-blur-sm border border-white/60">
-                      Hi! I'm doing well, thank you. How can I assist you today?
-                    </div>
-                    <div className="mt-1 ml-1 text-xs text-gray-500">Just now</div>
-                  </div>
-                </div>
-
-                {/* USER 2 */}
-                <div className="flex justify-end">
-                  <div className="max-w-[78%]">
-                    <div className="rounded-2xl rounded-br-md bg-blue-500/25 text-gray-900 px-5 py-3 shadow-sm backdrop-blur-sm border border-white/40">
-                      Translate &quot;How are you?&quot; to Spanish.
-                    </div>
-                    <div className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-500">
-                      <span>Just now</span>
-                      <span className="text-blue-500">✓✓</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI 2 */}
-                <div className="flex justify-start">
-                  <div className="max-w-[78%]">
-                    <div className="mb-1 ml-1 text-xs font-semibold text-gray-600">ASK-GPT</div>
-                    <div className="rounded-2xl rounded-tl-md bg-white/70 text-gray-900 px-5 py-3 shadow-sm backdrop-blur-sm border border-white/60">
-                      Certainly! The phrase &quot;How are you?&quot; translates to Spanish as ¿Como estas?
-                    </div>
-                    <div className="mt-1 ml-1 text-xs text-gray-500">Just now</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fixed empty-state input + disclaimer (UI only) */}
-              <div className="fixed inset-x-0 bottom-0 z-20">
-                <div className="mx-auto max-w-3xl px-4 pb-4">
-                  <div className="rounded-3xl bg-white/45 backdrop-blur-md border border-white/60 shadow-sm px-4 py-3">
-                    <div className="flex items-center gap-2 rounded-full bg-white/55 border border-white/60 px-4 py-3">
-                      <button type="button" className="text-gray-600 active:scale-95 transition" aria-label="Attach">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-6 w-6">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01" />
-                        </svg>
-                      </button>
-
-                      <input
-                        type="text"
-                        placeholder="Ask anything..."
-                        disabled
-                        className="flex-1 bg-transparent outline-none text-gray-900 placeholder:text-gray-500"
-                      />
-
-                      <button type="button" className="text-blue-600 active:scale-95 transition" aria-label="Send">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-6 w-6">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    <div className="mt-3 text-center">
-                      <p className="text-xs text-gray-600">ASK-GPT can make mistakes. Verify important information.</p>
-                      <p className="mt-1 text-xs text-gray-500">Free Tier v1</p>
-                    </div>
-                  </div>
-
-                  {/* Footer Badge */}
-                  <div className="mt-3">
-                    <button className="w-full flex items-center justify-between px-5 py-3.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl shadow-sm hover:bg-white/60 transition-all group">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">👑</span>
-                        <span className="text-[14px] font-bold text-gray-700">Developer: Prohor (Boss)</span>
-                      </div>
-                      <ChevronRight size={20} className="text-gray-400 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full pb-28">
-              {/* Real messages */}
-              {conversation.messages.map((msg) => (
-                <div key={msg.id} className="px-4 mb-4">
-                  {msg.role === Role.MODEL && (
-                    <div className="mb-1 ml-1 text-xs font-semibold text-gray-600">ASK-GPT</div>
-                  )}
-                  <ChatMessage message={msg} />
-                </div>
-              ))}
-
-              {/* Typing indicator */}
-              {isLoading && (
-                <div className="px-4 mb-6">
-                  <div className="mb-1 ml-1 text-xs font-semibold text-gray-600">ASK-GPT</div>
-                  <div className="inline-block rounded-2xl rounded-tl-md bg-white/70 px-5 py-3 border border-white/60 shadow-sm backdrop-blur-sm">
-                    <div className="flex gap-1.5">
-                      <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" />
-                      <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.2s]" />
-                      <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.4s]" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Real input only when not empty */}
-      {!isEmpty && <ChatInput onSend={handleSend} isLoading={isLoading} />}
-
-      {/* Footer badge only when not empty (empty state has its own fixed footer) */}
-      {!isEmpty && (
-        <div className="px-4 pb-4">
-          <div className="max-w-3xl mx-auto">
-            <button className="w-full flex items-center justify-between px-5 py-3.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl shadow-sm hover:bg-white/60 transition-all group">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">👑</span>
-                <span className="text-[14px] font-bold text-gray-700">Developer: Prohor (Boss)</span>
-              </div>
-              <ChevronRight size={20} className="text-gray-400 group-hover:translate-x-1 transition-transform" />
-            </button>
+    <div className="flex flex-col h-screen bg-[#F3F0FF] font-sans overflow-hidden">
+      {/* Scrollable Area */}
+      <div className="flex-1 overflow-y-auto px-4 pt-8 pb-32">
+        {/* Welcome Header */}
+        <div className="flex flex-col items-center mb-8">
+          <h1 className="text-[32px] font-bold text-[#1A1C2E] mb-1">Welcome to ASK-GPT</h1>
+          <p className="text-[#4B4E6D] text-lg mb-4">How can I assist you today?</p>
+          
+          <div className="flex items-center bg-white/60 px-4 py-1.5 rounded-full shadow-sm border border-gray-100">
+            <span className="text-yellow-500 mr-2">👑</span>
+            <span className="text-gray-600 text-sm">Developer: <span className="font-medium">Prohor (Boss)</span></span>
           </div>
         </div>
-      )}
+
+        {/* Message Thread */}
+        <div className="max-w-2xl mx-auto space-y-6">
+          {conversation?.messages.map((msg) => (
+            <div key={msg.id} className={`flex flex-col ${msg.role === Role.USER ? 'items-end' : 'items-start'}`}>
+              <div 
+                className={`max-w-[85%] p-4 rounded-2xl shadow-sm text-[15px] leading-relaxed
+                  ${msg.role === Role.USER 
+                    ? 'bg-[#E0E7FF] text-[#1A1C2E] rounded-tr-none' 
+                    : 'bg-white text-[#1A1C2E] rounded-tl-none border border-gray-100'
+                  }`}
+              >
+                {msg.content}
+              </div>
+              <div className="flex items-center mt-1 px-1">
+                <span className="text-[11px] text-gray-400">Just now</span>
+                {msg.role === Role.USER && <span className="ml-1 text-[#8B8D98] text-xs">✓✓</span>}
+              </div>
+            </div>
+          ))}
+
+          {isLoading && (
+            <div className="flex flex-col items-start">
+              <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm">
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></div>
+                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce delay-75"></div>
+                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce delay-150"></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {/* Fixed Bottom UI */}
+      <div className="fixed bottom-0 left-0 right-0 px-4 pb-6 bg-gradient-to-t from-[#F3F0FF] via-[#F3F0FF] to-transparent">
+        <div className="max-w-2xl mx-auto">
+          {/* Input Bar */}
+          <div className="relative flex items-center bg-white rounded-2xl shadow-lg p-2 border border-gray-100">
+            <button className="p-2 text-gray-400 hover:text-gray-600">
+              <IoAttachOutline size={24} />
+            </button>
+            <input 
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Ask anything..."
+              className="flex-1 bg-transparent border-none outline-none px-2 text-[#1A1C2E] placeholder-gray-400"
+            />
+            <button 
+              onClick={handleSend}
+              disabled={!inputText.trim() || isLoading}
+              className={`p-2 rounded-xl transition-colors ${inputText.trim() ? 'bg-[#7C3AED] text-white' : 'text-blue-200'}`}
+            >
+              <IoSend size={20} />
+            </button>
+          </div>
+
+          {/* Footer Info */}
+          <div className="mt-4 text-center">
+            <p className="text-[11px] text-gray-400 uppercase tracking-tight">
+              ASK-GPT can make mistakes. Verify important information.
+            </p>
+            <p className="text-[11px] text-gray-400 font-medium mt-0.5">
+              Free Tier v1
+            </p>
+          </div>
+
+          {/* Bottom Developer Navigation Bar */}
+          <div className="mt-4 bg-white/80 backdrop-blur-sm rounded-2xl p-3 border border-gray-100 flex items-center justify-between shadow-sm cursor-pointer hover:bg-white transition-colors">
+            <div className="flex items-center">
+              <span className="text-yellow-500 mr-2 text-sm">👑</span>
+              <span className="text-gray-600 text-sm">Developer: <span className="font-medium">Prohor (Boss)</span></span>
+            </div>
+            <IoChevronForward className="text-gray-400" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
