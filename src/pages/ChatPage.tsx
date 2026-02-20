@@ -159,7 +159,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
                 I'm ASK-GPT, your multi-talented AI assistant. Try asking me for writing help, translations, or coding advice.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
+            <div className="grid grid-cols-1 gap-4 w-full max-w-md">
               <button onClick={() => handleSend("Explain quantum physics to a 5-year old.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
                 "Explain quantum physics to a 5-year old."
               </button>
