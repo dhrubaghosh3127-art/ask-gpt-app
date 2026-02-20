@@ -148,32 +148,87 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
       />
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        {(!conversation || conversation.messages.length === 0) ? (
-          <div className="h-full flex flex-col items-center justify-center p-8 space-y-6 text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-xl">
-              A
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">How can I help you today?</h2>
-              <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md">
-                I'm ASK-GPT, your multi-talented AI assistant. Try asking me for writing help, translations, or coding advice.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
-              <button onClick={() => handleSend("Explain quantum physics to a 5-year old.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Explain quantum physics to a 5-year old."
-              </button>
-              <button onClick={() => handleSend("Write a professional email for a job application.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Write a professional email for a job application."
-              </button>
-              <button onClick={() => handleSend("Translate 'Hello, how are you?' to Bangla.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Translate 'Hello, how are you?' to Bangla."
-              </button>
-              <button onClick={() => handleSend("Write a Python script to scrape a website.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Write a Python script to scrape a website."
-              </button>
-            </div>
-          </div>
+        <div className="h-full flex flex-col items-center justify-start px-4 sm:px-8 pt-10 pb-28 text-center">
+  <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+    Welcome to{" "}
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+      ASK-GPT
+    </span>
+  </h1>
+
+  <p className="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+    How can I assist you today?
+  </p>
+
+  <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 dark:bg-gray-800/60 border border-gray-200/70 dark:border-gray-700/60 shadow-sm">
+    <span className="text-lg">👑</span>
+    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+      Developer: Prohor (Boss)
+    </span>
+  </div>
+
+  <div className="mt-8 w-full max-w-xl space-y-5">
+    {/* USER (Right) */}
+    <div className="flex justify-end">
+      <div className="max-w-[85%]">
+        <div className="px-4 py-3 rounded-2xl rounded-br-md bg-blue-600/15 dark:bg-blue-500/20 text-gray-900 dark:text-gray-100 shadow-sm border border-blue-600/10">
+          Hello! How are you?
+        </div>
+        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-right">
+          Just now ✓✓
+        </div>
+      </div>
+    </div>
+
+    {/* AI (Left) */}
+    <div className="flex justify-start">
+      <div className="max-w-[85%]">
+        <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 ml-2">
+          ASK-GPT
+        </div>
+        <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-white/80 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200/70 dark:border-gray-700/60">
+          Hi! I'm doing well, thank you. How can I assist you today?
+        </div>
+        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-left ml-2">
+          Just now
+        </div>
+      </div>
+    </div>
+
+    {/* USER (Right) */}
+    <div className="flex justify-end">
+      <div className="max-w-[85%]">
+        <div className="px-4 py-3 rounded-2xl rounded-br-md bg-blue-600/15 dark:bg-blue-500/20 text-gray-900 dark:text-gray-100 shadow-sm border border-blue-600/10">
+          Translate "How are you?" to Spanish.
+        </div>
+        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-right">
+          Just now ✓✓
+        </div>
+      </div>
+    </div>
+
+    {/* AI (Left) */}
+    <div className="flex justify-start">
+      <div className="max-w-[85%]">
+        <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 ml-2">
+          ASK-GPT
+        </div>
+        <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-white/80 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200/70 dark:border-gray-700/60">
+          Certainly! The phrase "How are you?" translates to Spanish as{" "}
+          <span className="font-semibold">"¿Cómo estás?"</span>
+        </div>
+        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-left ml-2">
+          Just now
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p className="mt-8 text-xs text-gray-500 dark:text-gray-400">
+    ASK-GPT can make mistakes. Verify important information.{" "}
+    <span className="opacity-80">Free Tier v1</span>
+  </p>
+</div>
         ) : (
           <div className="pb-20">
             {conversation.messages.map((msg, idx) => (
