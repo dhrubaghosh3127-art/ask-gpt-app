@@ -159,10 +159,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
                 How can I assist you today?
               </p><p className="mt-3 text-[14px] text-gray-500 font-medium">👑 Developer: Prohor (Boss)</p>
             </div>
-            <div className="grid grid-cols-1 gap-4 w-full max-w-md">
-              <button onClick={() => handleSend("Explain quantum physics to a 5-year old.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
-                "Explain quantum physics to a 5-year old."
-              </button>
+            
               <button onClick={() => handleSend("Write a professional email for a job application.")} className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 text-sm text-left transition-all">
                 "Write a professional email for a job application."
               </button>
