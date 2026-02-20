@@ -156,7 +156,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
             <div className="max-w-2xl mx-auto flex flex-col gap-4">
               <h1 className="text-[32px] font-bold text-gray-900 tracking-tight">Welcome to ASK-GPT</h1>
               <p className="mt-2 text-[17px] text-gray-500 font-medium">
-                I'm ASK-GPT, your multi-talented AI assistant. Try asking me for writing help, translations, or coding advice.
+                How can I assist you today?
               </p>
             </div>
             <div className="grid grid-cols-1 gap-4 w-full max-w-md">
