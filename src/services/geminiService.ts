@@ -2,7 +2,7 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Message, Role } from "../types";
 
 // Note: In this environment, process.env.API_KEY is pre-configured
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
 export const getGeminiResponse = async (
   prompt: string, 
