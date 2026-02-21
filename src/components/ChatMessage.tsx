@@ -35,7 +35,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
             {isUser ? 'You' : 'ASK-GPT'}
           </div>
           
-          <div className={`${isUser ? 'max-w-[95%] rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : 'max-w-[85%] text-gray-900 dark:text-white'} leading-relaxed whitespace-pre-wrap`}>
+          <div className={`${isUser ? 'max-w-[85%] rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : 'flex-1 w-full max-w-none bg-transparent text-gray-900 dark:text-white px-0 py-0'}`}>
             {isEditing ? (
               <div className="flex flex-col gap-2">
                 <textarea 
