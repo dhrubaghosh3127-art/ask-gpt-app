@@ -8,14 +8,14 @@ interface ChatInputProps {
 const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-const formClassName = "w-full max-w-none mx-auto flex items-center gap-3 bg-gray-100/90 dark:bg-gray-800/70 backdrop-blur-md rounded-3xl shadow-lg border border-gray-200/80 dark:border-gray-700/60 px-4 py-3";
+const formClassName = "max-w-3xl mx-auto flex items-center gap-3 bg-white/70 dark:bg-gray-900/60 backdrop-blur rounded-2xl shadow-lg border border-gray-200/70 dark:border-gray-700/60 px-3 py-2";
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
   }, [input]);
-const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[28px] leading-[1.15] text-gray-900 dark:text-white placeholder:text-gray-400 px-1 pt-1 resize-none max-h-[160px] min-h-[56px]";
+const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[16px] leading-6 text-gray-900 dark:text-white placeholder:text-gray-400 px-2 py-2 resize-none max-h-[120px]";
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (input.trim() && !isLoading) {
@@ -50,7 +50,7 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
           type="submit"
           disabled={isLoading || !input.trim()}
           className={`
-            w-12 h-12 flex items-center justify-center rounded-2xl transition-colors
+            p-3 rounded-lg transition-colors → w-12 h-12 flex items-center justify-center rounded-2xl transition-colors
             ${input.trim() && !isLoading ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-400'}
           `}
         >
