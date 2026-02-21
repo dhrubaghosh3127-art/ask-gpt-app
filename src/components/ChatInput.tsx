@@ -15,7 +15,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
   }, [input]);
-
+const textareaClassName = "w-full bg-transparent border-none focus:ring-0 text-[32px] leading-tight text-gray-900 dark:text-white placeholder:text-gray-400 px-2 pt-2 resize-none max-h-[200px]";
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (input.trim() && !isLoading) {
