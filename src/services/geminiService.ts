@@ -11,7 +11,7 @@ export const getGeminiResponse = async (
   systemInstruction: string = ''
 ): Promise<string> => {
   try {
-    const chatHistory = history.map(msg => ({
+    const chatHistory = history.slice(-12).map(msg => ({
       role: msg.role === Role.USER ? 'user' : 'model',
       parts: [{ text: msg.content }]
     }));
