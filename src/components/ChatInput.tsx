@@ -8,7 +8,7 @@ interface ChatInputProps {
 const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-const formClassName = "max-w-3xl mx-auto flex items-center gap-3 bg-white/70 dark:bg-gray-900/60 backdrop-blur rounded-3xl shadow-lg border border-gray-200/70 dark:border-gray-700/60 px-3 py-3";
+const formClassName = "max-w-3xl mx-auto flex items-center gap-3 bg-white/70 dark:bg-gray-900/60 backdrop-blur rounded-3xl shadow-lg border border-gray-200/70 dark:border-gray-700/60 px-3 py-2";
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
