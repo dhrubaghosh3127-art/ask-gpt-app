@@ -3,7 +3,7 @@ import { Message, Role } from "../types";
 
 // Note: In this environment, process.env.API_KEY is pre-configured
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-
+if (!API_KEY) throw new Error('Missing VITE_GEMINI_API_KEY');
 export const getGeminiResponse = async (
   prompt: string, 
   history: Message[], 
