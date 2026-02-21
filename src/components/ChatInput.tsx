@@ -44,7 +44,7 @@ const textareaClassName = "w-full bg-transparent border-none focus:ring-0 text-[
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask anything..."
-          className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white py-3 px-4 resize-none max-h-[200px] outline-none"
+          className={textareaClassName}
         />
         <button 
           type="submit"
