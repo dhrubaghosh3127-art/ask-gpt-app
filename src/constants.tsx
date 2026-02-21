@@ -15,4 +15,6 @@ export const MODELS = [
   { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Fast)', description: 'Best for speed and daily tasks' },
   { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Smart)', description: 'Best for complex reasoning and coding' },
 ];
-   
+   export const DEFAULT_MODEL_ID = "gemini-1.5-flash";
+export const HARD_MODEL_ID = "gemini-2.5-flash";
+export const VERY_HARD_MODEL_ID = "gemini-3-flash";
