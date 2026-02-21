@@ -90,7 +90,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: Role.MODEL,
-        content: "Error: Could not connect to Gemini API. Please check your network or API key configuration.",
+        content: `❌ Gemini Error: ${(error as any)?.message || (error as any)?.toString?.() || JSON.stringify(error)}`,
         timestamp: Date.now()
       };
       updateConversation([...updatedMessages, errorMessage]);
