@@ -35,7 +35,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
     <div className="w-full px-4 pb-4">
       <form 
         onSubmit={handleSubmit}
-        className="max-w-3xl mx-auto relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 flex items-end p-2"
+        className={formClassName}
       >
         <textarea
           ref={textareaRef}
