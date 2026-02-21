@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 export const getGeminiResponse = async (
   prompt: string, 
   history: Message[], 
-  modelId: string = 'gemini-3-flash-preview',
+  modelId: string = 'gemini-1.5-flash-preview',
   systemInstruction: string = ''
 ): Promise<string> => {
   try {
