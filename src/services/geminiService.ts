@@ -1,10 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Message, Role } from "../types";
-
-/**
- * Note: Apnar environment-e process.env.API_KEY oboshoy thakte hobe.
- * Vercel Dashboard -> Settings -> Environment Variables e 'API_KEY' name e key add korun.
- */
 const genAI = new GoogleGenerativeAI(process.env.API_KEY || '');
 
 export const getGeminiResponse = async (
