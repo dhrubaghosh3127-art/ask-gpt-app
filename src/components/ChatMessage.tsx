@@ -30,12 +30,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
           {isUser ? 'U' : 'G'}
         </div>
         
-        <div className={`space-y-4 ${isUser ? 'max-w-[78%] ml-auto text-right' : 'max-w-[78%]'}`}>
+        <div className={`flex-1 flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
           <div className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-tight">
             {isUser ? 'You' : 'ASK-GPT'}
           </div>
           
-          <div className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+          <div className={`max-w-[78%] rounded-2xl px-4 py-3 leading-relaxed whitespace-pre-wrap shadow-sm ${isUser ? 'bg-blue-200 text-gray-900' : 'bg-white text-gray-900 border border-gray-200'}`}>
             {isEditing ? (
               <div className="flex flex-col gap-2">
                 <textarea 
