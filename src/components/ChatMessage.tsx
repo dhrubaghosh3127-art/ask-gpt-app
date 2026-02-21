@@ -27,8 +27,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
     <div className={`w-full flex ${isUser ? 'justify-end' : 'justify-start'} px-4 my-3`}>
       <div className={`max-w-[95%] flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start`}>
         <div className={`w-8 h-8 rounded shrink-0 flex items-center justify-center text-white text-sm font-bold ${isUser ? 'bg-blue-600' : 'bg-green-600'}`}>
-          {isUser ? 'U' : 'G'}
-        </div>
+          
         
         <div className={`w-full flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
           <div className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-tight">
