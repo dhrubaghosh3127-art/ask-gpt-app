@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' }
 export const getGeminiResponse = async (
   prompt: string, 
   history: Message[], 
-  modelId: string = 'gemini-1.5-flash-preview',
+  modelId: string = "gemini-2.5-flash",
   systemInstruction: string = ''
 ): Promise<string> => {
   try {
