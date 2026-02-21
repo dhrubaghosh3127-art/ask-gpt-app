@@ -30,7 +30,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
           {isUser ? 'U' : 'G'}
         </div>
         
-        <div className="flex-1 space-y-4">
+        <div className={`space-y-4 ${isUser ? 'max-w-[78%] ml-auto text-right' : 'max-w-[78%]'}`}>
           <div className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-tight">
             {isUser ? 'You' : 'ASK-GPT'}
           </div>
