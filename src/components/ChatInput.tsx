@@ -15,7 +15,7 @@ const formClassName = "max-w-3xl mx-auto flex items-center gap-3 bg-white/70 dar
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
   }, [input]);
-const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[24px] leading-tight text-gray-900 dark:text-white placeholder:text-gray-400 px-2 py-2 resize-none max-h-[120px]";
+const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[20px] leading-snug text-gray-900 dark:text-white placeholder:text-gray-400 px-2 py-2 resize-none max-h-[120px]";
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (input.trim() && !isLoading) {
