@@ -6,7 +6,7 @@ import ChatMessage from '../components/ChatMessage';
 import { Conversation, Message, Role } from '../types';
 import { getConversations, saveConversations } from '../utils/storage';
 import { getGeminiResponse } from '../services/geminiService';
-import { TOOL_CATEGORIES, MODELS } from '../constants';
+import { TOOL_CATEGORIES, MODELS, DEFAULT_MODEL_ID, HARD_MODEL_ID, VERY_HARD_MODEL_ID } from '../constants';
 
 interface ChatPageProps {
   toggleSidebar: () => void;
