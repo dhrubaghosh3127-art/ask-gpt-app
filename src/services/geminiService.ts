@@ -36,5 +36,4 @@ export const getGeminiResponse = async (
   return await getGeminiResponse(prompt, history, DEFAULT_MODEL_ID, systemInstruction);
 }
     throw error;
-  }
     
