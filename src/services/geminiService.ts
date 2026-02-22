@@ -1,6 +1,6 @@
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { Message, Role } from "../types";
-import { DEFAULT_MODEL_ID, HARD_MODEL_ID, VERY_HARD_MODEL_ID } from '../constants';
+import { DEFAULT_MODEL_ID, VERY_HARD_MODEL_ID } from "../constants";
 // Note: In this environment, process.env.API_KEY is pre-configured
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
