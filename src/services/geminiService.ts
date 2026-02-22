@@ -31,8 +31,10 @@ export const getGeminiResponse = async (
 
     return response.text || "I'm sorry, I couldn't generate a response.";
   } catch (error) {
-    const code = (error as any)?.error?.code;
+    const code = (error as any)?.error?.error?.code;
+    if (code === 429 && modelId === VERY_HARD_MODEL_ID) {
+  return await getGeminiResponse(prompt, history, DEFAULT_MODEL_ID, systemInstruction);
+};
     throw error;
   }
-};
     
