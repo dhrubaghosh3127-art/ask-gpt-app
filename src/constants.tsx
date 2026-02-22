@@ -12,10 +12,10 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
 ];
 
 export const MODELS = [
-  { id: "gemini-2.5-flash", name: "ASKGPT 2.5 Flash (Default)", description: "Normal chat + light tasks" },
-  { id: "gemini-2.5-flash", name: "ASKGPT 2.5 Flash (Hard)", description: "Hard math / code" },
+  { id: "gemini-1.5-flash", name: "ASKGPT 1.5 Flash (Default)", description: "Normal chat + light tasks" },
+  { id: "gemini-2.5-flash", name: "ASKGPT 1.5 pro (Hard)", description: "Hard math / code" },
   { id: "gemini-3-flash", name: "ASKGPT 3 Flash (Very Hard)", description: "Use only when needed" },
 ];
-   export const DEFAULT_MODEL_ID = "gemini-2.5-flash";
+   export const DEFAULT_MODEL_ID = "gemini-1.5-flash";
 export const HARD_MODEL_ID = "gemini-2.5-flash";
 export const VERY_HARD_MODEL_ID = "gemini-3-flash";
