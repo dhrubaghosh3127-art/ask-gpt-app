@@ -31,7 +31,7 @@ export const getGeminiResponse = async (
 
     return response.text || "I'm sorry, I couldn't generate a response.";
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    
     throw error;
   }
 };
