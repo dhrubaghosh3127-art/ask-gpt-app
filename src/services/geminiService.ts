@@ -34,7 +34,7 @@ export const getGeminiResponse = async (
     const code = (error as any)?.error?.error?.code;
     if (code === 429 && modelId === VERY_HARD_MODEL_ID) {
   return await getGeminiResponse(prompt, history, DEFAULT_MODEL_ID, systemInstruction);
-};
+}
     throw error;
   }
     
