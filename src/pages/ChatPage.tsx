@@ -18,7 +18,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
   const navigate = useNavigate();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
