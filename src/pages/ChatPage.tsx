@@ -124,7 +124,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
     
     setIsLoading(true);
     try {
-      const response = await getGeminiResponse(lastUserPrompt, previousMessages, selectedModel);
+      const response = await getGeminiResponse(lastUserPrompt, previousMessages, lastUserPrompt.length > 350 ? VERY_HARD_MODEL_ID : DEFAULT_MODEL_ID);
       const botMessage: Message = {
         id: Date.now().toString(),
         role: Role.MODEL,
