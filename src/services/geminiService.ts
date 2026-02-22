@@ -1,13 +1,13 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Message, Role } from "../types";
-
+import { DEFAULT_MODEL_ID, HARD_MODEL_ID, VERY_HARD_MODEL_ID } from '../constants';
 // Note: In this environment, process.env.API_KEY is pre-configured
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
 export const getGeminiResponse = async (
   prompt: string, 
   history: Message[], 
-  modelId: string = "gemini-2.5-flash",
+  modelId: string = DEFAULT_MODEL_ID,
   systemInstruction: string = ''
 ): Promise<string> => {
   try {
