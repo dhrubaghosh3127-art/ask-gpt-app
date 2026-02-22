@@ -7,6 +7,7 @@ export interface Message {
   id: string;
   role: Role;
   content: string;
+  attachments?: ImageAttachment[];
   timestamp: number;
 }
 
