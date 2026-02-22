@@ -12,8 +12,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
 ];
 
 export const MODELS = [
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (Default/hard)", description: "Normal chat + light tasks" },
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (Hard)", description: "Hard math / code" },
+  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (Hard)", description: "Hard math / code / Normal chat + light tasks" },
   { id: "gemini-3-flash", name: "Gemini 3 Flash (Very Hard)", description: "Use only when needed" },
 ];
    export const DEFAULT_MODEL_ID = "gemini-2.5-flash";
