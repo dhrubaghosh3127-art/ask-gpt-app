@@ -2,7 +2,7 @@ export enum Role {
   USER = 'user',
   MODEL = 'model'
 }
-
+export type ImageAttachment = { dataUrl: string; mimeType: string };
 export interface Message {
   id: string;
   role: Role;
