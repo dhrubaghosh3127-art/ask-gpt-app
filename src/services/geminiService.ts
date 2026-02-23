@@ -1,39 +1,25 @@
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import Groq from "groq-sdk";
 import { Message, Role } from "../types";
-import { DEFAULT_MODEL_ID, HARD_MODEL_ID, VERY_HARD_MODEL_ID } from "../constants";
-// Note: In this environment, process.env.API_KEY is pre-configured
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
+
+const client = new Groq({ apiKey: import.meta.env.VITE_GROQ_API_KEY || "" });
 
 export const getGeminiResponse = async (
-  prompt: string, 
-  history: Message[], 
-  modelId: string = DEFAULT_MODEL_ID,
-  systemInstruction: string = ''
+  prompt: string,
+  history: Message[],
+  modelId: string,
+  systemInstruction: string = ""
 ): Promise<string> => {
-  try {
-    const chatHistory = history.map(msg => ({
-      role: msg.role === Role.USER ? 'user' : 'model',
-      parts: [{ text: msg.content }]
-    }));
+  const messages = [
+    ...(systemInstruction ? [{ role: "system" as const, content: systemInstruction }] : []),
+    ...history.map(m => ({ role: (m.role === Role.USER ? "user" : "assistant") as const, content: m.content })),
+    { role: "user" as const, content: prompt },
+  ];
 
-    // For better results, we prepend system instruction if present
-    const contents = [...chatHistory, { role: 'user', parts: [{ text: prompt }] }];
+  const r = await client.chat.completions.create({
+    model: modelId,
+    messages,
+    temperature: 0.7,
+  });
 
-    const response = await ai.models.generateContent({
-      model: modelId,
-      contents: contents,
-      config: {
-        systemInstruction: systemInstruction || "You are ASK-GPT, a helpful and professional AI assistant. You can help with writing, translation, study, and coding.",
-        temperature: 0.7,
-        topP: 0.95,
-      }
-    });
-
-    return response.text || "I'm sorry, I couldn't generate a response.";
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    throw error;
-  }
+  return r.choices?.[0]?.message?.content?.trim() || "I'm sorry, I couldn't generate a response.";
 };
-
-    
