@@ -36,8 +36,9 @@ export const getGeminiResponse = async (
     body: JSON.stringify({ model: modelId, messages, temperature: 0.7, max_tokens: 512 }),
   });
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || "Groq API Error");
+  const data = await res.json(); console.log("Groq status:", res.status, data);
+  if (!res.ok) throw new Error(data?.error?.message || data?.message || `Groq API Error (${res.status})`);
+
 
   return (data?.choices?.[0]?.message?.content || "").trim() || "I'm sorry, I couldn't generate a response.";
 };
