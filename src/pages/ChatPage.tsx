@@ -77,7 +77,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
       const systemPrompt = tool ? tool.prompt : '';
       
       const autoModel = selectedModel===DEFAULT_MODEL_ID ? (content.length>600?VERY_HARD_MODEL_ID:content.length>350?HARD_MODEL_ID:DEFAULT_MODEL_ID) : selectedModel;
-const response = await getGeminiResponse(content, updatedMessages, autoModel, systemPrompt);
+const response = await getGeminiResponse(content, apiHistory, autoModel, systemPrompt);
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
