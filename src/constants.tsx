@@ -12,9 +12,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
 ];
 
 export const MODELS = [
-  { id: "llama-3.1-8b-instant", name: "ASKGPT 3.1 8B (Default)", description: "Fast chat" },
-  { id: "llama-3.3-70b-versatile", name: "ASKGPT 3.3 70B (Hard)", description: "Better reasoning" },
-  { id: "meta-llama/llama-4-scout-17b-16e-instruct", name: "ASKGPT 4 Scout (Very Hard)", description: "Use only when needed" },
+  { id: "llama-3.1-8b-instant", name: "ASKGPT 3.1 8B (Auto)", description: "Default (auto switches on hard)" },
 ];
 
 export const DEFAULT_MODEL_ID = "llama-3.1-8b-instant";
