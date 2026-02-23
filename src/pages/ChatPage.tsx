@@ -91,7 +91,7 @@ const response = await getGeminiResponse(content, updatedMessages, autoModel, sy
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: Role.MODEL,
-        content: !navigator.onLine ? "No internet connection. Please check your internet connection." : "Error: Please try again.",
+        content: !navigator.onLine ? "No internet connection. Please check your internet connection." : `Error: ${((error as any)?.message || "Groq API Error")}`,
         timestamp: Date.now()
       };
       updateConversation([...updatedMessages, errorMessage]);
