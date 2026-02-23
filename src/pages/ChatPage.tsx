@@ -125,7 +125,7 @@ const response = await getGeminiResponse(content, updatedMessages, autoModel, sy
     
     setIsLoading(true);
     try {
-      const response = await getGeminiResponse(lastUserPrompt, previousMessages, lastUserPrompt.length > 350 ? VERY_HARD_MODEL_ID : DEFAULT_MODEL_ID);
+      selectedModel===DEFAULT_MODEL_ID ? (lastUserPrompt.length>600?VERY_HARD_MODEL_ID:lastUserPrompt.length>350?HARD_MODEL_ID:DEFAULT_MODEL_ID) : selectedModel
       const botMessage: Message = {
         id: Date.now().toString(),
         role: Role.MODEL,
