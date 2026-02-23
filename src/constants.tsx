@@ -11,7 +11,6 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
   { id: 'image', name: 'Image Help', icon: '🖼️', prompt: 'I want you to act as a design consultant. Help me with UI suggestions, image ratios, and descriptions.' },
 ];
 
-export const MODELS = [
   export const MODELS = [
-  { id: "qwen/qwen3-32b", name: "Qwen 3 32B" }, name: "ASKGPT 3.1 8B (Auto)",
+  { id: "qwen/qwen3-32b", name: "ASK-GPT 2.5" },
 ];
