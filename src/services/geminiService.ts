@@ -15,7 +15,7 @@ export const getGeminiResponse = async (
       role: m.role === Role.USER ? "user" : "assistant",
       content: m.content,
     })),
-    { role: "user", content: prompt },
+    
   ];
 
   const res = await fetch(URL, {
