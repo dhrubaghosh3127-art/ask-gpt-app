@@ -12,7 +12,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
 ];
 
   export const MODELS = [
-  { id: "qwen/qwen3-32b", name: "ASK-GPT 2.5" },
+  { id: "qwen/qwen3-32b", name: "ASK-GPT 2.5 pro(Auto/hard)" },
 ];
 export const DEFAULT_MODEL_ID = "qwen/qwen3-32b";
 export const HARD_MODEL_ID = "qwen/qwen3-32b";
