@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Message, Role } from '../types';
-
+import ReactMarkdown from 'react-markdown';
 interface ChatMessageProps {
   message: Message;
   onDelete: (id: string) => void;
