@@ -12,9 +12,6 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
 ];
 
 export const MODELS = [
-  { id: "llama-3.1-8b-instant", name: "ASKGPT 3.1 8B (Auto)", description: "Default (auto switches on hard)" },
+  export const MODELS = [
+  { id: "qwen/qwen3-32b", name: "Qwen 3 32B" }, name: "ASKGPT 3.1 8B (Auto)",
 ];
-
-export const DEFAULT_MODEL_ID = "llama-3.1-8b-instant";
-export const HARD_MODEL_ID = "llama-3.3-70b-versatile";
-export const VERY_HARD_MODEL_ID = "meta-llama/llama-4-scout-17b-16e-instruct";
