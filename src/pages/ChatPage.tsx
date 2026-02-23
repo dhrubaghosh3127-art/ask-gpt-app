@@ -68,7 +68,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
       timestamp: Date.now()
     };
 
-   const updatedMessages = [...(conversation?.messages || []), userMessage].slice(-12);
+   const updatedMessages = [...(conversation?.messages || []), userMessage]; const apiHistory = updatedMessages.slice(-12);
     updateConversation(updatedMessages);
     setIsLoading(true);
 
