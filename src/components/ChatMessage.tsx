@@ -50,7 +50,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
                 </div>
               </div>
             ) : (
-              message.content
+             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
             )}
           </div>
           
