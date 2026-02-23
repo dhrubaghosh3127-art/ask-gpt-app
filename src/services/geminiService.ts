@@ -20,7 +20,7 @@ export const getGeminiResponse = async (
 ): Promise<string> => {
   const messages = [
     { role: "system", content: (systemInstruction?.trim() || DEFAULT_SYSTEM_PROMPT).slice(0, 1500) },
-    ...history.slice(-12).map(...)
+    ...history.slice(-12).map[...]
       role: m.role === Role.USER ? "user" : "assistant",
       content: (m.content || "").slice(0, 1200),
     })),
