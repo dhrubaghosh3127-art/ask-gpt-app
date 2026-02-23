@@ -91,7 +91,7 @@ const response = await getGeminiResponse(content, updatedMessages, autoModel, sy
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: Role.MODEL,
-        content: !navigator.onLine ? "No internet connection. Please check your internet connection." : `❌ Gemini Error: ${String((error as any)?.message ?? error)}`,
+        content: !navigator.onLine ? "No internet connection. Please check your internet connection." : `❌ Error: ${String((error as any)?.message ?? error)}`,
         timestamp: Date.now()
       };
       updateConversation([...updatedMessages, errorMessage]);
