@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Message, Role } from '../types';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 interface ChatMessageProps {
   message: Message;
   onDelete: (id: string) => void;
