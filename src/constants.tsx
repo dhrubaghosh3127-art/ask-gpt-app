@@ -12,8 +12,11 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
 ];
 
 export const MODELS = [
-  { id: "gemini-2.5-flash-lite", name: "ASKGPT 2.5 Flash (Default)", description: "Normal chat + light tasks" },
+  { id: "llama-3.1-8b-instant", name: "ASKGPT 3.1 8B (Default)", description: "Fast chat" },
+  { id: "llama-3.3-70b-versatile", name: "ASKGPT 3.3 70B (Hard)", description: "Better reasoning" },
+  { id: "meta-llama/llama-4-scout-17b-16e-instruct", name: "ASKGPT 4 Scout (Very Hard)", description: "Use only when needed" },
 ];
-   export const DEFAULT_MODEL_ID = "gemini-2.5-flash-lite";
-export const HARD_MODEL_ID = "gemini-2.5-flash-lite";
-export const VERY_HARD_MODEL_ID = "gemini-2.5-flash-lite";
+
+export const DEFAULT_MODEL_ID = "llama-3.1-8b-instant";
+export const HARD_MODEL_ID = "llama-3.3-70b-versatile";
+export const VERY_HARD_MODEL_ID = "meta-llama/llama-4-scout-17b-16e-instruct";
