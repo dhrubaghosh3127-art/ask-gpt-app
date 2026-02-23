@@ -39,4 +39,4 @@ export const getGeminiResponse = async (
   const data = await res.json(); console.log("Groq status:", res.status, data);
 if (!res.ok) throw new Error(data?.error?.message ?? data?.message ?? `Groq API Error (${res.status})`);
 
-  return ((data?.choices?.[0]?.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim() || "I'm sorry, I couldn't generate a response.");
+  return (data?.choices?.[0]?.message?.content || "").trim() || "I'm sorry, I couldn't generate a response.";
