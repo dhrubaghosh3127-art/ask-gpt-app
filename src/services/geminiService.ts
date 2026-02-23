@@ -56,7 +56,7 @@ export const getGeminiResponse = async (
     { role: "system", content: (systemInstruction?.trim() || DEFAULT_SYSTEM_PROMPT) },
     ...history.slice(-12).map((m) => ({
       role: m.role === Role.USER ? "user" : "assistant",
-      content: m.content,
+      content: (m.content || "").slice(0, 1200),
     })),
     
   ];
