@@ -16,7 +16,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
-    alert('Copied to clipboard!');
+    navigator.vibrate?.(20);
   };
 
   const handleSaveEdit = () => {
