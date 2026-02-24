@@ -67,7 +67,43 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
   </svg>
 </button>
 
-  {attachOpen && (
+  <button
+  type="button"
+  onClick={() => setModeOpen(v => !v)}
+  className="h-12 px-4 rounded-full bg-white/80 dark:bg-gray-800/70 shadow-md border border-gray-200/70 dark:border-gray-700/60 flex items-center gap-2"
+>
+  <span>🚀</span>
+  <span className="font-semibold">{mode}</span>
+  <span className="opacity-60">▾</span>
+</button>
+
+{modeOpen && (
+  <div className="absolute bottom-14 left-14 w-44 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/70 dark:border-gray-700/60 shadow-xl">
+    <button
+      type="button"
+      onClick={() => { setMode('Auto'); setModeOpen(false); }}
+      className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60"
+    >
+      🚀 Auto
+    </button>
+    <button
+      type="button"
+      onClick={() => { setMode('Fast'); setModeOpen(false); }}
+      className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60"
+    >
+      ⚡ Fast
+    </button>
+    <button
+      type="button"
+      onClick={() => { setMode('Thinking'); setModeOpen(false); }}
+      className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60"
+    >
+      🧠 Thinking
+    </button>
+  </div>
+)}
+
+{attachOpen && (
     <div className="absolute bottom-14 left-0 w-52 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/80 dark:border-gray-700/70 shadow-xl backdrop-blur-xl">
       <button type="button" onClick={openUpload} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60">📁 Upload photo</button>
       <button type="button" onClick={openCamera} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60">📷 Camera</button>
