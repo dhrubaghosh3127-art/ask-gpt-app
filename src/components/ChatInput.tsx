@@ -9,6 +9,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [attachOpen, setAttachOpen] = useState(false);
+  const [attachedImage, setAttachedImage] = useState<File | null>(null);
 const uploadRef = useRef<HTMLInputElement>(null);
 const cameraRef = useRef<HTMLInputElement>(null);
 
