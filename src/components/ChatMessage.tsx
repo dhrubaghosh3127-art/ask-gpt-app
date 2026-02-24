@@ -50,7 +50,7 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
                 </div>
               </div>
             ) : (
-             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ pre: MdPre }} className="markdown">{message.content}</ReactMarkdown>
+             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ pre: MdPre }} className="markdown text-[14px] leading-normal">{message.content}</ReactMarkdown>
             )}
           </div>
           
