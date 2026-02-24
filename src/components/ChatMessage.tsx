@@ -50,7 +50,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
                 </div>
               </div>
             ) : (
-             <ReactMarkdown remarkPlugins={[remarkGfm]} className="whitespace-pre-wrap break-words leading-relaxed text-[15px]">{message.content}</ReactMarkdown>
+             <ReactMarkdown remarkPlugins={[remarkGfm]} className="markdown whitespace-pre-wrap break-words leading-relaxed text-[15px]">{message.content}</ReactMarkdown>
             )}
           </div>
           
