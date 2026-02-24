@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Message, Role } from '../types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -23,7 +23,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
     onEdit(message.id, editValue);
     setIsEditing(false);
   };
-
+const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.join(''):String(r??'')).replace(/\n$/,'');return(<div className="relative"><pre className={p.className}>{p.children}</pre><button type="button" onClick={()=>{navigator.clipboard.writeText(t);navigator.vibrate?.(20);}} className="absolute top-2 right-2 text-xs px-2 py-1 rounded bg-black/60 text-white">Copy</button></div>);};
   return (
     <div className={`w-full flex ${isUser ? 'justify-end' : 'justify-start'} px-4 my-3`}>
       <div className={`max-w-[95%] flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start`}>
@@ -50,7 +50,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
                 </div>
               </div>
             ) : (
-             <ReactMarkdown remarkPlugins={[remarkGfm]} className="markdown whitespace-pre-wrap break-words leading-relaxed text-[15px]">{message.content}</ReactMarkdown>
+             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ pre: MdPre }} className="markdown">{message.content}</ReactMarkdown>
             )}
           </div>
           
