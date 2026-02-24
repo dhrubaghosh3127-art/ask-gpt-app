@@ -75,8 +75,22 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
   <span>🚀</span>
   <span className="font-semibold">{mode}</span>
   <span className="opacity-60">▾</span>
+</button>    
+<button
+  type="button"
+  aria-label="Voice"
+  className="w-12 h-12 shrink-0 flex items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/70 shadow-md border border-gray-200/70 dark:border-gray-700/60"
+  onClick={() => {}}
+>
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M12 14a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M19 11a7 7 0 01-14 0" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M12 19v2m-4 0h8" />
+  </svg>
 </button>
-
 {modeOpen && (
   <div className="absolute bottom-14 left-14 w-44 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/70 dark:border-gray-700/60 shadow-xl">
     <button
