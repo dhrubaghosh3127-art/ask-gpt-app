@@ -175,7 +175,7 @@ const response = await getGeminiResponse(content, apiHistory, autoModel, systemP
             </div>
           </div>
         ) : (
-          <div className="pb-20">
+          <div className="pb-4">
             {conversation.messages.map((msg, idx) => (
               <ChatMessage 
                 key={msg.id} 
