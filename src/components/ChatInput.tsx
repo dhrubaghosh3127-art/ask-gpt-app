@@ -48,12 +48,24 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
       >
         <div className="relative">
   <button
-    type="button"
-    onClick={() => setAttachOpen(v => !v)}
-    className="mr-2 h-12 w-12 shrink-0 rounded-full bg-white shadow-md border border-gray-200 text-[22px] font-semibold text-gray-800 flex items-center justify-center active:scale-95 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+  type="button"
+  onClick={() => setAttachOpen(v => !v)}
+  aria-label="Attach"
+  className="mr-2 h-12 w-12 shrink-0 rounded-full bg-white/80 dark:bg-gray-800/70 shadow-md border border-gray-200/70 dark:border-gray-700/60 text-gray-700 dark:text-gray-200 flex items-center justify-center active:scale-95"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-5 w-5"
   >
-    📎
-  </button>
+    <path d="M21.44 11.05l-8.49 8.49a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.19 9.19a2 2 0 01-2.83-2.83l8.49-8.49" />
+  </svg>
+</button>
 
   {attachOpen && (
     <div className="absolute bottom-14 left-0 w-52 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/80 dark:border-gray-700/70 shadow-xl backdrop-blur-xl">
