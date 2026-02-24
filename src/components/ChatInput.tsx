@@ -45,6 +45,22 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
         onSubmit={handleSubmit}
         className={formClassName}
       >
+        <div className="relative">
+  <button
+    type="button"
+    onClick={() => setAttachOpen(v => !v)}
+    className="mr-2 h-11 w-11 shrink-0 rounded-full bg-white/70 dark:bg-gray-900/60 border border-gray-200/70 dark:border-gray-700/60 flex items-center justify-center shadow-sm"
+  >
+    +
+  </button>
+
+  {attachOpen && (
+    <div className="absolute bottom-14 left-0 w-48 rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/70 dark:border-gray-700/60 shadow-lg overflow-hidden">
+      <button type="button" onClick={openUpload} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60">📁 Upload photo</button>
+      <button type="button" onClick={openCamera} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60">📷 Camera</button>
+    </div>
+  )}
+</div>
         <textarea
           ref={textareaRef}
           rows={1}
@@ -54,6 +70,7 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
           placeholder="Ask anything..."
           className={textareaClassName}
         />
+        <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0]||null)} />
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0] ?? null)} />
         <button 
           type="submit"
