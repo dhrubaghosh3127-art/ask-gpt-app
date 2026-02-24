@@ -51,7 +51,7 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
     onClick={() => setAttachOpen(v => !v)}
     className="mr-2 h-12 w-12 shrink-0 rounded-full bg-white shadow-md border border-gray-200 text-[22px] font-semibold text-gray-800 flex items-center justify-center active:scale-95 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
   >
-    +
+    📎
   </button>
 
   {attachOpen && (
