@@ -35,7 +35,7 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
             {isUser ? 'You' : 'ASK-GPT'}
           </div>
           
-          <div className={`${isUser?'max-w-[85%] bg-blue-200 text-gray-900':'w-[99%] bg-white/90 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100'} rounded-2xl px-4 py-3 shadow-sm border border-gray-200/70 dark:border-gray-800 backdrop-blur`}>
+          <div className={`${isUser?'max-w-[85%] bg-blue-200 text-gray-900':'w-[95%] bg-white/90 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100'} rounded-2xl px-4 py-3 shadow-sm border border-gray-200/70 dark:border-gray-800 backdrop-blur`}>
             {isEditing ? (
               <div className="flex flex-col gap-2">
                 <textarea 
