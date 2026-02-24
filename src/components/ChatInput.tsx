@@ -46,7 +46,7 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
         onSubmit={handleSubmit}
         className={formClassName}
       >
-        <div className="relative">
+        <div className="relative flex items-center gap-3">
   <button
   type="button"
   onClick={() => setAttachOpen(v => !v)}
