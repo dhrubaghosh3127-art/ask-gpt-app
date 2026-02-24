@@ -26,7 +26,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onEdit, on
 const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.join(''):String(r??'')).replace(/\n$/,'');return(<div className="relative"><pre className={p.className}>{p.children}</pre><button type="button" onClick={()=>{navigator.clipboard.writeText(t);navigator.vibrate?.(20);}} className="absolute top-2 right-2 text-xs px-2 py-1 rounded bg-black/60 text-white">Copy</button></div>);};
   return (
     <div className={`w-full flex ${isUser ? 'justify-end' : 'justify-start'} px-4 my-3`}>
-      <div className={`max-w-[95%] flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start`}>
+      <div className={`w-full flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start`}>
         
           
         
@@ -35,7 +35,7 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
             {isUser ? 'You' : 'ASK-GPT'}
           </div>
           
-          <div className={`${isUser?'max-w-[85%] bg-blue-200 text-gray-900':'w-[95%] bg-white/90 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100'} rounded-2xl px-4 py-3 shadow-sm border border-gray-200/70 dark:border-gray-800 backdrop-blur`}>
+          <div className={`${isUser ? 'max-w-[95%] rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : 'w-[99%] max-w-none bg-transparent text-gray-900 dark:text-gray-100 px-0 py-0 rounded-none shadow-none border-0'}`}>
             {isEditing ? (
               <div className="flex flex-col gap-2">
                 <textarea 
