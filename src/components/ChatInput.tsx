@@ -15,7 +15,7 @@ const cameraRef = useRef<HTMLInputElement>(null);
 
 const openUpload = () => { setAttachOpen(false); uploadRef.current?.click(); };
 const openCamera = () => { setAttachOpen(false); cameraRef.current?.click(); };
-const formClassName = "relative max-w-3xl mx-auto flex items-center gap-3 bg-white/70 dark:bg-gray-900/60 backdrop-blur rounded-2xl shadow-lg border border-gray-200/70 dark:border-gray-700/60 px-3 py-2";
+const formClassName = "relative max-w-3xl mx-auto w-full flex flex-col rounded-3xl bg-white/70 dark:bg-gray-900/60 backdrop-blur shadow-lg border border-gray-200/70 dark:border-gray-700/60 p-4";
   const [mode, setMode] = useState<'Auto' | 'Fast' | 'Thinking'>('Auto');
   const [modeOpen, setModeOpen] = useState(false);
   useEffect(() => {
