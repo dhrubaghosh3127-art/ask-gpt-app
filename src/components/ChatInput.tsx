@@ -55,7 +55,7 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
   </button>
 
   {attachOpen && (
-    <div className="absolute bottom-14 left-0 w-48 rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/70 dark:border-gray-700/60 shadow-lg overflow-hidden">
+    className="absolute bottom-14 left-0 w-52 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/80 dark:border-gray-700/70 shadow-xl backdrop-blur-xl"
       <button type="button" onClick={openUpload} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60">📁 Upload photo</button>
       <button type="button" onClick={openCamera} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60">📷 Camera</button>
     </div>
