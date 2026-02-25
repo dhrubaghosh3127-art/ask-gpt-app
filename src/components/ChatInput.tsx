@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 interface ChatInputProps {
-  onSend: (message: string, imageBase64?: string | null) => void;
+  onSend: (message: string) => void;
   isLoading: boolean;
 }
 
