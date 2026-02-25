@@ -16,13 +16,24 @@ export const getGeminiResponse = async ({
   imageBase64?: string | null;
   systemInstruction?: string;
 }): Promise<string> => {
-  const messages = [
-    { role: "system", content: (systemInstruction?.trim() || DEFAULT_SYSTEM_PROMPT).slice(0, 1500) },
+  const messages: any[] = [
+    {
+      role: "system",
+      content: (systemInstruction?.trim() || DEFAULT_SYSTEM_PROMPT).slice(0, 1500),
+    },
     ...history.slice(-12).map((m) => ({
       role: m.role === Role.USER ? "user" : "assistant",
       content: (m.content || "").slice(0, 1200),
     })),
-    
+    imageBase64
+      ? {
+          role: "user",
+          content: [
+            { type: "text", text: prompt.slice(0, 1200) },
+            { type: "image_url", image_url: { url: imageBase64 } },
+          ],
+        }
+      : { role: "user", content: prompt.slice(0, 1200) },
   ];
 
   const res = await fetch(URL, {
