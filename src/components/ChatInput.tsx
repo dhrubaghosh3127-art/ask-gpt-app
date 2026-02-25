@@ -147,8 +147,8 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
           placeholder="Ask anything..."
           className={textareaClassName}
         />
-        <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={(e)=>handlePickImage(e.target.files?.[0] ?? null)}
-        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e)=>handlePickImage(e.target.files?.[0] ?? null)}
+        <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0] ?? null)}
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0] ?? null)}
         <button 
           type="submit"
           disabled={isLoading || !input.trim()}
