@@ -11,6 +11,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
   const [attachOpen, setAttachOpen] = useState(false);
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
+  void attachedImage;
+void imageBase64;
 const uploadRef = useRef<HTMLInputElement>(null);
 const cameraRef = useRef<HTMLInputElement>(null);
 
