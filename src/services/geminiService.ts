@@ -16,6 +16,7 @@ export const getGeminiResponse = async ({
   imageBase64?: string | null;
   systemInstruction?: string;
 }): Promise<string> => {
+  const selectedModel = imageBase64 ? IMAGE_MODEL_ID : modelId;
   const messages: any[] = [
     {
       role: "system",
