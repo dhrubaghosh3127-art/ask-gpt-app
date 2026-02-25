@@ -31,7 +31,7 @@ export const getGeminiResponse = async ({
       "Content-Type": "application/json",
       Authorization: `Bearer ${API_KEY}`,
     },
-    body: JSON.stringify({ model: modelId, messages, temperature: 0.7, max_tokens: 1536 })
+    body: JSON.stringify({ model: selectedModel, messages, temperature: 0.7, max_tokens: 1536 })
   });
 
   const data = await res.json(); console.log("Groq status:", res.status, data);
