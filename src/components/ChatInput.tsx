@@ -10,25 +10,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [attachOpen, setAttachOpen] = useState(false);
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
-  void attachedImage;
-void imageBase64;
 const uploadRef = useRef<HTMLInputElement>(null);
 const cameraRef = useRef<HTMLInputElement>(null);
 
 const openUpload = () => { setAttachOpen(false); uploadRef.current?.click(); };
 const openCamera = () => { setAttachOpen(false); cameraRef.current?.click(); };
-  const handlePickImage = (file?: File | null) => {
-  if (!file) {
-    setAttachedImage(null);
-    setImageBase64(null);
-    return;
-  }
-  setAttachedImage(file);
-  const reader = new FileReader();
-  reader.onload = () => setImageBase64(String(reader.result));
-  reader.readAsDataURL(file);
-};
 const formClassName = "relative max-w-3xl mx-auto bg-white/70 dark:bg-gray-900/60 backdrop-blur rounded-2xl shadow-lg border border-gray-200/70 dark:border-gray-700/60 p-3";
   const [mode, setMode] = useState<'Auto' | 'Fast' | 'Thinking'>('Auto');
   const [modeOpen, setModeOpen] = useState(false);
@@ -147,8 +133,8 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
           placeholder="Ask anything..."
           className={textareaClassName}
         />
-        <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0] ?? null)}
-        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0] ?? null)}
+        <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0]||null)} />
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0] ?? null)} />
         <button 
           type="submit"
           disabled={isLoading || !input.trim()}
@@ -167,7 +153,7 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
         </button>
       </form>
       <p className="max-w-3xl mx-auto text-center mt-3 text-[10px] text-gray-500 dark:text-gray-400">
-        ASK-GPT can make mistakes
+        ASK-GPT can make mistakes. Verify important information. Free Tier v1.
       </p>
     </div>
   );
