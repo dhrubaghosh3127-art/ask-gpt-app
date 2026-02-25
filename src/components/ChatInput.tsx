@@ -27,9 +27,13 @@ const formClassName = "relative max-w-3xl mx-auto bg-white/70 dark:bg-gray-900/6
 const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[16px] leading-6 text-gray-900 dark:text-white placeholder:text-gray-400 px-2 py-2 resize-none max-h-[120px]";
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (input.trim() && !isLoading) {
-      onSend(input);
-      setInput('');
+    if (isLoading) return;
+if (!input.trim() && !imageBase64) return;
+
+onSend(input.trim(), imageBase64);
+setInput('');
+setAttachedImage(null);
+setImageBase64(null);
     }
   };
 
@@ -37,7 +41,6 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
-    }
   };
 
   return (
