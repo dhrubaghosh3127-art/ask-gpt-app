@@ -31,7 +31,7 @@ const userKey = getUserApiKey();
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ modelId, messages, userKey }),
+    body: JSON.stringify({ modelId, messages, userApiKey: userKey })
   });
 
   const data = await res.json();
