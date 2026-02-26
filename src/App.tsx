@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ChatPage from './pages/ChatPage';
 import PremiumPage from './pages/PremiumPage';
+import KeySetup from './pages/KeySetup';
 import Sidebar from './components/Sidebar';
 
 const App: React.FC = () => {
@@ -38,7 +39,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Navigate to="/chat" />} />
             <Route path="/chat" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
-            <Route path="/premium" element={<PremiumPage />} />
+            <Route path="/key" element={<KeySetup />} />
           </Routes>
         </main>
       </div>
