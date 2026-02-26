@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import ChatInput from '../components/ChatInput';
 import ChatMessage from '../components/ChatMessage';
 import { Conversation, Message, Role } from '../types';
-import { getConversations, saveConversations } from '../utils/storage';
+import { getConversations, saveConversations, getUserApiKey, getFreeCount, incFreeCount } from '../utils/storage';
 import { getGeminiResponse } from '../services/geminiService';
 import { TOOL_CATEGORIES, MODELS, DEFAULT_MODEL_ID, HARD_MODEL_ID, VERY_HARD_MODEL_ID } from '../constants';
 
