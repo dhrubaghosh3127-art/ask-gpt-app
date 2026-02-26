@@ -75,9 +75,32 @@ const limitText = (userText: string) => {
       timestamp: Date.now()
     };
 
-   const updatedMessages = [...(conversation?.messages || []), userMessage]; const apiHistory = updatedMessages.slice(-12);
-    updateConversation(updatedMessages);
-    setIsLoading(true);
+   const updatedMessages = [...(conversation?.messages || []), userMessage];
+const apiHistory = updatedMessages.slice(-12);
+updateConversation(updatedMessages);
+
+//  Free daily limit (userKey না থাকলে)
+const userKey = getUserApiKey();
+if (!userKey) {
+  const count = getFreeCount();
+
+  if (count >= 5) {
+    const botMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      role: Role.MODEL,
+      content: limitText(content),
+      timestamp: Date.now(),
+    };
+
+    updateConversation([...updatedMessages, botMessage]);
+    return;
+  }
+
+  // limit এর মধ্যে থাকলে count বাড়াও
+  incFreeCount();
+}
+
+setIsLoading(true);
 
     try {
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
