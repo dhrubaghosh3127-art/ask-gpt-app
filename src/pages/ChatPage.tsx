@@ -60,13 +60,15 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
     if (!id) navigate(`/chat/${currentId}`);
   };
 const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
-
 const limitText = (userText: string) => {
   if (isBangla(userText)) {
-    return ` আপনার আজকের ফ্রি লিমিট শেষ (৫ মেসেজ)।\n\n আনলিমিটেড ব্যবহার করতে API Key যোগ করুন: /key`;
+    return `✅ আপনার আজকের ফ্রি লিমিট শেষ (৫ মেসেজ)।\n\n⚙️ Settings on করে Unlimited use করতে এখানে ক্লিক করুন: [API Key সেট করুন](#/key)`;
   }
-  return ` Your free daily limit is reached (5 messages).\n\n To use unlimited, add your API key here: /key`;
+  return `✅ Your free daily limit is reached (5 messages).\n\n⚙️ Turn on settings for unlimited use: [Set API Key](#/key)`;
 };
+
+
+
   const handleSend = async (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
