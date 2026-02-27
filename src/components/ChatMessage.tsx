@@ -51,7 +51,25 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
                 </div>
               </div>
             ) : (
-             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ pre: MdPre }} className="markdown text-[14px] leading-normal">{message.content}</ReactMarkdown>
+             <ReactMarkdown
+  remarkPlugins={[remarkGfm]}
+  components={{
+    pre: MdPre,
+    a: ({ href, children }) => {
+      const url = href || "";
+      const isInternal = url.startsWith("/") || url.startsWith("#");
+      if (isInternal) return <Link to={url} className="underline">{children}</Link>;
+      return (
+        <a href={url} target="_blank" rel="noreferrer" className="underline">
+          {children}
+        </a>
+      );
+    },
+  }}
+  className="markdown text-[14px] leading-relaxed"
+>
+  {message.content}
+</ReactMarkdown>
             )}
           </div>
           
