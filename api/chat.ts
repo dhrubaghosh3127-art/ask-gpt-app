@@ -17,19 +17,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
     const {
-      modelId,
-      messages,
-      userApiKey, // user key (optional)
-    } = body as {
-      modelId: string;
-      messages: any[];
-      userApiKey?: string;
-    };
+  modelId,
+  messages,
+  userKey, // user key (optional)
+} = body as {
+  modelId: string;
+  messages: any[];
+  userKey?: string;
+};
 
-    const apiKey = userApiKey || process.env.GROQ_API_KEY; // server key fallback
-    if (!apiKey) {
-      return res.status(400).json({ error: "Missing API key (userApiKey or GROQ_API_KEY)" });
-    }
+const apiKey = userKey || process.env.GROQ_API_KEY;
+if (!apiKey) {
+  return res.status(400).json({ error: "Missing API key (userKey or GROQ_API_KEY)" });
+}
     if (!modelId || !Array.isArray(messages)) {
       return res.status(400).json({ error: "modelId and messages are required" });
     }
