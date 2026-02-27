@@ -53,8 +53,15 @@ if (!apiKey) {
       return res.status(r.status).json({ error: data?.error?.message || data?.message || "Groq API error", data });
     }
 
-    const text = data?.choices?.[0]?.message?.content ?? "";
-    return res.status(200).json({ text });
+    const raw = data?.choices?.[0]?.message?.content ?? "";
+
+const text = raw
+  .replace(/<think>[\s\S]*?<\/think>/gi, "")
+  .replace(/^\s*<think>[\s\S]*$/gi, "")
+  .trim();
+
+return res.status(200).json({ text });
+    
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || "Server error" });
   }
