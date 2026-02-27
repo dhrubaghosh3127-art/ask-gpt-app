@@ -118,9 +118,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
 
         {/* Footer */}
         <div className="mt-auto pt-6 border-t border-gray-800 space-y-2 min-w-[250px]">
-          <Link to="/premium" className="flex items-center gap-3 px-3 py-2 text-sm text-yellow-500 hover:bg-gray-800 rounded-md transition-colors">
-            👑 Go Pro Free
-          </Link>
+          <Link
+  to="/key"
+  className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:bg-gray-800 rounded-md"
+>
+  ⚙️ Settings (Unlimited)
+</Link>
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:bg-gray-800 rounded-md transition-colors"
