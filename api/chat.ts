@@ -1,6 +1,7 @@
 // /api/chat.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // (optional) basic CORS
@@ -26,7 +27,7 @@ const { modelId, messages, userKey, userApiKey } = body as {
 const keyFromClient = (userKey ?? userApiKey ?? "").trim();
 const hasUserKey = keyFromClient.length > 0;
 
-const hasUserKey = !!(userKey && userKey.trim());
+const apiKey = hasUserKey ? keyFromClient : process.env.GROQ_API_KEY;
 
 //  userKey থাকলে OpenRouter, না থাকলে Groq
 const apiUrl = hasUserKey ? OPENROUTER_URL : GROQ_URL;
