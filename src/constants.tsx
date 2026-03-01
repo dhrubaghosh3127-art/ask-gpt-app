@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { ToolCategory } from './types';
 
 export const TOOL_CATEGORIES: ToolCategory[] = [
@@ -11,10 +11,6 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
   { id: 'image', name: 'Image Help', icon: '🖼️', prompt: 'I want you to act as a design consultant. Help me with UI suggestions, image ratios, and descriptions.' },
 ];
 
-  export const MODELS = [
-  { id: "qwen/qwen3-32b", 
-  { id: "meta-llama/llama-4-maverick-17b-128e-instruct", 
-];
 export const MODELS = [
   { id: "qwen/qwen3-32b", name: "ASK-GPT 2.5 pro (Auto)" },
   { id: "meta-llama/llama-4-maverick-17b-128e-instruct", name: "ASK-GPT (Vision)" },
