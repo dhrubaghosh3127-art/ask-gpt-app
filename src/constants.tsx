@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { ToolCategory } from './types';
 
 export const TOOL_CATEGORIES: ToolCategory[] = [
