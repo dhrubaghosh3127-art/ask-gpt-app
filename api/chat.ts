@@ -27,7 +27,7 @@ const { modelId, messages, userKey, userApiKey } = body as {
 const keyFromClient = (userKey ?? userApiKey ?? "").trim();
 const hasUserKey = keyFromClient.length > 0;
 
-// userKey থাকলে OpenRouter, না থাকলে Groq (admin)
+// ✅ userKey থাকলে OpenRouter, না থাকলে Groq (admin)
 const apiUrl = hasUserKey ? OPENROUTER_URL : GROQ_URL;
 const apiKey = hasUserKey ? keyFromClient : process.env.GROQ_API_KEY;
 
@@ -39,12 +39,18 @@ if (!apiKey) {
   });
 }
 
-if (!modelId || !Array.isArray(messages)) {
-  return res.status(400).json({ error: "modelId and messages are required" });
+// ✅ userKey থাকলে সবসময় Gemini 2.5 Flash
+const finalModelId = hasUserKey ? "google/gemini-2.5-flash" : (modelId || "qwen/qwen3-32b");
+if (!Array.isArray(messages)) {
+  return res.status(400).json({ error: "messages are required" });
 }
 
+if (!hasUserKey && !modelId) {
+  return res.status(400).json({ error: "modelId is required" });
+}
 //  আপাতত: userKey থাকলে সবসময় Gemini 2.5 Flash
-const finalModelId = hasUserKey ? "google/gemini-2.5-flash" : modelId;
+const finalModelId = hasUserKey
+  
 
 const r = await fetch(apiUrl, {
   method: "POST",
