@@ -1,6 +1,6 @@
 // /api/chat.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // (optional) basic CORS
