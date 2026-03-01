@@ -16,11 +16,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
 
-const { modelId, messages, userKey } = body as {
-  modelId: string;
-  messages: any[];
+const { modelId, messages, userKey, userApiKey } = body as {
+  modelId?: string;
+  messages?: any[];
   userKey?: string;
+  userApiKey?: string;
 };
+
+const keyFromClient = (userKey ?? userApiKey ?? "").trim();
+const hasUserKey = keyFromClient.length > 0;
 
 const hasUserKey = !!(userKey && userKey.trim());
 
