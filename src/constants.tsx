@@ -16,11 +16,6 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
   { id: "meta-llama/llama-4-maverick-17b-128e-instruct", 
 ];
 
-export const MODELS = [
-  { id: "qwen/qwen3-32b" },
-  { id: "meta-llama/llama-4-maverick-17b-128e-instruct" },
-];
-
 export const DEFAULT_MODEL_ID = "qwen/qwen3-32b"; // name: ASK-GPT 2.5 (AUTO)
 export const IMAGE_MODEL_ID = "meta-llama/llama-4-maverick-17b-128e-instruct"; // name: ASK-GPT (vision)
 
