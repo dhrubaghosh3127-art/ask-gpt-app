@@ -27,15 +27,15 @@ const { modelId, messages, userKey, userApiKey } = body as {
 const keyFromClient = (userKey ?? userApiKey ?? "").trim();
 const hasUserKey = keyFromClient.length > 0;
 
-const apiKey = hasUserKey ? keyFromClient : process.env.GROQ_API_KEY;
-
-//  userKey থাকলে OpenRouter, না থাকলে Groq
+// userKey থাকলে OpenRouter, না থাকলে Groq (admin)
 const apiUrl = hasUserKey ? OPENROUTER_URL : GROQ_URL;
-const apiKey = hasUserKey ? userKey!.trim() : process.env.GROQ_API_KEY;
+const apiKey = hasUserKey ? keyFromClient : process.env.GROQ_API_KEY;
 
 if (!apiKey) {
   return res.status(400).json({
-    error: hasUserKey ? "Missing API key (userKey)" : "Missing API key (GROQ_API_KEY)",
+    error: hasUserKey
+      ? "Missing API key (userKey)"
+      : "Missing API key (GROQ_API_KEY)",
   });
 }
 
