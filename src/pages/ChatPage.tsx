@@ -60,6 +60,30 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
     if (!id) navigate(`/chat/${currentId}`);
   };
 const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
+  const AUTO_FLASH_ID = "google/gemini-2.5-flash";
+const AUTO_THINK_ID = "deepseek/deepseek-r1";
+
+const shouldUseDeepSeek = (text: string) => {
+  const t = (text || "").toLowerCase();
+  const hasDigit = /[0-9০-৯]/.test(t);
+  const hasOp = /[+\-*/=%×÷]/.test(t);
+  const mathTrig = hasDigit && hasOp;
+
+  const mathNotation = /(\^|√|log|ln|sin|cos|tan|∫|sum|sigma|pi|theta|lim)/i.test(t);
+
+  const codeSymbols = /[{}()[\];<>]|==|!=|=>/.test(t);
+  const codeKeywords =
+    /\b(function|import|export|class|const|let|var|print|printf|console\.log|def|return|if|else|for|while|try|catch|async|await)\b/i.test(t);
+
+  const logicWords = /(বড়|ছোট|তুলনা|কেন|কীভাবে|কারণ|লজিক|বিশ্লেষণ|compare|analysis|why|how)/i.test(t);
+
+  const techWords =
+    /\b(error|bug|fix|solution|value|result|traceback|exception|typeerror|syntaxerror|cors|json|api|token|rate limit)\b/i.test(t);
+
+  return mathTrig || mathNotation || codeSymbols || codeKeywords || logicWords || techWords;
+};
+
+const pickAutoModelId = (text: string) => (shouldUseDeepSeek(text) ? AUTO_THINK_ID : AUTO_FLASH_ID);
 const limitText = (userText: string) => {
   if (isBangla(userText)) {
     return `✅ আপনার আজকের ফ্রি লিমিট শেষ (৫ মেসেজ)।\n\n⚙️ Settings on করে Unlimited use করতে এখানে ক্লিক করুন: [API Key সেট করুন](#/key)`;
