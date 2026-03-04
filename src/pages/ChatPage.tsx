@@ -132,7 +132,18 @@ setIsLoading(true);
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
       const systemPrompt = tool ? tool.prompt : '';
       
-      const autoModel = selectedModel===DEFAULT_MODEL_ID ? (content.length>600?VERY_HARD_MODEL_ID:content.length>350?HARD_MODEL_ID:DEFAULT_MODEL_ID) : selectedModel;
+      const adminAutoModel =
+  selectedModel === DEFAULT_MODEL_ID
+    ? (content.length > 600 ? VERY_HARD_MODEL_ID : content.length > 350 ? HARD_MODEL_ID : DEFAULT_MODEL_ID)
+    : selectedModel;
+
+const hasUserKey = !!userKey?.trim();
+
+//  userKey থাকলেই Gemini/DeepSeek auto switch (only on DEFAULT auto mode)
+const autoModel =
+  hasUserKey && selectedModel === DEFAULT_MODEL_ID
+    ? pickAutoModelId(content)
+    : adminAutoModel;
 const response = await getGeminiResponse({ prompt: content, history: apiHistory, modelId: autoModel, systemInstruction: systemPrompt });
       
       const botMessage: Message = {
