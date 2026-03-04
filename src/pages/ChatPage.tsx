@@ -192,7 +192,23 @@ const response = await getGeminiResponse({ prompt: content, history: apiHistory,
     
     setIsLoading(true);
     try {
-      selectedModel===DEFAULT_MODEL_ID ? (lastUserPrompt.length>600?VERY_HARD_MODEL_ID:lastUserPrompt.length>350?HARD_MODEL_ID:DEFAULT_MODEL_ID) : selectedModel
+      const hasUserKey = !!getUserApiKey()?.trim();
+
+const regenModelId =
+  hasUserKey && selectedModel === DEFAULT_MODEL_ID
+    ? pickAutoModelId(lastUserPrompt)
+    : (selectedModel === DEFAULT_MODEL_ID
+        ? (lastUserPrompt.length > 600 ? VERY_HARD_MODEL_ID : lastUserPrompt.length > 350 ? HARD_MODEL_ID : DEFAULT_MODEL_ID)
+        : selectedModel);
+      const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
+const systemPrompt = tool ? tool.prompt : "";
+
+const response = await getGeminiResponse({
+  prompt: lastUserPrompt,
+  history: prevMessages,
+  modelId: regenModelId,
+  systemInstruction: systemPrompt,
+});
       const botMessage: Message = {
         id: Date.now().toString(),
         role: Role.MODEL,
