@@ -204,7 +204,8 @@ const response = await getGeminiResponse({
       };
       updateConversation([...updatedMessages, errorMessage]);
     } finally {
-      setIsLoading(false);
+  stopThinking();
+  setIsLoading(false);
     }
   };
 
