@@ -92,14 +92,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const raw = data?.choices?.[0]?.message?.content ?? "";
-    const text = String(raw)
-      .replace(/<think>[\s\S]*?<\/think>/gi, "")
-      .replace(/^\s*<think>[\s\S]*$/gi, "")
-      .trim();
+    const provider = hasUserKey ? "openrouter" : "groq";
+const debugPrefix = `[${provider} | ${finalModelId}]`;
 
-    return res.status(200).json({ text });
-  } catch (e: any) {
-    return res.status(500).json({ error: e?.message || "Server error" });
-  }
+const raw = data?.choices?.[0]?.message?.content ?? "";
+const text = (debugPrefix + "\n" + raw)
+  .replace(/<think>[\s\S]*?<\/think>/gi, "")
+  .replace(/^\s*<think>[\s\S]*$/gi, "")
+  .trim();
+
+return res.status(200).json({ text });
                         
