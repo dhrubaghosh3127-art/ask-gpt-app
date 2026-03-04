@@ -205,7 +205,7 @@ const systemPrompt = tool ? tool.prompt : "";
 
 const response = await getGeminiResponse({
   prompt: lastUserPrompt,
-  history: prevMessages,
+  history: previousMessages.slice(-12),
   modelId: regenModelId,
   systemInstruction: systemPrompt,
 });
