@@ -20,10 +20,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
 const [isLoading, setIsLoading] = useState(false);
 const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
 
-const [thinkingText, setThinkingText] = useState<string>("");
 const [isThinking, setIsThinking] = useState(false);
-
-const messagesEndRef = useRef<HTMLDivElement>(null);
+const [thinkingText, setThinkingText] = useState("");
+const thinkingTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const conversations = getConversations();
