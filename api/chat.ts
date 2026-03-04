@@ -49,8 +49,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "modelId is required" });
     }
 
-    // userKey থাকলে আপাতত Gemini 2.5 Flash ফোর্স
-    const finalModelId = hasUserKey ? "google/gemini-2.5-flash" : modelId!;
+    const finalModelId =
+  hasUserKey
+    ? (modelId || "google/gemini-2.5-flash")
+    : (modelId || "qwen/qwen3-32b");
 
     const upstream = await fetch(apiUrl, {
       method: "POST",
