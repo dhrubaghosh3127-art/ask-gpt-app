@@ -17,12 +17,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => 
   const { id } = useParams();
   const navigate = useNavigate();
   const [conversation, setConversation] = useState<Conversation | null>(null);
-const [isLoading, setIsLoading] = useState(false);
-const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
-
-const [isThinking, setIsThinking] = useState(false);
-const [thinkingText, setThinkingText] = useState("");
-const thinkingTimerRef = useRef<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const conversations = getConversations();
@@ -87,35 +84,6 @@ const shouldUseDeepSeek = (text: string) => {
 };
 
 const pickAutoModelId = (text: string) => (shouldUseDeepSeek(text) ? AUTO_THINK_ID : AUTO_FLASH_ID);
- const THINKING_LINES = [
-  "Interpreting your request…",
-  "Checking details…",
-  "Drafting the answer…",
-];
-
-const thinkingIndexRef = useRef(0);
-
-const startThinking = () => {
-  setIsThinking(true);
-  thinkingIndexRef.current = 0;
-  setThinkingText(THINKING_LINES[0]);
-
-  if (thinkingTimerRef.current) window.clearInterval(thinkingTimerRef.current);
-  thinkingTimerRef.current = window.setInterval(() => {
-    thinkingIndexRef.current =
-      (thinkingIndexRef.current + 1) % THINKING_LINES.length;
-    setThinkingText(THINKING_LINES[thinkingIndexRef.current]);
-  }, 1200);
-};
-
-const stopThinking = () => {
-  if (thinkingTimerRef.current) {
-    window.clearInterval(thinkingTimerRef.current);
-    thinkingTimerRef.current = null;
-  }
-  setIsThinking(false);
-  setThinkingText("");
-}; 
 const limitText = (userText: string) => {
   if (isBangla(userText)) {
     return `✅ আপনার আজকের ফ্রি লিমিট শেষ (৫ মেসেজ)।\n\n⚙️ Settings on করে Unlimited use করতে এখানে ক্লিক করুন: [API Key সেট করুন](#/key)`;
@@ -176,16 +144,7 @@ const autoModel =
   hasUserKey && selectedModel === DEFAULT_MODEL_ID
     ? pickAutoModelId(content)
     : adminAutoModel;
-// ✅ ONLY DeepSeek হলে Thinking UI দেখাবে
-if (autoModel === AUTO_THINK_ID) startThinking();
-else stopThinking();
-
-const response = await getGeminiResponse({
-  prompt: content,
-  history: apiHistory,
-  modelId: autoModel,
-  systemInstruction: systemPrompt,
-});
+const response = await getGeminiResponse({ prompt: content, history: apiHistory, modelId: autoModel, systemInstruction: systemPrompt });
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -204,8 +163,7 @@ const response = await getGeminiResponse({
       };
       updateConversation([...updatedMessages, errorMessage]);
     } finally {
-  stopThinking();
-  setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -337,4 +295,3 @@ const response = await getGeminiResponse({
 };
 
 export default ChatPage;
-      
