@@ -210,8 +210,9 @@ const response = await getGeminiResponse({
         timestamp: Date.now()
       };
       updateConversation([...updatedMessages, errorMessage]);
-    } finally {
-      setIsLoading(false);
+    finally {
+  stopThinking();
+  setIsLoading(false);
     }
   };
 
