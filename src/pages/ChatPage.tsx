@@ -182,7 +182,17 @@ const autoModel =
   hasUserKey && selectedModel === DEFAULT_MODEL_ID
     ? pickAutoModelId(content)
     : adminAutoModel;
-const response = await getGeminiResponse({ prompt: content, history: apiHistory, modelId: autoModel, systemInstruction: systemPrompt });
+
+const isDeepseekThinking = autoModel === AUTO_THINK_ID;
+if (isDeepseekThinking) startThinking();
+else stopThinking();
+
+const response = await getGeminiResponse({
+  prompt: content,
+  history: apiHistory,
+  modelId: autoModel,
+  systemInstruction: systemPrompt,
+});
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
