@@ -249,6 +249,9 @@ const regenModelId =
     : (selectedModel === DEFAULT_MODEL_ID
         ? (lastUserPrompt.length > 600 ? VERY_HARD_MODEL_ID : lastUserPrompt.length > 350 ? HARD_MODEL_ID : DEFAULT_MODEL_ID)
         : selectedModel);
+      const isDeepseekThinking = regenModelId === AUTO_THINK_ID;
+if (isDeepseekThinking) startThinking();
+else stopThinking();
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
 const systemPrompt = tool ? tool.prompt : "";
 
