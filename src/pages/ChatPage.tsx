@@ -327,6 +327,32 @@ const response = await getGeminiResponse({
                     G
                   </div>
                   <div className="flex-1">
+                   {isThinking && (
+  <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
+    <button
+      type="button"
+      onClick={() => setThinkingOpen(v => !v)}
+      className="flex items-center gap-2"
+    >
+      <span>Thinking</span>
+      <span>{thinkingOpen ? "›" : "▾"}</span>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setThinkingOpen(false)}
+      className="underline"
+    >
+      Skip
+    </button>
+  </div>
+)}
+
+{isThinking && thinkingOpen && (
+  <div className="mb-3 text-sm text-gray-600">
+    {thinkingText}
+  </div>
+)}
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
