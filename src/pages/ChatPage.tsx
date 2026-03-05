@@ -90,6 +90,38 @@ const shouldUseDeepSeek = (text: string) => {
 };
 
 const pickAutoModelId = (text: string) => (shouldUseDeepSeek(text) ? AUTO_THINK_ID : AUTO_FLASH_ID);
+  const THINKING_LINES = [
+  "Interpreting the user's request…",
+  "Checking details…",
+  "Drafting the answer…",
+];
+
+const thinkingTimerRef = useRef<number | null>(null);
+const thinkingIndexRef = useRef(0);
+
+const startThinking = () => {
+  setIsThinking(true);
+  setThinkingOpen(true);
+
+  thinkingIndexRef.current = 0;
+  setThinkingText(THINKING_LINES[0]);
+
+  if (thinkingTimerRef.current) window.clearInterval(thinkingTimerRef.current);
+
+  thinkingTimerRef.current = window.setInterval(() => {
+    thinkingIndexRef.current =
+      (thinkingIndexRef.current + 1) % THINKING_LINES.length;
+    setThinkingText(THINKING_LINES[thinkingIndexRef.current]);
+  }, 1200);
+};
+
+const stopThinking = () => {
+  if (thinkingTimerRef.current) window.clearInterval(thinkingTimerRef.current);
+  thinkingTimerRef.current = null;
+
+  setIsThinking(false);
+  setThinkingText("");
+};
 const limitText = (userText: string) => {
   if (isBangla(userText)) {
     return `✅ আপনার আজকের ফ্রি লিমিট শেষ (৫ মেসেজ)।\n\n⚙️ Settings on করে Unlimited use করতে এখানে ক্লিক করুন: [API Key সেট করুন](#/key)`;
