@@ -15,11 +15,17 @@ interface ChatPageProps {
 
 const ChatPage: React.FC<ChatPageProps> = ({ toggleSidebar, isSidebarOpen }) => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+const navigate = useNavigate();
+
+const [conversation, setConversation] = useState<Conversation | null>(null);
+const [isLoading, setIsLoading] = useState(false);
+
+const [isThinking, setIsThinking] = useState(false);
+const [thinkingText, setThinkingText] = useState("");
+const [thinkingOpen, setThinkingOpen] = useState(true);
+
+const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
+const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const conversations = getConversations();
