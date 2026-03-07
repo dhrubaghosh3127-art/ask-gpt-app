@@ -186,8 +186,8 @@ const autoModel =
     ? pickAutoModelId(content)
     : adminAutoModel;
 
-const isThinkingModel = autoModel === AUTO_THINK_ID || autoModel === ADMIN_THINK_ID;
-if (isThinkingModel) startThinking();
+const isDeepseekThinking = autoModel === AUTO_THINK_ID;
+if (isDeepseekThinking) startThinking();
 else stopThinking();
 
 const response = await getGeminiResponse({
