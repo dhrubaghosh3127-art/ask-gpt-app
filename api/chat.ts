@@ -70,11 +70,13 @@ const finalMessages =
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: finalModelId,
-        messages: finalMessages,
-        temperature: 0.7,
-        max_tokens: 2048,
-      }),
+  model: finalModelId,
+  messages: finalMessages,
+  temperature: 0.7,
+  max_completion_tokens: 2048,
+  include_reasoning: finalModelId === "openai/gpt-oss-120b" ? false : undefined,
+  reasoning_effort: finalModelId === "openai/gpt-oss-120b" ? "high" : undefined,
+}),
     });
 
     const rawBody = await upstream.text();
