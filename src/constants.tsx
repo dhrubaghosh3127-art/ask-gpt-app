@@ -16,7 +16,7 @@ export const MODELS = [
   { id: "meta-llama/llama-4-maverick-17b-128e-instruct", name: "ASK-GPT (Vision)" },
 ];
 
-export const DEFAULT_MODEL_ID = "qwen/qwen3-32b";
+export const DEFAULT_MODEL_ID = "llama-3.3-70b-versatile";
 export const IMAGE_MODEL_ID = "meta-llama/llama-4-maverick-17b-128e-instruct";
 
 export const HARD_MODEL_ID = "qwen/qwen3-32b";
