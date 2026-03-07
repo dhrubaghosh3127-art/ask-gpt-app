@@ -53,7 +53,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   hasUserKey
     ? (modelId || "google/gemini-2.5-flash")
     : (modelId || "qwen/qwen3-32b");
+const ossSystem = {
+  role: "system",
+  content:
+    "You are a meticulous problem solver. For math/science/coding/logic: (1) restate briefly, (2) plan steps, (3) solve step-by-step with checks, (4) verify final result. If code: correct code blocks + short explanation + edge cases. Don't rush.",
+};
 
+const finalMessages =
+  finalModelId === "openai/gpt-oss-120b" ? [ossSystem, ...messages] : messages;
     const upstream = await fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -62,9 +69,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         model: finalModelId,
-        messages,
+        messages: finalMessages,
         temperature: 0.7,
-        max_tokens: 1536,
+        max_tokens: 2048,
       }),
     });
 
