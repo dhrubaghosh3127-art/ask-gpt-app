@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const finalModelId =
   hasUserKey
     ? (modelId || "google/gemini-2.5-flash")
-    : (modelId || "qwen/qwen3-32b");
+    : (modelId || "llama-3.3-70b-versatile");
 
     const upstream = await fetch(apiUrl, {
       method: "POST",
