@@ -143,8 +143,8 @@ const limitText = (userText: string) => {
 const apiHistory = updatedMessages.slice(-12);
 updateConversation(updatedMessages);
 
- // Free daily limit (userKey ... )
- const userKey = getUserApiKey();
+ // Free daily limit temporarily disabled for testing
+const userKey = getUserApiKey();
  if (userKey) {
    const count = getFreeCount();
    if (count >= 5) {
