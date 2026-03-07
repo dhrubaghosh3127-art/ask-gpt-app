@@ -143,18 +143,29 @@ const limitText = (userText: string) => {
 const apiHistory = updatedMessages.slice(-12);
 updateConversation(updatedMessages);
 
- // Free daily limit temporarily disabled for testing
+    // Free daily limit (only when userKey NOT set)
 const userKey = getUserApiKey();
- if (userKey) {
-   const count = getFreeCount();
-   if (count >= 5) {
-     const botMessage: Message = { ... };
-     updateConversation([...updatedMessages, botMessage]);
-     return;
-   }
-   incFreeCount();
- }
 
+// ✅ Testing mode: limit off রাখতে true
+const DISABLE_FREE_LIMIT = true;
+
+if (!DISABLE_FREE_LIMIT && !userKey) {
+  const count = getFreeCount();
+
+  if (count >= 5) {
+    const botMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      role: Role.MODEL,
+      content: limitText(content),
+      timestamp: Date.now(),
+    };
+
+    updateConversation([...updatedMessages, botMessage]);
+    return;
+  }
+
+  incFreeCount();
+}
 setIsLoading(true);
 
     try {
