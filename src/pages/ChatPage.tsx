@@ -68,7 +68,8 @@ const messagesEndRef = useRef<HTMLDivElement>(null);
 const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
   const AUTO_FLASH_ID = "google/gemini-2.5-flash";
 const AUTO_THINK_ID = "deepseek/deepseek-r1";
-
+const ADMIN_DEFAULT_ID = "llama-3.3-70b-versatile";
+const ADMIN_THINK_ID = "openai/gpt-oss-120b"
 const shouldUseDeepSeek = (text: string) => {
   const t = (text || "").toLowerCase();
   const hasDigit = /[0-9০-৯]/.test(t);
