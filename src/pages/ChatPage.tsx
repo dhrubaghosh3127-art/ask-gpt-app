@@ -175,7 +175,7 @@ setIsLoading(true);
       
       const adminAutoModel =
   selectedModel === DEFAULT_MODEL_ID
-    ? (content.length > 600 ? VERY_HARD_MODEL_ID : content.length > 350 ? HARD_MODEL_ID : DEFAULT_MODEL_ID)
+    ? (shouldUseDeepSeek(content) ? ADMIN_THINK_ID : ADMIN_DEFAULT_ID)
     : selectedModel;
 
 const hasUserKey = !!userKey?.trim();
