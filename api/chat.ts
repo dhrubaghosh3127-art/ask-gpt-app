@@ -104,7 +104,24 @@ const finalMessages =
     const provider = hasUserKey ? "openrouter" : "groq";
 const debugPrefix = `[${provider} | ${finalModelId}]`;
 
-const raw = data?.choices?.[0]?.message?.content ?? "";
+const msg0 = data?.choices?.[0]?.message;
+const content0 = msg0?.content;
+
+let raw = "";
+
+if (typeof content0 === "string") {
+  raw = content0;
+} else if (Array.isArray(content0)) {
+  raw = content0
+    .map((p: any) =>
+      typeof p === "string"
+        ? p
+        : typeof p?.text === "string"
+        ? p.text
+        : ""
+    )
+    .join("");
+}
 const text = (debugPrefix + "\n" + raw)
   .replace(/<think>[\s\S]*?<\/think>/gi, "")
   .replace(/^\s*<think>[\s\S]*$/gi, "")
