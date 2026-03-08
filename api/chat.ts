@@ -175,10 +175,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!cleaned) {
-  return res.status(200).json({
-    text: `${debugPrefix}\nRAW_DEBUG:\n${rawBody.slice(0, 1500)}`
-  });
-    }
+  cleaned = raw.trim();
+}
+
+if (!cleaned) {
+  cleaned = "⚠️ Empty response from model";
+}
 
     return res.status(200).json({
       text: `${debugPrefix}\n${cleaned}`,
