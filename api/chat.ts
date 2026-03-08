@@ -52,21 +52,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const finalModelId =
   hasUserKey
     ? (modelId || "google/gemini-2.5-flash")
-    : (modelId || "qwen/qwen3-32b");
+    : (modelId || "llama-3.3-70b-versatile");
 
-    const upstream = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: finalModelId,
-        messages,
-        temperature: 0.7,
-        max_tokens: 1536,
-      }),
-    });
+    const requestBody: Record<string, any> = {
+  model: finalModelId,
+  messages,
+  temperature: 0.7,
+};
+
+if (finalModelId === "openai/gpt-oss-120b") {
+  requestBody.max_completion_tokens = 4096;
+  requestBody.reasoning_effort = "high";
+} else {
+  requestBody.max_tokens = 2048;
+}
+
+const upstream = await fetch(apiUrl, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+  },
+  body: JSON.stringify(requestBody),
+});
 
     const rawBody = await upstream.text();
 
