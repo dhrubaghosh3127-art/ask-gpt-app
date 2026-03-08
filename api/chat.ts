@@ -4,6 +4,56 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+function extractTextFromAny(data: any): string {
+  const msg0 = data?.choices?.[0]?.message;
+  const content0 = msg0?.content;
+
+  if (typeof content0 === "string") {
+    return content0;
+  }
+
+  if (Array.isArray(content0)) {
+    const joined = content0
+      .map((p: any) => {
+        if (typeof p === "string") return p;
+        if (typeof p?.text === "string") return p.text;
+        if (typeof p?.content === "string") return p.content;
+        return "";
+      })
+      .join("")
+      .trim();
+
+    if (joined) return joined;
+  }
+
+  if (typeof data?.choices?.[0]?.text === "string") {
+    return data.choices[0].text;
+  }
+
+  if (typeof data?.output_text === "string") {
+    return data.output_text;
+  }
+
+  if (typeof msg0?.reasoning === "string") {
+    return msg0.reasoning;
+  }
+
+  if (Array.isArray(data?.output)) {
+    const joined = data.output
+      .map((item: any) => {
+        if (typeof item?.text === "string") return item.text;
+        if (typeof item?.content?.[0]?.text === "string") return item.content[0].text;
+        return "";
+      })
+      .join("")
+      .trim();
+
+    if (joined) return joined;
+  }
+
+  return "";
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -35,7 +85,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // userKey থাকলে OpenRouter, না থাকলে Groq(admin)
     const apiUrl = hasUserKey ? OPENROUTER_URL : GROQ_URL;
-    const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
+    const apiKey = hasUserKey
+      ? keyFromClient
+      : (process.env.GROQ_API_KEY || "");
 
     if (!apiKey) {
       return res.status(400).json({
@@ -49,34 +101,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "modelId is required" });
     }
 
-    const finalModelId =
-  hasUserKey
-    ? (modelId || "google/gemini-2.5-flash")
-    : (modelId || "llama-3.3-70b-versatile");
-const ossSystem = {
-  role: "system",
-  content:
-    "You are a meticulous problem solver. For math/science/coding/logic: restate briefly, plan steps, solve carefully, and give a clear final answer."
-};
+    const finalModelId = hasUserKey
+      ? (modelId || "google/gemini-2.5-flash")
+      : (modelId || "llama-3.3-70b-versatile");
 
-const finalMessages =
-  finalModelId === "openai/gpt-oss-120b"
-    ? [ossSystem, ...messages]
-    : messages;
+    const ossSystem = {
+      role: "system",
+      content:
+        "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and always give a clear final answer in normal text.",
+    };
+
+    const finalMessages =
+      finalModelId === "openai/gpt-oss-120b"
+        ? [ossSystem, ...messages]
+        : messages;
+
+    const requestBody: Record<string, any> = {
+      model: finalModelId,
+      messages: finalMessages,
+      temperature: 0.7,
+    };
+
+    if (finalModelId === "openai/gpt-oss-120b") {
+      requestBody.max_completion_tokens = 2048;
+      requestBody.include_reasoning = false;
+      requestBody.reasoning_effort = "high";
+    } else {
+      requestBody.max_tokens = 1536;
+    }
+
     const upstream = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-  model: finalModelId,
-  messages: finalMessages,
-  temperature: 0.7,
-  max_completion_tokens: 2048,
-  include_reasoning: finalModelId === "openai/gpt-oss-120b" ? false : undefined,
-  reasoning_effort: finalModelId === "openai/gpt-oss-120b" ? "high" : undefined,
-}),
+      body: JSON.stringify(requestBody),
     });
 
     const rawBody = await upstream.text();
@@ -93,7 +153,7 @@ const finalMessages =
         data?.error?.message ||
         data?.error ||
         data?.message ||
-        rawBody?.slice(0, 250) ||
+        rawBody?.slice(0, 400) ||
         "API Error";
 
       return res.status(upstream.status).json({ error: msg, data });
@@ -101,44 +161,31 @@ const finalMessages =
 
     if (!data) {
       return res.status(502).json({
-        error: rawBody?.slice(0, 250) || "Invalid response from provider",
+        error: rawBody?.slice(0, 400) || "Invalid response from provider",
       });
     }
 
     const provider = hasUserKey ? "openrouter" : "groq";
-const debugPrefix = `[${provider} | ${finalModelId}]`;
+    const debugPrefix = `[${provider} | ${finalModelId}]`;
 
-const msg0 = data?.choices?.[0]?.message;
-const content0 = msg0?.content;
+    const raw = extractTextFromAny(data);
 
-let raw = "";
+    let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 
-if (typeof content0 === "string") {
-  raw = content0;
-} else if (Array.isArray(content0)) {
-  raw = content0
-    .map((p: any) =>
-      typeof p === "string"
-        ? p
-        : typeof p?.text === "string"
-        ? p.text
-        : typeof p?.content === "string"
-        ? p.content
-        : ""
-    )
-    .join("");
-}
+    if (!cleaned) {
+      cleaned = raw.trim();
+    }
 
-if (!raw && typeof data?.choices?.[0]?.text === "string") {
-  raw = data.choices[0].text;
-}
+    if (!cleaned) {
+      cleaned = "⚠️ Empty response from model";
+    }
 
-if (!raw && typeof data?.output_text === "string") {
-  raw = data.output_text;
-}
-
-let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
-if (!cleaned) cleaned = raw || "⚠️ Empty response from model";
-
-return res.status(200).json({ text: `${debugPrefix}\n${cleaned}` });
-                        
+    return res.status(200).json({
+      text: `${debugPrefix}\n${cleaned}`,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      error: err?.message || "Server error",
+    });
+  }
+      }
