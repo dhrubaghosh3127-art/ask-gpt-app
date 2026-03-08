@@ -3,53 +3,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-function looksLikeCode(text: string): boolean {
-  return /```|function\s*|import\s|export\s|const\s|let\s|var\s|class\s|def\s|return\b|console\.log|print\(|printf\(|if\s*\(|for\s*\(|while\s*\(|try\s*\{|catch\s*\(/i.test(
-    text
-  );
-}
 
-function shouldPlainifyMath(text: string): boolean {
-  if (looksLikeCode(text)) return false;
-
-  return /\\frac|\\sqrt|\\geq|\\ge|\\leq|\\le|\\neq|\\approx|\\pm|\\cdot|\\times|\\Rightarrow|\\Longrightarrow|\\sum|\\displaystyle|\\bigl|\\bigr|\\Bigl|\\Bigr|\\quad|\\qquad|\\\[|\\|[A-Za-z0-9()]+\^2|[A-Za-z0-9()]+\^3/i.test(
-    text
-  );
-}
-
-function toPlainMathBangla(text: string): string {
-  let t = text;
-
-  t = t
-    .replace(/\\/g, "")
-    .replace(/\\/g, "")
-    .replace(/\\/g, "")
-    .replace(/\\/g, "");
-
-  for (let i = 0; i < 8; i++) {
-    t = t.replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, "($1 কে $2 দিয়ে ভাগ)");
-    t = t.replace(/\\sqrt\s*\{([^{}]+)\}/g, "($1 এর বর্গমূল)");
-  }
-
-  t = t
-    .replace(/\\geq|\\ge/g, " বড় বা সমান ")
-    .replace(/\\leq|\\le/g, " ছোট বা সমান ")
-    .replace(/\\neq/g, " সমান নয় ")
-    .replace(/\\approx/g, " প্রায় সমান ")
-    .replace(/\\pm/g, " প্লাস বা মাইনাস ")
-    .replace(/\\cdot|\\times/g, " গুণ ")
-    .replace(/\\Rightarrow|\\Longrightarrow/g, " তাই ")
-    .replace(/\\sum_\{cyc\}|\\sum/g, "যোগফল")
-    .replace(/\\displaystyle|\\bigl|\\bigr|\\Bigl|\\Bigr|\\big|\\Big|\\quad|\\qquad/g, " ")
-    .replace(/([A-Za-z0-9()]+)\^2\b/g, "$1 এর বর্গ")
-    .replace(/([A-Za-z0-9()]+)\^3\b/g, "$1 এর ঘন")
-    .replace(/[{}]/g, "")
-    .replace(/\s{2,}/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-
-  return t;
-}
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -197,10 +151,6 @@ const cleaned =
   raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim() ||
   raw.trim() ||
   "⚠️ Empty response from model";
-
-const finalText = shouldPlainifyMath(cleaned)
-  ? toPlainMathBangla(cleaned)
-  : cleaned;
 
 return res.status(200).json({
   text: `${debugPrefix}\n${finalText}`,
