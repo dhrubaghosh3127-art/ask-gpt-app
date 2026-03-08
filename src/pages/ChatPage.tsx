@@ -70,6 +70,7 @@ const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
 const AUTO_THINK_ID = "deepseek/deepseek-r1";
 const ADMIN_DEFAULT_ID = "llama-3.3-70b-versatile";
 const ADMIN_THINK_ID = "openai/gpt-oss-120b"
+  const ADMIN_WEB_ID = "groq/compound";
 const shouldUseDeepSeek = (text: string) => {
   const t = (text || "").toLowerCase();
   const hasDigit = /[0-9০-৯]/.test(t);
@@ -89,8 +90,79 @@ const shouldUseDeepSeek = (text: string) => {
 
   return mathTrig || mathNotation || codeSymbols || codeKeywords || logicWords || techWords;
 };
+const shouldAvoidWebSearch = (text: string) => {
+  const t = (text || "").toLowerCase();
 
-const pickAutoModelId = (text: string) => (shouldUseDeepSeek(text) ? AUTO_THINK_ID : AUTO_FLASH_ID);
+  const avoidWords =
+    /\b(solve|math|equation|integral|derivative|prove|theorem|physics|chemistry|biology|translate|translation|grammar|rewrite|essay|paragraph|summary|explain|what does this mean|coding|code|bug|debug|error in code|typescript|javascript|python|react|html|css|sql|algorithm)\b/i.test(
+      t
+    );
+
+  const hasMathPattern =
+    /[0-9]+\s*[\+\-\*\/=]\s*[0-9]+|x\^|y\^|sqrt|sin|cos|tan|log|ln|∫|Σ|π|theta|>=|<=/.test(
+      t
+    );
+
+  return avoidWords || hasMathPattern;
+};
+
+const shouldUseWebSearch = (text: string) => {
+  const t = (text || "").toLowerCase();
+
+  if (shouldAvoidWebSearch(t)) return false;
+
+  const timeWords =
+    /\b(latest|today|current|now|right now|recent|recently|update|updated|new|newest|live|real time)\b/i.test(
+      t
+    );
+
+  const newsWords =
+    /\b(news|announcement|release|launched|launch|rollout|breaking|headline)\b/i.test(
+      t
+    );
+
+  const moneyWords =
+    /\b(price|pricing|cost|rate|exchange rate|stock|share price|market cap|crypto|bitcoin|btc|eth|gold price|dollar rate)\b/i.test(
+      t
+    );
+
+  const weatherWords =
+    /\b(weather|temperature|forecast|rain|storm|humidity)\b/i.test(t);
+
+  const sportsWords =
+    /\b(match|score|live score|fixture|schedule|standing|points table|result today)\b/i.test(
+      t
+    );
+
+  const webIntentWords =
+    /\b(search|lookup|look up|find online|check online|verify|fact check|source|official source|official website|website|link|url|visit|browse)\b/i.test(
+      t
+    );
+
+  const compareCurrentWords =
+    /\b(best phone|best laptop|best ai model|which is better now|current version|new version|vs 2026|vs 2025)\b/i.test(
+      t
+    );
+
+  const hasUrl = /https?:\/\/|www\./i.test(t);
+
+  return (
+    timeWords ||
+    newsWords ||
+    moneyWords ||
+    weatherWords ||
+    sportsWords ||
+    webIntentWords ||
+    compareCurrentWords ||
+    hasUrl
+  );
+};
+const pickAutoModelId = (text: string) =>
+  shouldUseWebSearch(text)
+    ? ADMIN_WEB_ID
+    : shouldUseDeepSeek(text)
+    ? ADMIN_THINK_ID
+    : ADMIN_DEFAULT_ID;
   const THINKING_LINES = [
   "Understanding the question...",
   "Checking the details...",
