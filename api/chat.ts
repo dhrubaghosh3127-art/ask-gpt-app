@@ -54,9 +54,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? (modelId || "google/gemini-2.5-flash")
     : (modelId || "llama-3.3-70b-versatile");
 const ossSystem = {
+  const ossSystem = {
   role: "system",
   content:
-    "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and always give a clear final answer in normal text. For math answers, use simple normal language. Answer math only in easy readable Bangla, and do not use LaTeX, raw math code, markdown headings, or symbolic math language unless absolutely necessary.",
+    "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and always give a clear final answer in normal text. For math answers, always and only use simple normal language.",
 };
 
 const finalMessages =
