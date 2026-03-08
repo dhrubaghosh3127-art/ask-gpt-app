@@ -153,5 +153,5 @@ const cleaned =
   "⚠️ Empty response from model";
 
 return res.status(200).json({
-  text: `${debugPrefix}\n${finalText}`,
-});              
+  text: `${debugPrefix}\n${cleaned}`,
+});         
