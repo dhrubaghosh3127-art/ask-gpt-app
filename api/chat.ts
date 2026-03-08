@@ -168,20 +168,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const raw = extractTextFromAny(data);
 
-    let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 
-    if (!cleaned) {
-      cleaned = raw.trim();
-    }
+if (!cleaned) {
+  const reasoning = data?.choices?.[0]?.message?.reasoning;
+  if (typeof reasoning === "string") {
+    cleaned = reasoning.trim();
+  }
+}
 
-    if (!cleaned) {
-  cleaned = raw.trim();
+if (!cleaned) {
+  const m = rawBody.match(/"reasoning":"([\s\S]*?)"/);
+  if (m?.[1]) {
+    cleaned = m[1]
+      .replace(/\\n/g, "\n")
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, "\\")
+      .replace(/\\u003c/g, "<")
+      .replace(/\\u003e/g, ">")
+      .trim();
+  }
 }
 
 if (!cleaned) {
   cleaned = "⚠️ Empty response from model";
 }
-
     return res.status(200).json({
       text: `${debugPrefix}\n${cleaned}`,
     });
