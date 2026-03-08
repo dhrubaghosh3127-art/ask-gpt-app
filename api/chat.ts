@@ -53,10 +53,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   hasUserKey
     ? (modelId || "google/gemini-2.5-flash")
     : (modelId || "llama-3.3-70b-versatile");
+const ossSystem = {
+  role: "system",
+  content:
+    "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and always give a clear final answer in normal text. For math answers, use simple normal language.",
+};
 
+const finalMessages =
+  finalModelId === "openai/gpt-oss-120b"
+    ? [ossSystem, ...messages]
+    : messages;
     const requestBody: Record<string, any> = {
   model: finalModelId,
-  messages,
+  messages: finalMessages,
   temperature: 0.7,
 };
 
