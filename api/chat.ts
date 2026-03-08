@@ -124,8 +124,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (finalModelId === "openai/gpt-oss-120b") {
       requestBody.max_completion_tokens = 2048;
-      requestBody.include_reasoning = false;
-      requestBody.reasoning_effort = "high";
     } else {
       requestBody.max_tokens = 1536;
     }
