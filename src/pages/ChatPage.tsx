@@ -92,9 +92,11 @@ const shouldUseDeepSeek = (text: string) => {
 
 const pickAutoModelId = (text: string) => (shouldUseDeepSeek(text) ? AUTO_THINK_ID : AUTO_FLASH_ID);
   const THINKING_LINES = [
-  "Interpreting the user's request…",
-  "Checking details…",
-  "Drafting the answer…",
+  "Understanding the question...",
+  "Checking the details...",
+  "Working through the steps...",
+  "Verifying the result...",
+  "Preparing the best answer...",
 ];
 
 const thinkingTimerRef = useRef<number | null>(null);
