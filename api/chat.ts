@@ -53,7 +53,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   hasUserKey
     ? (modelId || "google/gemini-2.5-flash")
     : (modelId || "llama-3.3-70b-versatile");
-const ossSystem = {
   const ossSystem = {
   role: "system",
   content:
