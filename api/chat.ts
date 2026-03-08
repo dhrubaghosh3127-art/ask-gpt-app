@@ -106,10 +106,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : (modelId || "llama-3.3-70b-versatile");
 
     const ossSystem = {
-      role: "system",
-      content:
-        "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and always give a clear final answer in normal text.",
-    };
+  role: "system",
+  content:
+    "You are a meticulous problem solver. For math problems, explain in simple normal language, step by step, like ChatGPT tutoring a student. Do not use raw LaTeX, bracketed math code, or symbolic format unless absolutely necessary. Explain symbols in words when helpful, for example write what sin, cos, sqrt mean in normal language. Keep science, coding, and logic answers clear and readable, and always give a clean final answer in normal text.",
+};
 
     const finalMessages =
       finalModelId === "openai/gpt-oss-120b"
