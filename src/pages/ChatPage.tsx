@@ -188,8 +188,10 @@ const autoModel =
     ? pickAutoModelId(content)
     : adminAutoModel;
 
-const isDeepseekThinking = autoModel === AUTO_THINK_ID;
-if (isDeepseekThinking) startThinking();
+const isThinkingModel =
+  autoModel === AUTO_THINK_ID || autoModel === ADMIN_THINK_ID;
+
+if (isThinkingModel) startThinking();
 else stopThinking();
 
 const response = await getGeminiResponse({
@@ -254,8 +256,10 @@ const regenModelId =
     : (selectedModel === DEFAULT_MODEL_ID
         ? (lastUserPrompt.length > 600 ? VERY_HARD_MODEL_ID : lastUserPrompt.length > 350 ? HARD_MODEL_ID : DEFAULT_MODEL_ID)
         : selectedModel);
-      const isDeepseekThinking = regenModelId === AUTO_THINK_ID;
-if (isDeepseekThinking) startThinking();
+      const isThinkingModel =
+  regenModelId === AUTO_THINK_ID || regenModelId === ADMIN_THINK_ID;
+
+if (isThinkingModel) startThinking();
 else stopThinking();
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
 const systemPrompt = tool ? tool.prompt : "";
