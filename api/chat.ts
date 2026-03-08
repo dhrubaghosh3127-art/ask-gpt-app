@@ -105,11 +105,45 @@ const upstream = await fetch(apiUrl, {
     const provider = hasUserKey ? "openrouter" : "groq";
 const debugPrefix = `[${provider} | ${finalModelId}]`;
 
-const raw = data?.choices?.[0]?.message?.content ?? "";
-const text = (debugPrefix + "\n" + raw)
-  .replace(/<think>[\s\S]*?<\/think>/gi, "")
-  .replace(/^\s*<think>[\s\S]*$/gi, "")
-  .trim();
+const msg0 = data?.choices?.[0]?.message;
+const content0 = msg0?.content;
 
-return res.status(200).json({ text });
+let raw = "";
+
+if (typeof content0 === "string") {
+  raw = content0;
+} else if (Array.isArray(content0)) {
+  raw = content0
+    .map((p: any) =>
+      typeof p === "string"
+        ? p
+        : typeof p?.text === "string"
+        ? p.text
+        : typeof p?.content === "string"
+        ? p.content
+        : ""
+    )
+    .join("");
+}
+
+if (!raw && typeof msg0?.reasoning === "string") {
+  raw = msg0.reasoning;
+}
+
+if (!raw && typeof data?.choices?.[0]?.text === "string") {
+  raw = data.choices[0].text;
+}
+
+if (!raw && typeof data?.output_text === "string") {
+  raw = data.output_text;
+}
+
+const cleaned =
+  raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim() ||
+  raw.trim() ||
+  "⚠️ Empty response from model";
+
+return res.status(200).json({
+  text: `${debugPrefix}\n${cleaned}`,
+});
                         
