@@ -537,26 +537,32 @@ const response = await getGeminiResponse({
       />
 
       <circle
-        cx="32"
-        cy="32"
-        r="26"
-        fill="none"
-        stroke="url(#geminiArc)"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        strokeDasharray="26 138"
-        transform="rotate(-155 32 32)"
-        opacity="1"
-      >
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from="-155 32 32"
-          to="205 32 32"
-          dur="1.15s"
-          repeatCount="indefinite"
-        />
-      </circle>
+  cx="32"
+  cy="32"
+  r="26"
+  fill="none"
+  stroke="url(#geminiArc)"
+  strokeWidth="3.4"
+  strokeLinecap="round"
+  strokeDasharray="18 146"
+  transform="rotate(-150 32 32)"
+  opacity="1"
+>
+  <animateTransform
+    attributeName="transform"
+    type="rotate"
+    from="-150 32 32"
+    to="210 32 32"
+    dur="0.58s"
+    repeatCount="indefinite"
+  />
+  <animate
+    attributeName="stroke-dasharray"
+    values="18 146; 28 136; 12 152; 24 140; 18 146"
+    dur="0.9s"
+    repeatCount="indefinite"
+  />
+</circle>
     </svg>
   </div>
 </div>
