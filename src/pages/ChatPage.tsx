@@ -90,7 +90,6 @@ const shouldUseDeepSeek = (text: string) => {
 
   return mathTrig || mathNotation || codeSymbols || codeKeywords || logicWords || techWords;
 };
-const shouldAvoidWebSearch = (text: string) => {
   const t = (text || "").toLowerCase();
 
   const avoidWords =
@@ -112,9 +111,9 @@ const shouldUseWebSearch = (text: string) => {
   if (shouldAvoidWebSearch(t)) return false;
 
   const timeWords =
-    /\b(latest|today|current|now|right now|recent|recently|update|updated|new|newest|live|real time)\b/i.test(
-      t
-    );
+  /\b(latest|today|current|now|right now|recent|recently|update|updated|new|newest|live|real time|ekhon|bortomane|aj|ajke|shorbosesh)\b/i.test(
+    t
+  );
 
   const newsWords =
     /\b(news|announcement|release|launched|launch|rollout|breaking|headline)\b/i.test(
@@ -122,9 +121,9 @@ const shouldUseWebSearch = (text: string) => {
     );
 
   const moneyWords =
-    /\b(price|pricing|cost|rate|exchange rate|stock|share price|market cap|crypto|bitcoin|btc|eth|gold price|dollar rate)\b/i.test(
-      t
-    );
+  /\b(price|pricing|cost|rate|exchange rate|stock|share price|market cap|crypto|bitcoin|btc|eth|gold price|dollar rate|dollar|usd|tk|taka|koto tk|koto taka|rate koto)\b/i.test(
+    t
+  );
 
   const weatherWords =
     /\b(weather|temperature|forecast|rain|storm|humidity)\b/i.test(t);
