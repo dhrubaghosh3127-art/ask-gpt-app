@@ -158,11 +158,7 @@ const shouldUseWebSearch = (text: string) => {
   );
 };
 const pickAutoModelId = (text: string) =>
-  shouldUseWebSearch(text)
-    ? ADMIN_WEB_ID
-    : shouldUseDeepSeek(text)
-    ? ADMIN_THINK_ID
-    : ADMIN_DEFAULT_ID;
+  shouldUseDeepSeek(text) ? AUTO_THINK_ID : AUTO_FLASH_ID;
   const THINKING_LINES = [
   "Understanding the question...",
   "Checking the details...",
@@ -249,7 +245,11 @@ setIsLoading(true);
       
       const adminAutoModel =
   selectedModel === DEFAULT_MODEL_ID
-    ? (shouldUseDeepSeek(content) ? ADMIN_THINK_ID : ADMIN_DEFAULT_ID)
+    ? shouldUseWebSearch(content)
+      ? ADMIN_WEB_ID
+      : shouldUseDeepSeek(content)
+      ? ADMIN_THINK_ID
+      : ADMIN_DEFAULT_ID
     : selectedModel;
 
 const hasUserKey = !!userKey?.trim();
@@ -261,7 +261,9 @@ const autoModel =
     : adminAutoModel;
 
 const isThinkingModel =
-  autoModel === AUTO_THINK_ID || autoModel === ADMIN_THINK_ID;
+  autoModel === AUTO_THINK_ID ||
+  autoModel === ADMIN_THINK_ID ||
+  autoModel === ADMIN_WEB_ID;
 
 if (isThinkingModel) startThinking();
 else stopThinking();
@@ -325,11 +327,17 @@ const response = await getGeminiResponse({
 const regenModelId =
   hasUserKey && selectedModel === DEFAULT_MODEL_ID
     ? pickAutoModelId(lastUserPrompt)
-    : (selectedModel === DEFAULT_MODEL_ID
-        ? (lastUserPrompt.length > 600 ? VERY_HARD_MODEL_ID : lastUserPrompt.length > 350 ? HARD_MODEL_ID : DEFAULT_MODEL_ID)
-        : selectedModel);
+    : selectedModel === DEFAULT_MODEL_ID
+    ? shouldUseWebSearch(lastUserPrompt)
+      ? ADMIN_WEB_ID
+      : shouldUseDeepSeek(lastUserPrompt)
+      ? ADMIN_THINK_ID
+      : ADMIN_DEFAULT_ID
+    : selectedModel;
       const isThinkingModel =
-  regenModelId === AUTO_THINK_ID || regenModelId === ADMIN_THINK_ID;
+  regenModelId === AUTO_THINK_ID ||
+  regenModelId === ADMIN_THINK_ID ||
+  regenModelId === ADMIN_WEB_ID;
 
 if (isThinkingModel) startThinking();
 else stopThinking();
