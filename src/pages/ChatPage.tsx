@@ -432,124 +432,131 @@ const response = await getGeminiResponse({
             {isLoading && (
               <div className="py-8 bg-gray-50 dark:bg-gray-800/50">
                 <div className="max-w-3xl mx-auto px-4 flex gap-6">
-                  <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center">
-  <svg
-    viewBox="0 0 64 64"
-    className="w-7 h-7"
-    aria-hidden="true"
-  >
-    <defs>
-      <radialGradient id="orbBase" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.98" />
-        <stop offset="28%" stopColor="#d9f7ff" stopOpacity="0.95" />
-        <stop offset="62%" stopColor="#7dd3fc" stopOpacity="0.92" />
-        <stop offset="82%" stopColor="#a78bfa" stopOpacity="0.88" />
-        <stop offset="100%" stopColor="#f472b6" stopOpacity="0.82" />
-      </radialGradient>
+  <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center">
+  <div className="w-10 h-10 flex items-center justify-center">
+    <svg viewBox="0 0 64 64" className="w-10 h-10" aria-hidden="true">
+      <defs>
+        <clipPath id="mixOrbClip">
+          <circle cx="32" cy="32" r="20" />
+        </clipPath>
 
-      <radialGradient id="blobBlue" cx="35%" cy="35%" r="65%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-        <stop offset="35%" stopColor="#67e8f9" stopOpacity="0.9" />
-        <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
-      </radialGradient>
+        <filter id="mixSoftBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4.6" />
+        </filter>
 
-      <radialGradient id="blobPink" cx="60%" cy="40%" r="70%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7" />
-        <stop offset="35%" stopColor="#f0abfc" stopOpacity="0.9" />
-        <stop offset="100%" stopColor="#ec4899" stopOpacity="0" />
-      </radialGradient>
+        <radialGradient id="mixWhiteShell" cx="50%" cy="38%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="60%" stopColor="#ffffff" stopOpacity="0.98" />
+          <stop offset="84%" stopColor="#eef7ff" stopOpacity="0.96" />
+          <stop offset="100%" stopColor="#d8f0ff" stopOpacity="0.94" />
+        </radialGradient>
 
-      <radialGradient id="blobPurple" cx="45%" cy="60%" r="70%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
-        <stop offset="35%" stopColor="#c084fc" stopOpacity="0.9" />
-        <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-      </radialGradient>
+        <radialGradient id="mixBlue" cx="35%" cy="35%" r="72%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+          <stop offset="30%" stopColor="#8be9ff" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#46a7ff" stopOpacity="0" />
+        </radialGradient>
 
-      <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="2.2" />
-      </filter>
+        <radialGradient id="mixPink" cx="62%" cy="36%" r="75%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7" />
+          <stop offset="32%" stopColor="#ff9de6" stopOpacity="0.92" />
+          <stop offset="100%" stopColor="#ff4fc3" stopOpacity="0" />
+        </radialGradient>
 
-      <filter id="orbGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="1.6" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-    </defs>
+        <radialGradient id="mixPurple" cx="50%" cy="64%" r="78%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.42" />
+          <stop offset="34%" stopColor="#c59cff" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#7c4dff" stopOpacity="0" />
+        </radialGradient>
 
-    <circle cx="32" cy="32" r="22" fill="url(#orbBase)" filter="url(#orbGlow)" />
+        <linearGradient id="geminiArc" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#22c55e" />
+          <stop offset="45%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
+      </defs>
 
-    <g filter="url(#softGlow)">
-      <circle cx="24" cy="26" r="13" fill="url(#blobBlue)">
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from="0 32 32"
-          to="360 32 32"
-          dur="5s"
-          repeatCount="indefinite"
-        />
-      </circle>
+      <circle cx="32" cy="32" r="20" fill="url(#mixWhiteShell)" />
 
-      <circle cx="40" cy="24" r="14" fill="url(#blobPink)">
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from="360 32 32"
-          to="0 32 32"
-          dur="6.5s"
-          repeatCount="indefinite"
-        />
-      </circle>
+      <g clipPath="url(#mixOrbClip)">
+        <circle cx="24" cy="25" r="15" fill="url(#mixBlue)" filter="url(#mixSoftBlur)">
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from="0 32 32"
+            to="360 32 32"
+            dur="4.8s"
+            repeatCount="indefinite"
+          />
+        </circle>
 
-      <circle cx="34" cy="41" r="15" fill="url(#blobPurple)">
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from="0 32 32"
-          to="360 32 32"
-          dur="8s"
-          repeatCount="indefinite"
-        />
-      </circle>
-    </g>
+        <circle cx="41" cy="25" r="14" fill="url(#mixPink)" filter="url(#mixSoftBlur)">
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from="360 32 32"
+            to="0 32 32"
+            dur="6.1s"
+            repeatCount="indefinite"
+          />
+        </circle>
 
-    <circle cx="32" cy="32" r="9" fill="#ffffff" opacity="0.28" />
+        <circle cx="34" cy="41" r="16" fill="url(#mixPurple)" filter="url(#mixSoftBlur)">
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from="0 32 32"
+            to="360 32 32"
+            dur="7.2s"
+            repeatCount="indefinite"
+          />
+        </circle>
 
-    <circle
-      cx="32"
-      cy="32"
-      r="28"
-      fill="none"
-      stroke="rgba(255,255,255,0.18)"
-      strokeWidth="1.5"
-    />
+        <circle cx="32" cy="32" r="10" fill="#ffffff" opacity="0.34" />
+      </g>
 
-    <circle
-      cx="32"
-      cy="32"
-      r="28"
-      fill="none"
-      stroke="#ffffff"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeDasharray="22 154"
-      transform="rotate(-90 32 32)"
-      opacity="0.95"
-    >
-      <animateTransform
-        attributeName="transform"
-        type="rotate"
-        from="-90 32 32"
-        to="270 32 32"
-        dur="1.6s"
-        repeatCount="indefinite"
+      <circle
+        cx="32"
+        cy="32"
+        r="20"
+        fill="none"
+        stroke="rgba(255,255,255,0.78)"
+        strokeWidth="1.2"
       />
-    </circle>
-  </svg>
+
+      <circle
+        cx="32"
+        cy="32"
+        r="26"
+        fill="none"
+        stroke="rgba(255,255,255,0.14)"
+        strokeWidth="2"
+      />
+
+      <circle
+        cx="32"
+        cy="32"
+        r="26"
+        fill="none"
+        stroke="url(#geminiArc)"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        strokeDasharray="26 138"
+        transform="rotate(-155 32 32)"
+        opacity="1"
+      >
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from="-155 32 32"
+          to="205 32 32"
+          dur="1.15s"
+          repeatCount="indefinite"
+        />
+      </circle>
+    </svg>
+  </div>
 </div>
-      
                   <div className="flex-1">
                    {isThinking && (
   <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
