@@ -433,34 +433,51 @@ const response = await getGeminiResponse({
               <div className="py-8 bg-gray-50 dark:bg-gray-800/50">
                 <div className="max-w-3xl mx-auto px-4 flex gap-6">
                   <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center">
-  <div className="relative w-6 h-6 rounded-full overflow-hidden bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.35)]">
+  <div className="relative w-6 h-6 flex items-center justify-center">
     <div
-      className="absolute inset-[-22%] rounded-full blur-[6px] animate-spin"
+      className="absolute inset-0 rounded-full animate-spin"
       style={{
-        animationDuration: "4s",
+        animationDuration: "2.4s",
         background:
-          "conic-gradient(from 0deg, #7dd3fc, #60a5fa, #a78bfa, #f472b6, #7dd3fc)",
+          "conic-gradient(from 0deg, rgba(255,255,255,0) 0deg, rgba(255,255,255,0) 220deg, rgba(255,255,255,0.98) 265deg, rgba(255,255,255,0.35) 300deg, rgba(255,255,255,0) 340deg, rgba(255,255,255,0) 360deg)",
+        WebkitMask:
+          "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
+        mask:
+          "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
+        filter: "drop-shadow(0 0 4px rgba(255,255,255,0.45))",
       }}
     />
-    <div
-      className="absolute inset-[8%] rounded-full blur-[5px]"
-      style={{
-        background:
-          "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(125,211,252,0.85) 22%, rgba(167,139,250,0.85) 50%, rgba(244,114,182,0.75) 75%, rgba(255,255,255,0) 100%)",
-        animation: "spin 6s linear infinite reverse",
-      }}
-    />
-    <div
-      className="absolute inset-[18%] rounded-full blur-[3px]"
-      style={{
-        background:
-          "radial-gradient(circle at 65% 35%, rgba(255,255,255,0.95) 0%, rgba(103,232,249,0.75) 28%, rgba(168,85,247,0.65) 60%, rgba(255,255,255,0) 100%)",
-        animation: "spin 8s linear infinite",
-      }}
-    />
-    <div className="absolute inset-[30%] rounded-full bg-white/55 blur-[1px]" />
+
+    <div className="relative w-5 h-5 rounded-full overflow-hidden bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.35)]">
+      <div
+        className="absolute inset-[-22%] rounded-full blur-[6px] animate-spin"
+        style={{
+          animationDuration: "4s",
+          background:
+            "conic-gradient(from 0deg, #7dd3fc, #60a5fa, #a78bfa, #f472b6, #7dd3fc)",
+        }}
+      />
+      <div
+        className="absolute inset-[8%] rounded-full blur-[5px]"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(125,211,252,0.85) 22%, rgba(167,139,250,0.85) 50%, rgba(244,114,182,0.75) 75%, rgba(255,255,255,0) 100%)",
+          animation: "spin 6s linear infinite reverse",
+        }}
+      />
+      <div
+        className="absolute inset-[18%] rounded-full blur-[3px]"
+        style={{
+          background:
+            "radial-gradient(circle at 65% 35%, rgba(255,255,255,0.95) 0%, rgba(103,232,249,0.75) 28%, rgba(168,85,247,0.65) 60%, rgba(255,255,255,0) 100%)",
+          animation: "spin 8s linear infinite",
+        }}
+      />
+      <div className="absolute inset-[30%] rounded-full bg-white/55 blur-[1px]" />
+    </div>
   </div>
 </div>
+      
                   <div className="flex-1">
                    {isThinking && (
   <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
