@@ -90,6 +90,7 @@ const shouldUseDeepSeek = (text: string) => {
 
   return mathTrig || mathNotation || codeSymbols || codeKeywords || logicWords || techWords;
 };
+  const shouldAvoidWebSearch = (text: string) => {
   const t = (text || "").toLowerCase();
 
   const avoidWords =
