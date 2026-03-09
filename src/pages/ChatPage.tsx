@@ -271,8 +271,15 @@ const isThinkingModel =
   autoModel === ADMIN_THINK_ID ||
   autoModel === ADMIN_WEB_ID;
 
-if (isThinkingModel) startThinking();
-else stopThinking();
+if (isThinkingModel) {
+  if (autoModel === ADMIN_WEB_ID) {
+    startThinking("Searching web", WEB_SEARCH_LINES);
+  } else {
+    startThinking("Thinking", THINKING_LINES);
+  }
+} else {
+  stopThinking();
+}
 
 const response = await getGeminiResponse({
   prompt: content,
@@ -345,8 +352,15 @@ const regenModelId =
   regenModelId === ADMIN_THINK_ID ||
   regenModelId === ADMIN_WEB_ID;
 
-if (isThinkingModel) startThinking();
-else stopThinking();
+if (isThinkingModel) {
+  if (regenModelId === ADMIN_WEB_ID) {
+    startThinking("Searching web", WEB_SEARCH_LINES);
+  } else {
+    startThinking("Thinking", THINKING_LINES);
+  }
+} else {
+  stopThinking();
+}
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
 const systemPrompt = tool ? tool.prompt : "";
 
@@ -429,7 +443,7 @@ const response = await getGeminiResponse({
       onClick={() => setThinkingOpen(v => !v)}
       className="flex items-center gap-2"
     >
-      <span>Thinking</span>
+      <span>{thinkingLabel}</span>
       <span>{thinkingOpen ? "›" : "▾"}</span>
     </button>
 
