@@ -23,7 +23,7 @@ const [isLoading, setIsLoading] = useState(false);
 const [isThinking, setIsThinking] = useState(false);
 const [thinkingText, setThinkingText] = useState("");
 const [thinkingOpen, setThinkingOpen] = useState(true);
-
+const [thinkingLabel, setThinkingLabel] = useState("Thinking");
 const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
 const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -175,19 +175,20 @@ const WEB_SEARCH_LINES = [
 const thinkingTimerRef = useRef<number | null>(null);
 const thinkingIndexRef = useRef(0);
 
-const startThinking = () => {
+const startThinking = (label = "Thinking", lines = THINKING_LINES) => {
   setIsThinking(true);
   setThinkingOpen(true);
+  setThinkingLabel(label);
 
   thinkingIndexRef.current = 0;
-  setThinkingText(THINKING_LINES[0]);
+  setThinkingText(lines[0]);
 
   if (thinkingTimerRef.current) window.clearInterval(thinkingTimerRef.current);
 
   thinkingTimerRef.current = window.setInterval(() => {
     thinkingIndexRef.current =
-      (thinkingIndexRef.current + 1) % THINKING_LINES.length;
-    setThinkingText(THINKING_LINES[thinkingIndexRef.current]);
+      (thinkingIndexRef.current + 1) % lines.length;
+    setThinkingText(lines[thinkingIndexRef.current]);
   }, 1200);
 };
 
