@@ -166,7 +166,12 @@ const pickAutoModelId = (text: string) =>
   "Verifying the result...",
   "Preparing the best answer...",
 ];
-
+const WEB_SEARCH_LINES = [
+  "Searching the web...",
+  "Checking trusted sources...",
+  "Verifying latest information...",
+  "Preparing the answer...",
+];
 const thinkingTimerRef = useRef<number | null>(null);
 const thinkingIndexRef = useRef(0);
 
