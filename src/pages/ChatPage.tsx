@@ -299,7 +299,24 @@ setIsLoading(true);
     : selectedModel;
 
 const hasUserKey = !!userKey?.trim();
+const isImageRequest = !hasUserKey && shouldCreateImage(content);
 
+if (isImageRequest) {
+  stopThinking();
+
+  const imageModelId = pickImageModelId(content);
+  const imageResult = await generateImage(content, imageModelId);
+
+  const botMessage: Message = {
+    id: (Date.now() + 1).toString(),
+    role: Role.MODEL,
+    content: `![Generated image](${imageResult.imageUrl})\n\nImage model: ${imageResult.modelId}`,
+    timestamp: Date.now(),
+  };
+
+  updateConversation([...updatedMessages, botMessage]);
+  return;
+         }
 //  userKey থাকলেই Gemini/DeepSeek auto switch (only on DEFAULT auto mode)
 const autoModel =
   hasUserKey && selectedModel === DEFAULT_MODEL_ID
