@@ -49,15 +49,69 @@ if (mode === "image") {
 
   const geminiApiKey = process.env.GEMINI_API_KEY || "";
 
-  if (!geminiApiKey) {
-    return res.status(400).json({
-      error: "Missing API key (GEMINI_API_KEY)",
-    });
-  }
-
-  return res.status(501).json({
-    error: "Image mode is not connected yet",
+if (!geminiApiKey) {
+  return res.status(400).json({
+    error: "Missing API key (GEMINI_API_KEY)",
   });
+}
+
+const actualImageModel =
+  modelId === "imagen-4-fast-generate"
+    ? "imagen-4.0-fast-generate-001"
+    : modelId === "imagen-4-ultra-generate"
+    ? "imagen-4.0-ultra-generate-001"
+    : "imagen-4.0-generate-001";
+
+const imageRes = await fetch(
+  `https://generativelanguage.googleapis.com/v1beta/models/${actualImageModel}:predict`,
+  {
+    method: "POST",
+    headers: {
+      "x-goog-api-key": geminiApiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      instances: [
+        {
+          prompt: imagePrompt,
+        },
+      ],
+      parameters: {
+        sampleCount: 1,
+      },
+    }),
+  }
+);
+
+const imageData = await imageRes.json().catch(() => null);
+
+if (!imageRes.ok) {
+  return res.status(imageRes.status).json({
+    error:
+      imageData?.error?.message ||
+      imageData?.error ||
+      "Image generation failed",
+    data: imageData,
+  });
+}
+
+const imageBytes =
+  imageData?.predictions?.[0]?.bytesBase64Encoded ||
+  imageData?.predictions?.[0]?.image?.bytesBase64Encoded ||
+  imageData?.generatedImages?.[0]?.image?.imageBytes ||
+  "";
+
+if (!imageBytes) {
+  return res.status(502).json({
+    error: "No image bytes returned from Gemini",
+    data: imageData,
+  });
+}
+
+return res.status(200).json({
+  imageUrl: `data:image/png;base64,${imageBytes}`,
+  modelId: actualImageModel,
+});
     }
     // userKey থাকলে OpenRouter, না থাকলে Groq(admin)
     const apiUrl = hasUserKey ? OPENROUTER_URL : GROQ_URL;
