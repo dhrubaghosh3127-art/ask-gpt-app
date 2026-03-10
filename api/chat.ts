@@ -19,12 +19,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body =
       typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
 
-    const { modelId, messages, userKey, userApiKey } = body as {
-      modelId?: string;
-      messages?: any[];
-      userKey?: string;
-      userApiKey?: string;
-    };
+    const { modelId, messages, userKey, userApiKey, prompt, mode } = body as {
+  modelId?: string;
+  messages?: any[];
+  userKey?: string;
+  userApiKey?: string;
+  prompt?: string;
+  mode?: "chat" | "image";
+};
 
     if (!Array.isArray(messages)) {
       return res.status(400).json({ error: "messages are required" });
@@ -32,7 +34,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const keyFromClient = (userKey ?? userApiKey ?? "").trim();
     const hasUserKey = keyFromClient.length > 0;
+if (mode === "image") {
+  const imagePrompt = (prompt || "").trim();
 
+  if (hasUserKey) {
+    return res.status(403).json({
+      error: "Image generation is available only in admin mode",
+    });
+  }
+
+  if (!imagePrompt) {
+    return res.status(400).json({ error: "prompt is required" });
+  }
+
+  const geminiApiKey = process.env.GEMINI_API_KEY || "";
+
+  if (!geminiApiKey) {
+    return res.status(400).json({
+      error: "Missing API key (GEMINI_API_KEY)",
+    });
+  }
+
+  return res.status(501).json({
+    error: "Image mode is not connected yet",
+  });
+    }
     // userKey থাকলে OpenRouter, না থাকলে Groq(admin)
     const apiUrl = hasUserKey ? OPENROUTER_URL : GROQ_URL;
     const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
