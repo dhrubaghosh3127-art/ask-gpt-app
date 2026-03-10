@@ -17,7 +17,9 @@ export const MODELS = [
 ];
 
 export const DEFAULT_MODEL_ID = "llama-3.3-70b-versatile";
-export const IMAGE_MODEL_ID = "meta-llama/llama-4-maverick-17b-128e-instruct";
+export const IMAGE_FAST_MODEL_ID = "imagen-4-fast-generate";
+export const IMAGE_MODEL_ID = "imagen-4-generate";
+export const IMAGE_ULTRA_MODEL_ID = "imagen-4-ultra-generate";
 
 export const HARD_MODEL_ID = "openai/gpt-oss-120b";
 export const VERY_HARD_MODEL_ID = "openai/gpt-oss-120b";
