@@ -28,8 +28,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   mode?: "chat" | "image";
 };
 
-    if (!Array.isArray(messages)) {
-      return res.status(400).json({ error: "messages are required" });
+    if (mode !== "image" && !Array.isArray(messages)) {
+  return res.status(400).json({ error: "messages are required" });
     }
 
     const keyFromClient = (userKey ?? userApiKey ?? "").trim();
