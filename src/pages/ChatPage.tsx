@@ -6,7 +6,16 @@ import ChatMessage from '../components/ChatMessage';
 import { Conversation, Message, Role } from '../types';
 import { getConversations, saveConversations, getUserApiKey, getFreeCount, incFreeCount } from '../utils/storage';
 import { getGeminiResponse } from '../services/geminiService';
-import { TOOL_CATEGORIES, MODELS, DEFAULT_MODEL_ID, HARD_MODEL_ID, VERY_HARD_MODEL_ID } from '../constants';
+import {
+  TOOL_CATEGORIES,
+  MODELS,
+  DEFAULT_MODEL_ID,
+  HARD_MODEL_ID,
+  VERY_HARD_MODEL_ID,
+  IMAGE_FAST_MODEL_ID,
+  IMAGE_MODEL_ID,
+  IMAGE_ULTRA_MODEL_ID,
+} from '../constants';
 
 interface ChatPageProps {
   toggleSidebar: () => void;
@@ -159,6 +168,36 @@ const shouldUseWebSearch = (text: string) => {
 };
 const pickAutoModelId = (text: string) =>
   shouldUseDeepSeek(text) ? AUTO_THINK_ID : AUTO_FLASH_ID;
+  const shouldCreateImage = (text: string) => {
+  const t = (text || "").toLowerCase().trim();
+
+  const imageWords =
+    /\b(draw|generate image|create image|make image|make a photo|create a photo|generate a photo|image of|picture of|photo of|poster|wallpaper|thumbnail|logo|icon|banner|avatar|portrait|illustration|sticker|artwork|concept art|character design)\b/i.test(t);
+
+  const banglaImageWords =
+    /(ছবি বানাও|ছবি তৈরি|একটা ছবি|ফটো বানাও|ফটো তৈরি|পিকচার বানাও|পোস্টার বানাও|লোগো বানাও|থাম্বনেইল বানাও|ওয়ালপেপার বানাও|ইলাস্ট্রেশন বানাও|পোর্ট্রেট বানাও|ড্র করো|এঁকে দাও)/i.test(t);
+
+  const avoidWords =
+    /\b(analyze image|analyse image|describe image|edit image|remove background|extract text|ocr|caption this image)\b/i.test(t);
+
+  return !avoidWords && (imageWords || banglaImageWords);
+};
+
+const pickImageModelId = (text: string) => {
+  const t = (text || "").toLowerCase().trim();
+
+  const simpleWords =
+    /\b(icon|logo|sticker|emoji|simple|minimal|minimalist|flat|cartoon|outline)\b/i.test(t);
+
+  const ultraWords =
+    /\b(ultra realistic|photorealistic|realistic|cinematic|4k|8k|highly detailed|detailed face|studio lighting|dramatic lighting|professional photography|product shot|luxury ad|poster with text|typography|text on image)\b/i.test(t);
+
+  const longPrompt = t.length > 220;
+
+  if (ultraWords || longPrompt) return IMAGE_ULTRA_MODEL_ID;
+  if (simpleWords && t.length < 90) return IMAGE_FAST_MODEL_ID;
+  return IMAGE_MODEL_ID;
+};
   const THINKING_LINES = [
   "Understanding the question...",
   "Checking the details...",
