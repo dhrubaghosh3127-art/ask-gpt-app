@@ -443,21 +443,32 @@ if (isThinkingModel) {
   stopThinking();
 }
 
-const response = await getGeminiResponse({
+const placeholderId = (Date.now() + 1).toString();
+
+const botMessage: Message = {
+  id: placeholderId,
+  role: Role.MODEL,
+  content: "",
+  timestamp: Date.now(),
+};
+
+updateConversation([...updatedMessages, botMessage]);
+
+const finalText = await streamTextResponse({
   prompt: content,
   history: apiHistory,
   modelId: autoModel,
   systemInstruction: systemPrompt,
+  placeholderId,
 });
-      
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: Role.MODEL,
-        content: response,
-        timestamp: Date.now()
-      };
 
-      updateConversation([...updatedMessages, botMessage]);
+updateConversation([
+  ...updatedMessages,
+  {
+    ...botMessage,
+    content: finalText,
+  },
+]);
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
