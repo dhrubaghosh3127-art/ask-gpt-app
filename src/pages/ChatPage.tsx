@@ -5,7 +5,7 @@ import ChatInput from '../components/ChatInput';
 import ChatMessage from '../components/ChatMessage';
 import { Conversation, Message, Role } from '../types';
 import { getConversations, saveConversations, getUserApiKey, getFreeCount, incFreeCount } from '../utils/storage';
-import { getGeminiResponse, getStreamingResponse } from '../services/geminiService';
+import { getGeminiResponse } from '../services/geminiService';
 import { generateImage } from '../services/imageService';
 import {
   TOOL_CATEGORIES,
@@ -36,10 +36,7 @@ const [thinkingOpen, setThinkingOpen] = useState(true);
 const [thinkingLabel, setThinkingLabel] = useState("Thinking");
 const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
 const messagesEndRef = useRef<HTMLDivElement>(null);
-const activeStreamMessageIdRef = useRef<string | null>(null);
-const streamBufferRef = useRef("");
-const streamRenderedRef = useRef("");
-const streamFlushTimerRef = useRef<number | null>(null);
+
   useEffect(() => {
     const conversations = getConversations();
     if (id) {
@@ -57,14 +54,7 @@ const streamFlushTimerRef = useRef<number | null>(null);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages]);
-useEffect(() => {
-  return () => {
-    if (streamFlushTimerRef.current) {
-      window.clearTimeout(streamFlushTimerRef.current);
-      streamFlushTimerRef.current = null;
-    }
-  };
-}, []);
+
   const updateConversation = (newMessages: Message[]) => {
     if (!conversation && !id) return;
     
@@ -85,108 +75,6 @@ useEffect(() => {
     setConversation(updatedConv);
     if (!id) navigate(`/chat/${currentId}`);
   };
-  const flushStreamToUI = () => {
-  const messageId = activeStreamMessageIdRef.current;
-  if (!messageId || !streamBufferRef.current) return;
-
-  streamRenderedRef.current += streamBufferRef.current;
-  streamBufferRef.current = "";
-
-  setConversation((prev) =>
-    prev
-      ? {
-          ...prev,
-          messages: prev.messages.map((msg) =>
-            msg.id === messageId
-              ? { ...msg, content: streamRenderedRef.current }
-              : msg
-          ),
-        }
-      : prev
-  );
-};
-
-const queueStreamFlush = () => {
-  if (streamFlushTimerRef.current) return;
-
-  streamFlushTimerRef.current = window.setTimeout(() => {
-    streamFlushTimerRef.current = null;
-    flushStreamToUI();
-  }, 32);
-};
-  const streamTextResponse = async ({
-  prompt,
-  history,
-  modelId,
-  systemInstruction,
-  placeholderId,
-}: {
-  prompt: string;
-  history?: Message[];
-  modelId: string;
-  systemInstruction?: string;
-  placeholderId: string;
-}) => {
-  activeStreamMessageIdRef.current = placeholderId;
-  streamBufferRef.current = "";
-  streamRenderedRef.current = "";
-
-  const res = await getStreamingResponse({
-    prompt,
-    history,
-    modelId,
-    systemInstruction,
-  });
-
-  const reader = res.body!.getReader();
-  const decoder = new TextDecoder();
-  let pending = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    pending += decoder.decode(value, { stream: true });
-    const lines = pending.split("\n");
-    pending = lines.pop() || "";
-
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-      if (!line.startsWith("data:")) continue;
-
-      const data = line.slice(5).trim();
-      if (!data || data === "[DONE]") continue;
-
-      try {
-        const json = JSON.parse(data);
-        const delta =
-          json?.choices?.[0]?.delta?.content ??
-          json?.choices?.[0]?.message?.content ??
-          "";
-
-        if (delta) {
-          streamBufferRef.current += delta;
-          queueStreamFlush();
-        }
-      } catch {}
-    }
-  }
-
-  if (streamFlushTimerRef.current) {
-    window.clearTimeout(streamFlushTimerRef.current);
-    streamFlushTimerRef.current = null;
-  }
-
-  flushStreamToUI();
-
-  const finalText = streamRenderedRef.current;
-
-  activeStreamMessageIdRef.current = null;
-  streamBufferRef.current = "";
-  streamRenderedRef.current = "";
-
-  return finalText;
-};
 const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
   const AUTO_FLASH_ID = "google/gemini-2.5-flash";
 const AUTO_THINK_ID = "deepseek/deepseek-r1";
@@ -450,32 +338,21 @@ if (isThinkingModel) {
   stopThinking();
 }
 
-const placeholderId = (Date.now() + 1).toString();
-
-const botMessage: Message = {
-  id: placeholderId,
-  role: Role.MODEL,
-  content: "",
-  timestamp: Date.now(),
-};
-
-updateConversation([...updatedMessages, botMessage]);
-
-const finalText = await streamTextResponse({
+const response = await getGeminiResponse({
   prompt: content,
   history: apiHistory,
   modelId: autoModel,
   systemInstruction: systemPrompt,
-  placeholderId,
 });
+      
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: Role.MODEL,
+        content: response,
+        timestamp: Date.now()
+      };
 
-updateConversation([
-  ...updatedMessages,
-  {
-    ...botMessage,
-    content: finalText,
-  },
-]);
+      updateConversation([...updatedMessages, botMessage]);
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -544,32 +421,19 @@ if (isThinkingModel) {
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
 const systemPrompt = tool ? tool.prompt : "";
 
-const placeholderId = Date.now().toString();
-
-const botMessage: Message = {
-  id: placeholderId,
-  role: Role.MODEL,
-  content: "",
-  timestamp: Date.now(),
-};
-
-updateConversation([...previousMessages, botMessage]);
-
-const finalText = await streamTextResponse({
+const response = await getGeminiResponse({
   prompt: lastUserPrompt,
   history: previousMessages.slice(-12),
   modelId: regenModelId,
   systemInstruction: systemPrompt,
-  placeholderId,
 });
-
-updateConversation([
-  ...previousMessages,
-  {
-    ...botMessage,
-    content: finalText,
-  },
-]);
+      const botMessage: Message = {
+        id: Date.now().toString(),
+        role: Role.MODEL,
+        content: response,
+        timestamp: Date.now()
+      };
+      updateConversation([...previousMessages, botMessage]);
     } catch (error) {
       console.error(error);
     } finally {
@@ -685,8 +549,7 @@ updateConversation([
             repeatCount="indefinite"
           />
         </circle>
-
-        <circle cx="41" cy="25" r="14" fill="url(#mixPink)" filter="url(#mixSoftBlur)">
+  <circle cx="41" cy="25" r="14" fill="url(#mixPink)" filter="url(#mixSoftBlur)">
           <animateTransform
             attributeName="transform"
             type="rotate"
@@ -811,4 +674,4 @@ updateConversation([
   );
 };
 
-export default ChatPage;
+export default ChatPage;      
