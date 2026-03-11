@@ -1,5 +1,5 @@
 import React from 'react';
-import { MODELS } from '../constants';
+// import { MODELS } from '../constants';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -20,15 +20,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
           </svg>
         </button>
         
-        <select 
-          value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          className="bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded-lg border border-gray-300 dark:border-gray-700 p-2 focus:ring-blue-500 outline-none"
-        >
-          {MODELS.map(m => (
-            <option key={m.id} value={m.id}>{m.name}</option>
-          ))}
-        </select>
+        <button
+  type="button"
+  className="h-14 min-w-[220px] px-6 rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 shadow-[0_8px_24px_rgba(15,23,42,0.08)] flex items-center justify-center gap-2 text-[18px] font-semibold text-gray-900 dark:text-white"
+>
+  <span>Profile</span>
+  <span className="text-gray-500 text-base">▾</span>
+</button>
       </div>
       
       <div className="flex items-center gap-3">
