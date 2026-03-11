@@ -22,10 +22,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
         
         <button
   type="button"
-  className="h-14 min-w-[220px] px-6 rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 shadow-[0_8px_24px_rgba(15,23,42,0.08)] flex items-center justify-center gap-2 text-[18px] font-semibold text-gray-900 dark:text-white"
+  className="relative h-14 min-w-[228px] px-6 rounded-[22px] border border-white/60 dark:border-white/10 bg-gradient-to-br from-[#f8fbff] via-[#eef4ff] to-[#f3ecff] dark:from-[#111827] dark:via-[#172033] dark:to-[#221933] shadow-[0_10px_30px_rgba(99,102,241,0.16)] flex items-center justify-center gap-2 overflow-hidden backdrop-blur-xl"
 >
-  <span>Profile</span>
-  <span className="text-gray-500 text-base">▾</span>
+  <span className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.95),transparent_38%),radial-gradient(circle_at_80%_30%,rgba(168,85,247,0.14),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.12),transparent_38%)]" />
+  <span className="relative text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-white">
+    Profile
+  </span>
+  <span className="relative text-gray-500 dark:text-gray-300 text-sm">▾</span>
 </button>
       </div>
       
