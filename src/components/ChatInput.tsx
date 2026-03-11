@@ -15,9 +15,10 @@ const cameraRef = useRef<HTMLInputElement>(null);
 
 const openUpload = () => { setAttachOpen(false); uploadRef.current?.click(); };
 const openCamera = () => { setAttachOpen(false); cameraRef.current?.click(); };
-const formClassName = 'relative mx-auto w-full max-w-[760px] rounded-[34px] border border-[#e8ebf0] bg-white px-5 pt-5 pb-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)]'
+const formClassName = 'relative mx-auto w-full max-w-[760px] rounded-[30px] border border-[#e8ebf0] bg-white px-5 pt-4 pb-3 shadow-[0_10px_26px_rgba(15,23,42,0.07)]'
   const [mode, setMode] = useState<'Auto' | 'Fast' | 'Thinking'>('Auto');
   const [modeOpen, setModeOpen] = useState(false);
+  const [webActive, setWebActive] = useState(false);
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
