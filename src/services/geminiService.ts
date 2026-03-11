@@ -22,8 +22,8 @@ export const getGeminiResponse = async ({
       content: (systemInstruction?.trim() || DEFAULT_SYSTEM_PROMPT).slice(0, 1500),
     },
     ...history.slice(-12).map((m) => ({
-      role: m.role === Role.USER ? "user" : "assistant",
-      content: (m.content || "").slice(0, 1200),
+      role: m.role === "model" ? "assistant" : m.role,
+content: m.content,
     })),
     { role: "user", content: prompt.slice(0, 1200) },
   ];
