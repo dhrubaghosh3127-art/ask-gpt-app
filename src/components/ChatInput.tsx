@@ -46,111 +46,156 @@ const textareaClassName = "flex-1 bg-transparent border-none focus:ring-0 text-[
         onSubmit={handleSubmit}
         className={formClassName}
       >
-        <div className="relative flex items-center gap-3">
-  <button
-  type="button"
-  onClick={() => setAttachOpen(v => !v)}
-  aria-label="Attach"
-  className="mr-2 h-12 w-12 shrink-0 rounded-full bg-white/80 dark:bg-gray-800/70 shadow-md border border-gray-200/70 dark:border-gray-700/60 text-gray-700 dark:text-gray-200 flex items-center justify-center active:scale-95"
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-5 w-5"
-  >
-    <path d="M21.44 11.05l-8.49 8.49a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.19 9.19a2 2 0 01-2.83-2.83l8.49-8.49" />
-  </svg>
-</button>
+       <div className="relative">
+  <div className="flex items-start gap-3">
+    <textarea
+      ref={textareaRef}
+      rows={1}
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
+      onKeyDown={handleKeyDown}
+      placeholder="Ask anything..."
+      className={textareaClassName}
+    />
 
-  <button
-  type="button"
-  onClick={() => setModeOpen(v => !v)}
-  className="h-12 px-4 rounded-full bg-white/80 dark:bg-gray-800/70 shadow-md border border-gray-200/70 dark:border-gray-700/60 flex items-center gap-2"
->
-  <span>🚀</span>
-  <span className="font-semibold">{mode}</span>
-  <span className="opacity-60">▾</span>
-</button>    
-<button
-  type="button"
-  aria-label="Voice"
-  className="w-12 h-12 shrink-0 flex items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/70 shadow-md border border-gray-200/70 dark:border-gray-700/60"
-  onClick={() => {}}
->
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M12 14a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M19 11a7 7 0 01-14 0" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M12 19v2m-4 0h8" />
-  </svg>
-</button>
-{modeOpen && (
-  <div className="absolute bottom-14 left-14 w-44 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/70 dark:border-gray-700/60 shadow-xl">
+    <div className="mt-1 flex shrink-0 items-center gap-3">
+      <button
+        type="button"
+        aria-label="Voice"
+        className="h-12 w-12 rounded-full bg-white shadow-[0_6px_18px_rgba(15,23,42,0.08)] border border-[#eceff3] flex items-center justify-center text-black"
+        onClick={() => {}}
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19v2m-4 0h8" />
+        </svg>
+      </button>
+
+      <button
+        type="submit"
+        disabled={isLoading || !input.trim()}
+        className={`h-14 w-14 rounded-[20px] flex items-center justify-center shadow-[0_12px_30px_rgba(37,99,235,0.26)] transition-all active:scale-95 ${
+          input.trim() && !isLoading
+            ? 'bg-[#1677ff] text-white'
+            : 'bg-gray-200 text-gray-400'
+        }`}
+      >
+        {isLoading ? (
+          <div className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+        ) : (
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 12h14" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 4l8 8-8 8" />
+          </svg>
+        )}
+      </button>
+    </div>
+  </div>
+
+  <div className="mt-4 flex flex-wrap items-center gap-2">
     <button
       type="button"
-      onClick={() => { setMode('Auto'); setModeOpen(false); }}
-      className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60"
+      onClick={() => setAttachOpen(v => !v)}
+      aria-label="Attach"
+      className="inline-flex h-11 items-center gap-2 rounded-full border border-[#e8ebf0] bg-white px-4 text-[15px] font-medium text-[#111827] shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
     >
-      🚀 Auto
+      <svg className="h-5 w-5 text-[#6b7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21.44 11.05l-8.49 8.49a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.19 9.19a2 2 0 01-2.83-2.83l8.49-8.49" />
+      </svg>
+      <span>Upload</span>
     </button>
+
     <button
       type="button"
-      onClick={() => { setMode('Fast'); setModeOpen(false); }}
-      className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60"
+      className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dbe7ff] bg-[#edf4ff] px-4 text-[15px] font-medium text-[#2563eb] shadow-[0_4px_12px_rgba(37,99,235,0.08)]"
     >
-      ⚡ Fast
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-3.51-7.11" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.6 9h16.8M3.6 15h16.8M12 3a15.3 15.3 0 010 18M12 3a15.3 15.3 0 000 18" />
+      </svg>
+      <span>Web</span>
     </button>
+
     <button
       type="button"
-      onClick={() => { setMode('Thinking'); setModeOpen(false); }}
-      className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60"
+      onClick={() => setModeOpen(v => !v)}
+      className="inline-flex h-11 items-center gap-2 rounded-full border border-[#e8ebf0] bg-white px-4 text-[15px] font-medium text-[#111827] shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
     >
-      🧠 Thinking
+      <span>{mode}</span>
+      <span className="text-[10px] text-[#6b7280]">▾</span>
+    </button>
+
+    <button
+      type="button"
+      className="inline-flex h-11 items-center gap-2 rounded-full border border-[#e8ebf0] bg-white px-4 text-[15px] font-medium text-[#111827] shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
+    >
+      <span>Model</span>
+      <span className="text-[10px] text-[#6b7280]">▾</span>
     </button>
   </div>
-)}
 
-{attachOpen && (
-    <div className="absolute bottom-14 left-0 w-52 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/80 dark:border-gray-700/70 shadow-xl backdrop-blur-xl">
-      <button type="button" onClick={openUpload} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60">📁 Upload photo</button>
-      <button type="button" onClick={openCamera} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100/70 dark:hover:bg-gray-800/60">📷 Camera</button>
+  {modeOpen && (
+    <div className="absolute left-0 bottom-[58px] z-20 w-44 overflow-hidden rounded-2xl border border-[#e7ebf0] bg-white shadow-[0_10px_28px_rgba(15,23,42,0.12)]">
+      <button
+        type="button"
+        onClick={() => { setMode('Auto'); setModeOpen(false); }}
+        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
+      >
+        Auto
+      </button>
+      <button
+        type="button"
+        onClick={() => { setMode('Fast'); setModeOpen(false); }}
+        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
+      >
+        Fast
+      </button>
+      <button
+        type="button"
+        onClick={() => { setMode('Thinking'); setModeOpen(false); }}
+        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
+      >
+        Thinking
+      </button>
     </div>
   )}
-</div>
-        <textarea
-          ref={textareaRef}
-          rows={1}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask anything..."
-          className={textareaClassName}
-        />
-        <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0]||null)} />
-        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e)=>setAttachedImage(e.target.files?.[0] ?? null)} />
-        <button 
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          className={`
-            w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-all active:scale-95
-            ${input.trim() && !isLoading ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-400'}
-          `}
-        >
-          {isLoading ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </button>
+
+  {attachOpen && (
+    <div className="absolute left-0 bottom-[58px] z-20 w-44 overflow-hidden rounded-2xl border border-[#e7ebf0] bg-white shadow-[0_10px_28px_rgba(15,23,42,0.12)]">
+      <button
+        type="button"
+        onClick={openUpload}
+        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
+      >
+        Gallery
+      </button>
+      <button
+        type="button"
+        onClick={openCamera}
+        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
+      >
+        Camera
+      </button>
+    </div>
+  )}
+
+  <input
+    ref={uploadRef}
+    type="file"
+    accept="image/*"
+    className="hidden"
+    onChange={(e) => setAttachedImage(e.target.files?.[0] ?? null)}
+  />
+  <input
+    ref={cameraRef}
+    type="file"
+    accept="image/*"
+    capture="environment"
+    className="hidden"
+    onChange={(e) => setAttachedImage(e.target.files?.[0] ?? null)}
+  />
+</div> 
       </form>
       <p className="max-w-3xl mx-auto text-center mt-3 text-[10px] text-gray-500 dark:text-gray-400">
         ASK-GPT can make mistakes. Verify important information. Free Tier v1.
