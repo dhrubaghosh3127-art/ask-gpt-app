@@ -36,7 +36,10 @@ const [thinkingOpen, setThinkingOpen] = useState(true);
 const [thinkingLabel, setThinkingLabel] = useState("Thinking");
 const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
 const messagesEndRef = useRef<HTMLDivElement>(null);
-
+const activeStreamMessageIdRef = useRef<string | null>(null);
+const streamBufferRef = useRef("");
+const streamRenderedRef = useRef("");
+const streamFlushTimerRef = useRef<number | null>(null);
   useEffect(() => {
     const conversations = getConversations();
     if (id) {
