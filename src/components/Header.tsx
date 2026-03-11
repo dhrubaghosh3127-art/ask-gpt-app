@@ -9,8 +9,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelectedModel }) => {
   return (
-    <header className="h-16 flex items-center justify-between px-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-10">
-      <div className="flex items-center gap-4">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-4 pt-4">
+      <div className="pointer-events-auto flex items-center gap-3">
         <button 
           onClick={toggleSidebar}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300"
@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
 </button>
       </div>
       
-      <div className="flex items-center gap-3">
+      <div className="pointer-events-auto flex items-center gap-3">
         <div className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">
           <span className="text-green-500">●</span> Online
         </div>
