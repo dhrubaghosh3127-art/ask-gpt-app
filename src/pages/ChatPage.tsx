@@ -107,6 +107,79 @@ const queueStreamFlush = () => {
     flushStreamToUI();
   }, 32);
 };
+  const streamTextResponse = async ({
+  prompt,
+  history,
+  modelId,
+  systemInstruction,
+  placeholderId,
+}: {
+  prompt: string;
+  history?: Message[];
+  modelId: string;
+  systemInstruction?: string;
+  placeholderId: string;
+}) => {
+  activeStreamMessageIdRef.current = placeholderId;
+  streamBufferRef.current = "";
+  streamRenderedRef.current = "";
+
+  const res = await getStreamingResponse({
+    prompt,
+    history,
+    modelId,
+    systemInstruction,
+  });
+
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let pending = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    pending += decoder.decode(value, { stream: true });
+    const lines = pending.split("\n");
+    pending = lines.pop() || "";
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line.startsWith("data:")) continue;
+
+      const data = line.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+
+      try {
+        const json = JSON.parse(data);
+        const delta =
+          json?.choices?.[0]?.delta?.content ??
+          json?.choices?.[0]?.message?.content ??
+          "";
+
+        if (delta) {
+          streamBufferRef.current += delta;
+          queueStreamFlush();
+        }
+      } catch {}
+    }
+  }
+
+  if (streamFlushTimerRef.current) {
+    window.clearTimeout(streamFlushTimerRef.current);
+    streamFlushTimerRef.current = null;
+  }
+
+  flushStreamToUI();
+
+  const finalText = streamRenderedRef.current;
+
+  activeStreamMessageIdRef.current = null;
+  streamBufferRef.current = "";
+  streamRenderedRef.current = "";
+
+  return finalText;
+};
 const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
   const AUTO_FLASH_ID = "google/gemini-2.5-flash";
 const AUTO_THINK_ID = "deepseek/deepseek-r1";
