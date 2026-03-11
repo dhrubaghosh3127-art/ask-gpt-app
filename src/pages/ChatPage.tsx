@@ -544,19 +544,32 @@ if (isThinkingModel) {
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
 const systemPrompt = tool ? tool.prompt : "";
 
-const response = await getGeminiResponse({
+const placeholderId = Date.now().toString();
+
+const botMessage: Message = {
+  id: placeholderId,
+  role: Role.MODEL,
+  content: "",
+  timestamp: Date.now(),
+};
+
+updateConversation([...previousMessages, botMessage]);
+
+const finalText = await streamTextResponse({
   prompt: lastUserPrompt,
   history: previousMessages.slice(-12),
   modelId: regenModelId,
   systemInstruction: systemPrompt,
+  placeholderId,
 });
-      const botMessage: Message = {
-        id: Date.now().toString(),
-        role: Role.MODEL,
-        content: response,
-        timestamp: Date.now()
-      };
-      updateConversation([...previousMessages, botMessage]);
+
+updateConversation([
+  ...previousMessages,
+  {
+    ...botMessage,
+    content: finalText,
+  },
+]);
     } catch (error) {
       console.error(error);
     } finally {
