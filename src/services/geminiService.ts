@@ -39,3 +39,51 @@ const userKey = getUserApiKey();
 
   return String(data?.text || "").trim();
 };
+export const getStreamingResponse = async ({
+  prompt,
+  history,
+  modelId,
+  systemInstruction,
+}: {
+  prompt: string;
+  history?: any[];
+  modelId?: string;
+  systemInstruction?: string;
+}) => {
+  const apiUrl = (import.meta.env.VITE_API_URL || "/api/chat").replace(
+    /\/chat$/,
+    "/chat-stream"
+  );
+
+  const messages = [
+    ...(systemInstruction
+      ? [{ role: "system", content: systemInstruction }]
+      : []),
+    ...((history || []).map((m: any) => ({
+      role: m.role === Role.USER ? "user" : "assistant",
+content: (m.content || "").slice(0, 1200),
+    })) || []),
+    { role: "user", content: prompt },
+  ];
+
+  const userApiKey = getUserApiKey();
+
+  const res = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      modelId,
+      messages,
+      userApiKey,
+    }),
+  });
+
+  if (!res.ok || !res.body) {
+    const raw = await res.text().catch(() => "");
+    throw new Error(raw || "Streaming request failed");
+  }
+
+  return res;
+};
