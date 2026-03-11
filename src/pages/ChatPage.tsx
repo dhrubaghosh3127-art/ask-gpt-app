@@ -57,7 +57,14 @@ const streamFlushTimerRef = useRef<number | null>(null);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages]);
-
+useEffect(() => {
+  return () => {
+    if (streamFlushTimerRef.current) {
+      window.clearTimeout(streamFlushTimerRef.current);
+      streamFlushTimerRef.current = null;
+    }
+  };
+}, []);
   const updateConversation = (newMessages: Message[]) => {
     if (!conversation && !id) return;
     
