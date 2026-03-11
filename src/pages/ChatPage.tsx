@@ -78,6 +78,35 @@ const streamFlushTimerRef = useRef<number | null>(null);
     setConversation(updatedConv);
     if (!id) navigate(`/chat/${currentId}`);
   };
+  const flushStreamToUI = () => {
+  const messageId = activeStreamMessageIdRef.current;
+  if (!messageId || !streamBufferRef.current) return;
+
+  streamRenderedRef.current += streamBufferRef.current;
+  streamBufferRef.current = "";
+
+  setConversation((prev) =>
+    prev
+      ? {
+          ...prev,
+          messages: prev.messages.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, content: streamRenderedRef.current }
+              : msg
+          ),
+        }
+      : prev
+  );
+};
+
+const queueStreamFlush = () => {
+  if (streamFlushTimerRef.current) return;
+
+  streamFlushTimerRef.current = window.setTimeout(() => {
+    streamFlushTimerRef.current = null;
+    flushStreamToUI();
+  }, 32);
+};
 const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
   const AUTO_FLASH_ID = "google/gemini-2.5-flash";
 const AUTO_THINK_ID = "deepseek/deepseek-r1";
