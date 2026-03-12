@@ -126,7 +126,7 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
     <button
   type="button"
   onClick={() => setModeOpen(v => !v)}
-  className="shrink-0 inline-flex h-[30px] min-w-[82px] items-center gap-[6px] rounded-[15px] border border-[#e7eaf0] bg-white px-[11px] text-[13px] font-medium text-[#111827] shadow-none"
+  className="shrink-0 inline-flex h-[30px] min-w-[74px] items-center gap-[4px] rounded-[15px] border border-[#e7eaf0] bg-white pl-[11px] pr-[8px] text-[13px] font-medium text-[#111827] shadow-none"
 >
   <span>{mode}</span>
   <span className="text-[9px] text-[#6b7280]">▾</span>
