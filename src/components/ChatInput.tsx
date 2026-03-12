@@ -73,24 +73,39 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
         </svg>
       </button>
 
-      <button
-        type="submit"
-        disabled={isLoading || !input.trim()}
-        className={`h-14 w-14 rounded-[20px] flex items-center justify-center shadow-[0_12px_30px_rgba(37,99,235,0.26)] transition-all active:scale-95 ${
-          input.trim() && !isLoading
-            ? 'bg-[#1677ff] text-white'
-            : 'bg-gray-200 text-gray-400'
-        }`}
-      >
-        {isLoading ? (
-          <div className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-        ) : (
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 12h14" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 4l8 8-8 8" />
-          </svg>
-        )}
-      </button>
+      {!input.trim() && !isLoading ? (
+  <button
+    type="button"
+    aria-label="Speak"
+    className="h-12 px-4 rounded-full bg-[#111111] text-white flex items-center justify-center gap-2 shadow-[0_10px_24px_rgba(17,17,17,0.16)] transition-all"
+  >
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 9v6" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M10 6v12" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M14 8v8" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M18 5v14" />
+    </svg>
+    <span className="text-[15px] font-semibold leading-none">Speak</span>
+  </button>
+) : (
+  <button
+    type={isLoading ? "button" : "submit"}
+    className={`h-[52px] w-[52px] flex items-center justify-center transition-all ${
+      isLoading
+        ? 'rounded-full bg-[#111111] text-white shadow-[0_10px_24px_rgba(17,17,17,0.16)]'
+        : 'rounded-[18px] bg-[#111111] text-white shadow-[0_10px_24px_rgba(17,17,17,0.16)]'
+    }`}
+  >
+    {isLoading ? (
+      <div className="h-[12px] w-[12px] rounded-[3px] bg-white" />
+    ) : (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 12h14" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 4l8 8-8 8" />
+      </svg>
+    )}
+  </button>
+)}
     </div>
   </div>
 
