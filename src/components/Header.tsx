@@ -45,31 +45,31 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
     </div>
 
     <div className="pointer-events-auto absolute right-4 top-4">
-      <div className="h-[46px] w-[98px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-between px-[10px]">
-        <button
-          type="button"
-          onClick={() => {
-            window.location.href = '/chat';
-          }}
-          className="h-[30px] w-[30px] flex items-center justify-center text-[#111827]"
-        >
-          <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M12 5v14M5 12h14" />
-          </svg>
-        </button>
+  <div className="h-[46px] w-[94px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center gap-[8px] px-[8px]">
+    <button
+      type="button"
+      onClick={() => {
+        window.location.href = '/chat';
+      }}
+      className="h-[30px] w-[30px] rounded-full border border-[#d9dbe3] flex items-center justify-center text-[#111827]"
+    >
+      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.3} d="M12 5v14M5 12h14" />
+      </svg>
+    </button>
 
-        <button
-          type="button"
-          className="h-[30px] w-[30px] flex items-center justify-center text-[#111827]"
-        >
-          <svg className="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="5" r="2" />
-            <circle cx="12" cy="12" r="2" />
-            <circle cx="12" cy="19" r="2" />
-          </svg>
-        </button>
-      </div>
-    </div>
+    <button
+      type="button"
+      className="h-[30px] w-[30px] flex items-center justify-center text-[#111827]"
+    >
+      <svg className="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
+        <circle cx="12" cy="5" r="2" />
+        <circle cx="12" cy="12" r="2" />
+        <circle cx="12" cy="19" r="2" />
+      </svg>
+    </button>
+  </div>
+</div>
   </header>
 );
 };
