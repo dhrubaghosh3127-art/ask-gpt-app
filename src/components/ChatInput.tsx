@@ -72,36 +72,35 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19v2m-4 0h8" />
         </svg>
       </button>
-
-      {!input.trim() && !isLoading ? (
+{!input.trim() && !isLoading ? (
   <button
     type="button"
     aria-label="Speak"
-    className="h-12 px-4 rounded-full bg-[#111111] text-white flex items-center justify-center gap-2 shadow-[0_10px_24px_rgba(17,17,17,0.16)] transition-all"
+    className="h-11 px-[14px] rounded-full bg-[#111111] text-white flex items-center justify-center gap-[7px] shadow-[0_8px_20px_rgba(17,17,17,0.14)] transition-all"
   >
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 9v6" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M10 6v12" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M14 8v8" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M18 5v14" />
     </svg>
-    <span className="text-[15px] font-semibold leading-none">Speak</span>
+    <span className="text-[14px] font-semibold leading-none">Speak</span>
   </button>
 ) : (
   <button
     type={isLoading ? "button" : "submit"}
-    className={`h-[52px] w-[52px] flex items-center justify-center transition-all ${
+    className={`h-11 w-11 flex items-center justify-center transition-all ${
       isLoading
-        ? 'rounded-full bg-[#111111] text-white shadow-[0_10px_24px_rgba(17,17,17,0.16)]'
-        : 'rounded-[18px] bg-[#111111] text-white shadow-[0_10px_24px_rgba(17,17,17,0.16)]'
+        ? 'rounded-full bg-[#111111] text-white shadow-[0_8px_20px_rgba(17,17,17,0.14)]'
+        : 'rounded-[16px] bg-[#111111] text-white shadow-[0_8px_20px_rgba(17,17,17,0.14)]'
     }`}
   >
     {isLoading ? (
-      <div className="h-[12px] w-[12px] rounded-[3px] bg-white" />
+      <div className="h-[10px] w-[10px] rounded-[3px] bg-white" />
     ) : (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 12h14" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 4l8 8-8 8" />
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M12 19V5" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M6 11l6-6 6 6" />
       </svg>
     )}
   </button>
