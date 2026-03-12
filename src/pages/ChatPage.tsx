@@ -55,36 +55,59 @@ const messagesEndRef = useRef<HTMLDivElement>(null);
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages]);
 const makeShortEnglishTitle = (text: string) => {
-  const t = (text || '').toLowerCase().trim();
+  const raw = (text || '').trim();
+  const t = raw.toLowerCase();
 
   if (!t) return 'General Chat';
 
-  if (/(math|equation|integral|algebra|geometry|theorem|solve|physics|chemistry|biology)/i.test(t)) {
-    return 'Math Help';
-  }
+  const hasMathSymbol =
+    /[=+\-*/^]/.test(t) ||
+    /sin|cos|tan|cot|sec|cosec|log|ln|sqrt|π|theta|integral|derivative|matrix|equation/.test(t);
 
-  if (/(code|coding|python|javascript|java|c\+\+|react|html|css|bug|debug|program)/i.test(t)) {
-    return 'Coding Help';
-  }
+  const hasMathWords =
+    /\b(math|solve|algebra|geometry|trigonometry|theorem|physics|chemistry|biology|calculus)\b/.test(t) ||
+    /গণিত|ম্যাথ|সমাধান|সমীকরণ|ত্রিকোণমিতি|পদার্থ|রসায়ন|জীববিজ্ঞান/.test(t);
 
-  if (/(translate|translation|bangla to english|english to bangla)/i.test(t)) {
-    return 'Translation';
-  }
+  if (hasMathSymbol || hasMathWords) return 'Math Help';
 
-  if (/(image|photo|picture|logo|design|ui|icon|draw|create image)/i.test(t)) {
-    return 'Image Task';
-  }
+  const hasCodeWords =
+    /\b(code|coding|python|javascript|typescript|java|c\+\+|cpp|react|html|css|bug|debug|fix|function|api|json|sql|program)\b/.test(t) ||
+    /কোড|কোডিং|প্রোগ্রাম|বাগ|ডিবাগ|ফিক্স|ফাংশন|অ্যাপ|ওয়েবসাইট/.test(t);
 
-  if (/(email|mail|application|cv|resume|cover letter)/i.test(t)) {
-    return 'Email Draft';
-  }
+  if (hasCodeWords) return 'Coding Help';
 
-  if (/(news|latest|current|today|price|weather|score|match|web|search)/i.test(t)) {
-    return 'Web Search';
-  }
+  const hasImageWords =
+    /\b(image|photo|picture|logo|design|ui|ux|icon|draw|edit image|generate image|create image)\b/.test(t) ||
+    /ছবি|পিক|ইমেজ|লোগো|ডিজাইন|আইকন|ui|ux/.test(t);
 
-  if (/(write|writing|essay|post|caption|story|article)/i.test(t)) {
-    return 'Writing Help';
+  if (hasImageWords) return 'Image Task';
+
+  const hasTranslateWords =
+    /\b(translate|translation|english to bangla|bangla to english|korean to english|japanese to english)\b/.test(t) ||
+    /অনুবাদ|ট্রান্সলেট|ইংলিশ|বাংলা|কোরিয়ান|জাপানি/.test(t);
+
+  if (hasTranslateWords) return 'Translation';
+
+  const hasEmailWords =
+    /\b(email|mail|application|cv|resume|cover letter|job application)\b/.test(t) ||
+    /ইমেইল|মেইল|সিভি|রিজিউম|জব|আবেদন/.test(t);
+
+  if (hasEmailWords) return 'Email Draft';
+
+  const hasWebWords =
+    /\b(news|latest|current|today|price|weather|score|match|web|search|verify|official)\b/.test(t) ||
+    /খবর|আজকের|দাম|আবহাওয়া|স্কোর|ম্যাচ|সার্চ|ওয়েব|ভেরিফাই/.test(t);
+
+  if (hasWebWords) return 'Web Search';
+
+  const hasWritingWords =
+    /\b(write|writing|essay|post|caption|story|article|paragraph)\b/.test(t) ||
+    /লিখ|রচনা|ক্যাপশন|পোস্ট|গল্প|আর্টিকেল|প্যারাগ্রাফ/.test(t);
+
+  if (hasWritingWords) return 'Writing Help';
+
+  if (raw.length <= 24) {
+    return raw.charAt(0).toUpperCase() + raw.slice(1, 24);
   }
 
   return 'General Chat';
