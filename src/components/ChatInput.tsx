@@ -61,17 +61,17 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
 
     <div className="mt-1 flex shrink-0 items-center gap-3">
       <button
-        type="button"
-        aria-label="Voice"
-        className="h-12 w-12 rounded-full bg-white shadow-[0_6px_18px_rgba(15,23,42,0.08)] border border-[#eceff3] flex items-center justify-center text-black"
-        onClick={() => {}}
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19v2m-4 0h8" />
-        </svg>
-      </button>
+  type="button"
+  aria-label="Voice"
+  className="shrink-0 h-11 w-11 rounded-full border border-[#eceff3] bg-white flex items-center justify-center shadow-[0_8px_20px_rgba(17,17,17,0.08)] transition-all"
+  onClick={() => {}}
+>
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.1} d="M12 14a3 3 0 003-3V6a3 3 0 00-6 0v5a3 3 0 003 3z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.1} d="M19 11v1a7 7 0 01-14 0v-1" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.1} d="M12 19v2m-4 0h8" />
+  </svg>
+</button>
 {!input.trim() && !isLoading ? (
   <button
     type="button"
