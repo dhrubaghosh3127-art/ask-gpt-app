@@ -107,10 +107,15 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
       <span>Upload</span>
     </button>
 
-    <button
-      type="button"
-      className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dbe7ff] bg-[#edf4ff] px-4 text-[15px] font-medium text-[#2563eb] shadow-[0_4px_12px_rgba(37,99,235,0.08)]"
-    >
+   <button
+  type="button"
+  onClick={() => setWebActive(v => !v)}
+  className={`shrink-0 inline-flex h-[30px] min-w-[82px] items-center gap-[6px] rounded-[15px] px-[11px] text-[13px] font-medium shadow-none ${
+    webActive
+      ? 'border border-[#dbe7ff] bg-[#edf4ff] text-[#2563eb]'
+      : 'border border-[#e7eaf0] bg-white text-[#111827]'
+  }`}
+>
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-3.51-7.11" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.6 9h16.8M3.6 15h16.8M12 3a15.3 15.3 0 010 18M12 3a15.3 15.3 0 000 18" />
