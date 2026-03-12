@@ -54,7 +54,41 @@ const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages]);
+const makeShortEnglishTitle = (text: string) => {
+  const t = (text || '').toLowerCase().trim();
 
+  if (!t) return 'General Chat';
+
+  if (/(math|equation|integral|algebra|geometry|theorem|solve|physics|chemistry|biology)/i.test(t)) {
+    return 'Math Help';
+  }
+
+  if (/(code|coding|python|javascript|java|c\+\+|react|html|css|bug|debug|program)/i.test(t)) {
+    return 'Coding Help';
+  }
+
+  if (/(translate|translation|bangla to english|english to bangla)/i.test(t)) {
+    return 'Translation';
+  }
+
+  if (/(image|photo|picture|logo|design|ui|icon|draw|create image)/i.test(t)) {
+    return 'Image Task';
+  }
+
+  if (/(email|mail|application|cv|resume|cover letter)/i.test(t)) {
+    return 'Email Draft';
+  }
+
+  if (/(news|latest|current|today|price|weather|score|match|web|search)/i.test(t)) {
+    return 'Web Search';
+  }
+
+  if (/(write|writing|essay|post|caption|story|article)/i.test(t)) {
+    return 'Writing Help';
+  }
+
+  return 'General Chat';
+};
   const updateConversation = (newMessages: Message[]) => {
     if (!conversation && !id) return;
     
@@ -65,7 +99,7 @@ const messagesEndRef = useRef<HTMLDivElement>(null);
       ? { ...conversation, messages: newMessages, lastUpdated: Date.now() }
       : { 
           id: currentId, 
-          title: newMessages[0].content.slice(0, 30) + (newMessages[0].content.length > 30 ? '...' : ''), 
+          title: makeShortEnglishTitle(newMessages[0].content),
           messages: newMessages, 
           lastUpdated: Date.now() 
         };
