@@ -24,16 +24,16 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
       </button>
     </div>
 
-    <div className="pointer-events-auto absolute left-1/2 top-4 -translate-x-1/2">
+    <div className="pointer-events-auto absolute left-[calc(50%-24px)] top-4 -translate-x-1/2">
       <button
         type="button"
-        className="h-[46px] w-[196px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center px-[16px] relative"
+        className="h-[46px] w-[176px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center px-[16px] relative"
       >
         <span
           className="truncate text-center text-[14px] font-semibold tracking-[-0.02em] text-[#3a3a3c]"
           style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
         >
-          ALL CHAT HISTORY
+          CHAT HISTORY
         </span>
 
         <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#6b7280]">
