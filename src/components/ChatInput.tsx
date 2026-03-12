@@ -134,7 +134,7 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
 
     <button
       type="button"
-      className="inline-flex h-11 items-center gap-2 rounded-full border border-[#e8ebf0] bg-white px-4 text-[15px] font-medium text-[#111827] shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
+      className="shrink-0 inline-flex h-[30px] min-w-[82px] items-center gap-[6px] rounded-[15px] border border-[#e7eaf0] bg-white px-[11px] text-[13px] font-medium text-[#111827] shadow-none"
     >
       <span>Model</span>
       <span className="text-[10px] text-[#6b7280]">▾</span>
