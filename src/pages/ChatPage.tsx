@@ -442,7 +442,7 @@ const response = await getGeminiResponse({
   };
 
   return (
-    <div className="relative flex-1 flex flex-col h-screen overflow-hidden bg-[#F3F0FF]">
+    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-white">
       <Header 
         toggleSidebar={toggleSidebar} 
         selectedModel={selectedModel} 
