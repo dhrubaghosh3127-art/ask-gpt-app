@@ -522,15 +522,20 @@ const response = await getGeminiResponse({
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-24 pb-24 flex flex-col">
         {(!conversation || conversation.messages.length === 0) ? (
           <div className="flex flex-col items-center justify-center px-6 text-center py-10">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-xl">
-              A
-            </div>
-            <div className="max-w-2xl mx-auto flex flex-col gap-4">
-              <h1 className="text-[32px] font-bold text-gray-900 tracking-tight">Welcome to ASK-GPT</h1>
-              <p className="mt-2 text-[17px] text-gray-500 font-medium">
-                How can I assist you today?
-              </p><p className="mt-3 text-[14px] text-gray-500 font-medium">👑 Developer: Prohor (Boss)</p>
-            </div>
+            <div className="max-w-2xl mx-auto flex flex-col items-center gap-4">
+  <h1 className="text-[28px] sm:text-[32px] font-bold text-gray-900 tracking-tight whitespace-nowrap">
+    Welcome to ASK-GPT
+  </h1>
+
+  <p className="mt-1 text-[17px] text-gray-500 font-medium text-center">
+    How can I assist you today?
+  </p>
+
+  <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-[#eceff3] bg-white px-4 py-2 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
+    <span className="text-[15px]">👑</span>
+    <span className="text-[14px] text-gray-600 font-medium">Developer: Prohor (Boss)</span>
+  </div>
+</div>
           <div className="hidden">
                 
             
