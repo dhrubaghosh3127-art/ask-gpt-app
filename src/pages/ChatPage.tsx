@@ -521,9 +521,9 @@ const response = await getGeminiResponse({
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-24 pb-24 flex flex-col">
         {(!conversation || conversation.messages.length === 0) ? (
-          <div className="flex flex-col items-center justify-center px-6 text-center py-10">
-            <div className="max-w-2xl mx-auto flex flex-col items-center gap-4">
-  <h1 className="text-[28px] sm:text-[32px] font-bold text-gray-900 tracking-tight whitespace-nowrap">
+          <div className="flex flex-col items-center justify-center min-h-[52vh] px-6 text-center pb-10">
+            <div className="w-full max-w-[340px] mx-auto flex flex-col items-center text-center gap-4">
+  <h1 className="w-full text-center text-[28px] sm:text-[32px] font-bold text-gray-900 tracking-tight whitespace-nowrap">
     WELCOME TO ASK-GPT 
   </h1>
 
