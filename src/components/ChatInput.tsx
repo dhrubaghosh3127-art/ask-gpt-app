@@ -95,13 +95,13 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
   </div>
 
   <div className="mt-3 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1">
-    <button
-      type="button"
-      onClick={() => setAttachOpen(v => !v)}
-      aria-label="Attach"
-      className="inline-flex h-11 items-center gap-2 rounded-full border border-[#e8ebf0] bg-white px-4 text-[15px] font-medium text-[#111827] shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
-    >
-      <svg className="h-5 w-5 text-[#6b7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <button
+  type="button"
+  onClick={() => setAttachOpen(v => !v)}
+  aria-label="Attach"
+  className="shrink-0 inline-flex h-[30px] min-w-[82px] items-center gap-[6px] rounded-[15px] border border-[#e7eaf0] bg-white px-[11px] text-[13px] font-medium text-[#111827] shadow-none"
+>
+  <svg className="h-[14px] w-[14px] text-[#6b7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21.44 11.05l-8.49 8.49a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.19 9.19a2 2 0 01-2.83-2.83l8.49-8.49" />
       </svg>
       <span>Upload</span>
