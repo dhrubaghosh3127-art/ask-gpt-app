@@ -95,14 +95,27 @@ const makeShortEnglishTitle = (text: string) => {
     const conversations = getConversations();
     const currentId = id || Date.now().toString();
     
-    const updatedConv: Conversation = conversation 
-      ? { ...conversation, messages: newMessages, lastUpdated: Date.now() }
-      : { 
-          id: currentId, 
-          title: makeShortEnglishTitle(newMessages[0].content),
-          messages: newMessages, 
-          lastUpdated: Date.now() 
-        };
+    const firstUserText =
+  newMessages.find(m => m.role === Role.USER)?.content || newMessages[0]?.content || '';
+
+const resolvedTitle = makeShortEnglishTitle(firstUserText);
+
+const updatedConv: Conversation = conversation
+  ? {
+      ...conversation,
+      title:
+        !conversation.title || conversation.title.trim() === '' || conversation.title === 'New Chat'
+          ? resolvedTitle
+          : conversation.title,
+      messages: newMessages,
+      lastUpdated: Date.now()
+    }
+  : {
+      id: currentId,
+      title: resolvedTitle,
+      messages: newMessages,
+      lastUpdated: Date.now()
+    };
 
     const updatedList = conversations.filter(c => c.id !== currentId);
     saveConversations([updatedConv, ...updatedList]);
