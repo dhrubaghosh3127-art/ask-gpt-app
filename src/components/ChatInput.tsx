@@ -94,7 +94,7 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
     </div>
   </div>
 
-  <div className="mt-3 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1">
+  <div className="mt-3 flex items-center gap-2 whitespace-nowrap">
   <button
   type="button"
   onClick={() => setAttachOpen(v => !v)}
