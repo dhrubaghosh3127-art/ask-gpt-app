@@ -116,7 +116,7 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
       : 'border border-[#e7eaf0] bg-white text-[#111827]'
   }`}
 >
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-3.51-7.11" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.6 9h16.8M3.6 15h16.8M12 3a15.3 15.3 0 010 18M12 3a15.3 15.3 0 000 18" />
       </svg>
