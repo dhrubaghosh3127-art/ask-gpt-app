@@ -523,7 +523,7 @@ const response = await getGeminiResponse({
         {(!conversation || conversation.messages.length === 0) ? (
           <div className="flex flex-col items-center justify-center min-h-[52vh] px-6 text-center pb-10">
             <div className="w-full max-w-[340px] mx-auto flex flex-col items-center text-center gap-4">
-  <h1 className="w-full text-center text-[28px] sm:text-[32px] font-bold text-gray-900 tracking-tight whitespace-nowrap">
+  <h1 className="w-full max-w-[320px] mx-auto text-center text-[24px] sm:text-[30px] font-bold text-gray-900 tracking-tight leading-none whitespace-nowrap">
     WELCOME TO ASK-GPT 
   </h1>
 
