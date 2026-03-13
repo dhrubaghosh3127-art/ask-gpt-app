@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 // import { MODELS } from '../constants';
 
 interface HeaderProps {
@@ -8,6 +9,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelectedModel }) => {
+  const navigate = useNavigate();
   return (
   <header className="pointer-events-none absolute inset-x-0 top-0 z-30 h-[84px] px-4 pt-4">
     <div className="pointer-events-auto absolute left-4 top-4">
@@ -27,6 +29,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
     <div className="pointer-events-auto absolute left-[calc(50%-24px)] top-4 -translate-x-1/2">
       <button
         type="button"
+onClick={() => navigate('/history')}
         className="h-[46px] w-[176px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center px-[16px] relative"
       >
         <span
