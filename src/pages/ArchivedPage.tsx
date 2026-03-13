@@ -98,15 +98,26 @@ const ArchivedPage: React.FC = () => {
       archivedChats.map((chat, index) => (
         <React.Fragment key={chat.id}>
           <button
-            type="button"
-            onClick={() => openChat(chat.id)}
-            className="block w-full px-5 py-4 text-left"
-            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-          >
-            <div className="truncate text-[16px] font-medium tracking-[-0.02em] text-[#111111]">
-              {chat.title}
-            </div>
-          </button>
+  type="button"
+  onClick={() => handleChatPress(chat)}
+  onTouchStart={() => startLongPress(chat)}
+  onTouchEnd={clearLongPress}
+  onTouchMove={clearLongPress}
+  onTouchCancel={clearLongPress}
+  onMouseDown={() => startLongPress(chat)}
+  onMouseUp={clearLongPress}
+  onMouseLeave={clearLongPress}
+  onContextMenu={(e) => {
+    e.preventDefault();
+    setMenuChat(chat);
+  }}
+  className="block w-full px-5 py-4 text-left"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+  <div className="truncate text-[16px] font-medium tracking-[-0.02em] text-[#111111]">
+    {chat.title}
+  </div>
+</button>
           {index !== archivedChats.length - 1 && <div className="h-px bg-[#f0f1f5]" />}
         </React.Fragment>
       ))
