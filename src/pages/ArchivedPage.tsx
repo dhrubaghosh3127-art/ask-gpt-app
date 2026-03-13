@@ -112,6 +112,38 @@ const ArchivedPage: React.FC = () => {
       ))
     )}
   </div>
+          {menuChat && (
+  <div
+    className="fixed inset-0 z-50 flex items-end justify-center bg-black/20"
+    onClick={() => setMenuChat(null)}
+  >
+    <div
+      className="w-full max-w-[430px] rounded-t-[28px] bg-white shadow-xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={handleRename}
+        className="w-full px-6 py-4 text-left text-[16px] border-b"
+      >
+        Rename
+      </button>
+
+      <button
+        onClick={handleUnarchive}
+        className="w-full px-6 py-4 text-left text-[16px] border-b"
+      >
+        Unarchive
+      </button>
+
+      <button
+        onClick={handlePin}
+        className="w-full px-6 py-4 text-left text-[16px]"
+      >
+        Pin chat
+      </button>
+    </div>
+  </div>
+)}
 </div>
       </div>
     </div>
