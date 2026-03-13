@@ -80,42 +80,55 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
   </div>
 </button>
     </div>
+{/* Tools Section */}
+<div className="mb-6 min-w-[250px] space-y-3">
+  <h2
+    className="px-1 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#9aa0aa]"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    Categories
+  </h2>
 
-        {/* Tools Section */}
-        <div className="mb-6 min-w-[250px]">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Categories</h2>
-          <div className="grid grid-cols-1 gap-1">
-            {TOOL_CATEGORIES.map(cat => (
-              <button 
-                key={cat.id}
-                onClick={() => {
-                  const newId = Date.now().toString();
-                  const newConv: Conversation = {
-                    id: newId,
-                    title: cat.name,
-                    messages: [{
-                      id: 'welcome',
-                      role: Role.MODEL,
-                      content: `Hello! I am ready to help you with **${cat.name}**. How can I assist you today?`,
-                      timestamp: Date.now()
-                    }],
-                    lastUpdated: Date.now(),
-                    category: cat.id
-                  };
-                  const updated = [newConv, ...conversations];
-                  saveConversations(updated);
-                  setConversations(updated);
-                  navigate(`/chat/${newId}`);
-                  if (window.innerWidth < 768) setIsOpen(false);
-                }}
-                className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-800 rounded-md transition-colors"
-              >
-                <span>{cat.icon}</span>
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </div>
+  {[
+    TOOL_CATEGORIES.slice(0, 4),
+    TOOL_CATEGORIES.slice(4, 8),
+  ].map((group, groupIndex) => (
+    <div key={groupIndex} className="grid grid-cols-2 gap-3">
+      {group.map((cat) => (
+        <button
+          key={cat.id}
+          onClick={() => {
+            const newId = Date.now().toString();
+            const newConv: Conversation = {
+              id: newId,
+              title: cat.name,
+              messages: [{
+                id: 'welcome',
+                role: Role.MODEL,
+                content: `Hello! I am ready to help you with **${cat.name}**. How can I assist you today?`,
+                timestamp: Date.now()
+              }],
+              lastUpdated: Date.now(),
+              category: cat.id
+            };
+            const updated = [newConv, ...conversations];
+            saveConversations(updated);
+            setConversations(updated);
+            navigate(`/chat/${newId}`);
+            if (window.innerWidth < 768) setIsOpen(false);
+          }}
+          className="flex min-h-[78px] flex-col items-start justify-center gap-2 rounded-[20px] border border-[#ececf2] bg-white px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition-all hover:bg-[#fafafa]"
+          style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+        >
+          <span className="text-[22px] leading-none">{cat.icon}</span>
+          <span className="text-[14px] font-semibold tracking-[-0.02em] text-[#111111]">
+            {cat.name}
+          </span>
+        </button>
+      ))}
+    </div>
+  ))}
+</div>
 
 
         {/* Footer */}
