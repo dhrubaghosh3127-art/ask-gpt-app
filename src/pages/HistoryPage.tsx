@@ -4,6 +4,8 @@ import { Conversation } from '../types';
 import {
   getActiveConversations,
   getArchivedConversations,
+  getConversations,
+  saveConversations,
 } from '../utils/storage';
 
 const HistoryPage: React.FC = () => {
@@ -21,8 +23,20 @@ const HistoryPage: React.FC = () => {
   };
 
   const openNewChat = () => {
-    navigate('/chat');
+  const newId = Date.now().toString();
+
+  const newConv: Conversation = {
+    id: newId,
+    title: 'New Chat',
+    messages: [],
+    lastUpdated: Date.now(),
+    archived: false,
   };
+
+  const updated = [newConv, ...getConversations()];
+  saveConversations(updated);
+  navigate(`/chat/${newId}`);
+};
 
   return (
     <div className="min-h-screen bg-white text-[#111111]">
