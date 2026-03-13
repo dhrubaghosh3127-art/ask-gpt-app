@@ -1,19 +1,78 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Conversation } from '../types';
-import { getArchivedConversations } from '../utils/storage';
+import {
+  getArchivedConversations,
+  pinConversation,
+  renameConversation,
+  unarchiveConversation,
+} from '../utils/storage';
 
 const ArchivedPage: React.FC = () => {
   const navigate = useNavigate();
   const [archivedChats, setArchivedChats] = useState<Conversation[]>([]);
+  const [menuChat, setMenuChat] = useState<Conversation | null>(null);
 
-  useEffect(() => {
+  const holdTimerRef = useRef<number | null>(null);
+  const suppressOpenRef = useRef(false);
+
+  const refreshArchived = () => {
     const archived = getArchivedConversations().sort((a, b) => b.lastUpdated - a.lastUpdated);
     setArchivedChats(archived);
+  };
+
+  useEffect(() => {
+    refreshArchived();
   }, []);
 
   const openChat = (id: string) => {
     navigate(`/chat/${id}`);
+  };
+
+  const clearLongPress = () => {
+    if (holdTimerRef.current) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+  };
+
+  const startLongPress = (chat: Conversation) => {
+    clearLongPress();
+    holdTimerRef.current = window.setTimeout(() => {
+      suppressOpenRef.current = true;
+      setMenuChat(chat);
+    }, 420);
+  };
+
+  const handleChatPress = (chat: Conversation) => {
+    if (suppressOpenRef.current) {
+      suppressOpenRef.current = false;
+      return;
+    }
+    openChat(chat.id);
+  };
+
+  const handleRename = () => {
+    if (!menuChat) return;
+    const nextTitle = window.prompt('Rename chat', menuChat.title);
+    if (!nextTitle || !nextTitle.trim()) return;
+    renameConversation(menuChat.id, nextTitle);
+    setMenuChat(null);
+    refreshArchived();
+  };
+
+  const handleUnarchive = () => {
+    if (!menuChat) return;
+    unarchiveConversation(menuChat.id);
+    setMenuChat(null);
+    refreshArchived();
+  };
+
+  const handlePin = () => {
+    if (!menuChat) return;
+    pinConversation(menuChat.id);
+    setMenuChat(null);
+    refreshArchived();
   };
 
   return (
