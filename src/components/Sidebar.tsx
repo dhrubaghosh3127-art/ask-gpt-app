@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Conversation, Role } from '../types';
 import { getConversations, saveConversations } from '../utils/storage';
 import { TOOL_CATEGORIES } from '../constants';
@@ -14,11 +14,11 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsDarkMode }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const navigate = useNavigate();
-  const { id } = useParams();
+  
 
   useEffect(() => {
     setConversations(getConversations());
-  }, [id, isOpen]);
+  }, [isOpen]);
 
   const createNewChat = () => {
     const newId = Date.now().toString();
@@ -96,25 +96,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
           </div>
         </div>
 
-        {/* History Section */}
-        <div className="flex-1 overflow-y-auto min-w-[250px]">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Recent History</h2>
-          <div className="space-y-1">
-            {conversations.map(conv => (
-              <Link
-                key={conv.id}
-                to={`/chat/${conv.id}`}
-                className={`
-                  block px-3 py-2 rounded-md text-sm truncate transition-colors
-                  ${id === conv.id ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}
-                `}
-                onClick={() => window.innerWidth < 768 && setIsOpen(false)}
-              >
-                {conv.title}
-              </Link>
-            ))}
-          </div>
-        </div>
 
         {/* Footer */}
         <div className="mt-auto pt-6 border-t border-gray-800 space-y-2 min-w-[250px]">
