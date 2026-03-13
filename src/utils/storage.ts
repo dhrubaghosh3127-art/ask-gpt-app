@@ -59,3 +59,26 @@ export const resetFreeCountToday = () => {
   const k = FREE_LIMIT_KEY_PREFIX + todayKey();
   localStorage.removeItem(k);
 };
+export const archiveConversation = (id: string) => {
+  const conversations = getConversations();
+  const updated = conversations.map(c =>
+    c.id === id ? { ...c, archived: true } : c
+  );
+  saveConversations(updated);
+};
+
+export const unarchiveConversation = (id: string) => {
+  const conversations = getConversations();
+  const updated = conversations.map(c =>
+    c.id === id ? { ...c, archived: false } : c
+  );
+  saveConversations(updated);
+};
+
+export const getActiveConversations = (): Conversation[] => {
+  return getConversations().filter(c => !c.archived);
+};
+
+export const getArchivedConversations = (): Conversation[] => {
+  return getConversations().filter(c => c.archived);
+};
