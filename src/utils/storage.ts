@@ -97,3 +97,13 @@ export const unpinConversation = (id: string) => {
   );
   saveConversations(updated);
 };
+export const renameConversation = (id: string, title: string) => {
+  const cleanTitle = title.trim();
+  if (!cleanTitle) return;
+
+  const conversations = getConversations();
+  const updated = conversations.map(c =>
+    c.id === id ? { ...c, title: cleanTitle } : c
+  );
+  saveConversations(updated);
+};
