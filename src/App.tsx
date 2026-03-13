@@ -4,6 +4,7 @@ import ChatPage from './pages/ChatPage';
 import PremiumPage from './pages/PremiumPage';
 import KeySetup from './pages/KeySetup';
 import HistoryPage from './pages/HistoryPage';
+import ArchivedPage from './pages/ArchivedPage';
 import Sidebar from './components/Sidebar';
 
 const App: React.FC = () => {
@@ -41,6 +42,7 @@ const App: React.FC = () => {
             <Route path="/chat" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/history" element={<HistoryPage />} />
+<Route path="/history/archived" element={<ArchivedPage />} />
 <Route path="/key" element={<KeySetup />} />
           </Routes>
         </main>
