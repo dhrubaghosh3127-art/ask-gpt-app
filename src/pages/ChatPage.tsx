@@ -113,7 +113,7 @@ const makeShortEnglishTitle = (text: string) => {
   return 'General Chat';
 };
   const updateConversation = (newMessages: Message[]) => {
-    if (!conversation && !id) return;
+    
     
     const conversations = getConversations();
     const currentId = id || Date.now().toString();
