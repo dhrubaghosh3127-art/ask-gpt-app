@@ -18,6 +18,7 @@ export interface Conversation {
   lastUpdated: number
   category?: string
   archived?: boolean
+pinned?: boolean
 }
 
 export interface ToolCategory {
