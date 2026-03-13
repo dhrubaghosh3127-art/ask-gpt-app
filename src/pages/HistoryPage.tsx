@@ -95,32 +95,34 @@ const HistoryPage: React.FC = () => {
               Your ASK-GPT history
             </div>
 
-            <div className="overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-              {activeChats.length === 0 ? (
-                <div
-                  className="px-5 py-5 text-[14px] text-[#8a8a8f]"
-                  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-                >
-                  No chat history yet
-                </div>
-              ) : (
-                activeChats.map((chat, index) => (
-                  <React.Fragment key={chat.id}>
-                    <button
-                      type="button"
-                      onClick={() => openChat(chat.id)}
-                      className="block w-full px-5 py-4 text-left"
-                      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-                    >
-                      <div className="truncate text-[16px] font-medium tracking-[-0.02em] text-[#111111]">
-                        {chat.title}
-                      </div>
-                    </button>
-                    {index !== activeChats.length - 1 && <div className="h-px bg-[#f0f1f5]" />}
-                  </React.Fragment>
-                ))
-              )}
+      <div className="h-[420px] overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+  <div className="h-full overflow-y-auto">
+    {activeChats.length === 0 ? (
+      <div
+        className="px-5 py-5 text-[14px] text-[#8a8a8f]"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+      >
+        No chat history yet
+      </div>
+    ) : (
+      activeChats.map((chat, index) => (
+        <React.Fragment key={chat.id}>
+          <button
+            type="button"
+            onClick={() => openChat(chat.id)}
+            className="block w-full px-5 py-4 text-left"
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+          >
+            <div className="truncate text-[16px] font-medium tracking-[-0.02em] text-[#111111]">
+              {chat.title}
             </div>
+          </button>
+          {index !== activeChats.length - 1 && <div className="h-px bg-[#f0f1f5]" />}
+        </React.Fragment>
+      ))
+    )}
+  </div>
+</div>
           </div>
         </div>
       </div>
