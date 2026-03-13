@@ -61,24 +61,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
       </div>
 
       <button
-        type="button"
-        className="w-full rounded-[22px] border border-[#ececf2] bg-white px-5 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
-        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-      >
-        <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
-          My Profile
-        </div>
-      </button>
+  type="button"
+  className="w-full rounded-[20px] border border-[#ececf2] bg-white px-5 py-3.5 text-center shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+  <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+    My Profile
+  </div>
+</button>
 
       <button
-        type="button"
-        className="w-full rounded-[22px] border border-[#d9edf9] bg-[#eaf7ff] px-5 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
-        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-      >
-        <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
-          Upgrade to ASK-GPT Plus
-        </div>
-      </button>
+  type="button"
+  className="w-full rounded-[20px] border border-[#d9edf9] bg-[#eaf7ff] px-5 py-3.5 text-left shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+  <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+    Upgrade to ASK-GPT Plus
+  </div>
+</button>
     </div>
 
         {/* Tools Section */}
