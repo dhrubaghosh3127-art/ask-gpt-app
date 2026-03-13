@@ -81,4 +81,19 @@ export const getActiveConversations = (): Conversation[] => {
 
 export const getArchivedConversations = (): Conversation[] => {
   return getConversations().filter(c => c.archived);
+  export const pinConversation = (id: string) => {
+  const conversations = getConversations();
+  const updated = conversations.map(c =>
+    c.id === id ? { ...c, pinned: true } : c
+  );
+  saveConversations(updated);
 };
+
+export const unpinConversation = (id: string) => {
+  const conversations = getConversations();
+  const updated = conversations.map(c =>
+    c.id === id ? { ...c, pinned: false } : c
+  );
+  saveConversations(updated);
+};
+
