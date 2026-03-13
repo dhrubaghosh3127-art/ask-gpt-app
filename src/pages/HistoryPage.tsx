@@ -1,47 +1,126 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Conversation } from '../types';
 import {
+  archiveConversation,
+  deleteConversation,
   getActiveConversations,
   getArchivedConversations,
   getConversations,
+  pinConversation,
+  renameConversation,
   saveConversations,
+  unpinConversation,
 } from '../utils/storage';
 
 const HistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeChats, setActiveChats] = useState<Conversation[]>([]);
   const [archivedChats, setArchivedChats] = useState<Conversation[]>([]);
+  const [menuChat, setMenuChat] = useState<Conversation | null>(null);
+
+  const holdTimerRef = useRef<number | null>(null);
+  const suppressOpenRef = useRef(false);
+
+  const refreshChats = () => {
+    const active = getActiveConversations().sort((a, b) => {
+      if (!!b.pinned !== !!a.pinned) return Number(!!b.pinned) - Number(!!a.pinned);
+      return b.lastUpdated - a.lastUpdated;
+    });
+
+    const archived = getArchivedConversations().sort((a, b) => b.lastUpdated - a.lastUpdated);
+
+    setActiveChats(active);
+    setArchivedChats(archived);
+  };
 
   useEffect(() => {
-  const active = getActiveConversations().sort((a, b) => {
-    if (!!b.pinned !== !!a.pinned) return Number(!!b.pinned) - Number(!!a.pinned);
-    return b.lastUpdated - a.lastUpdated;
-  });
-
-  setActiveChats(active);
-  setArchivedChats(getArchivedConversations());
-}, []);
+    refreshChats();
+  }, []);
 
   const openChat = (id: string) => {
     navigate(`/chat/${id}`);
   };
 
   const openNewChat = () => {
-  const newId = Date.now().toString();
+    const newId = Date.now().toString();
 
-  const newConv: Conversation = {
-    id: newId,
-    title: 'New Chat',
-    messages: [],
-    lastUpdated: Date.now(),
-    archived: false,
+    const newConv: Conversation = {
+      id: newId,
+      title: 'New Chat',
+      messages: [],
+      lastUpdated: Date.now(),
+      archived: false,
+      pinned: false,
+    };
+
+    const updated = [newConv, ...getConversations()];
+    saveConversations(updated);
+    navigate(`/chat/${newId}`);
   };
 
-  const updated = [newConv, ...getConversations()];
-  saveConversations(updated);
-  navigate(`/chat/${newId}`);
-};
+  const clearLongPress = () => {
+    if (holdTimerRef.current) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+  };
+
+  const startLongPress = (chat: Conversation) => {
+    clearLongPress();
+    holdTimerRef.current = window.setTimeout(() => {
+      suppressOpenRef.current = true;
+      setMenuChat(chat);
+    }, 420);
+  };
+
+  const handleChatPress = (chat: Conversation) => {
+    if (suppressOpenRef.current) {
+      suppressOpenRef.current = false;
+      return;
+    }
+    openChat(chat.id);
+  };
+
+  const handleRename = () => {
+    if (!menuChat) return;
+    const nextTitle = window.prompt('Rename chat', menuChat.title);
+    if (!nextTitle || !nextTitle.trim()) return;
+    renameConversation(menuChat.id, nextTitle);
+    setMenuChat(null);
+    refreshChats();
+  };
+
+  const handleArchive = () => {
+    if (!menuChat) return;
+    archiveConversation(menuChat.id);
+    setMenuChat(null);
+    refreshChats();
+  };
+
+  const handlePinToggle = () => {
+    if (!menuChat) return;
+    if (menuChat.pinned) {
+      unpinConversation(menuChat.id);
+    } else {
+      pinConversation(menuChat.id);
+    }
+    setMenuChat(null);
+    refreshChats();
+  };
+
+  const handleDelete = () => {
+    if (!menuChat) return;
+    const ok = window.confirm(`Delete "${menuChat.title}"?`);
+    if (!ok) return;
+    deleteConversation(menuChat.id);
+    setMenuChat(null);
+    refreshChats();
+  };
+
+  useEffect(() => {
+    return () => clearLongPress();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-[#111111]">
