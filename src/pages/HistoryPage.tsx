@@ -14,9 +14,14 @@ const HistoryPage: React.FC = () => {
   const [archivedChats, setArchivedChats] = useState<Conversation[]>([]);
 
   useEffect(() => {
-    setActiveChats(getActiveConversations());
-    setArchivedChats(getArchivedConversations());
-  }, []);
+  const active = getActiveConversations().sort((a, b) => {
+    if (!!b.pinned !== !!a.pinned) return Number(!!b.pinned) - Number(!!a.pinned);
+    return b.lastUpdated - a.lastUpdated;
+  });
+
+  setActiveChats(active);
+  setArchivedChats(getArchivedConversations());
+}, []);
 
   const openChat = (id: string) => {
     navigate(`/chat/${id}`);
