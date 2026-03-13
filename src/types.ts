@@ -12,11 +12,12 @@ export interface Message {
 }
 
 export interface Conversation {
-  id: string;
-  title: string;
-  messages: Message[];
-  lastUpdated: number;
-  category?: string;
+  id: string
+  title: string
+  messages: Message[]
+  lastUpdated: number
+  category?: string
+  archived?: boolean
 }
 
 export interface ToolCategory {
