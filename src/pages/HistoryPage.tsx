@@ -139,10 +139,11 @@ const HistoryPage: React.FC = () => {
 
           <div className="overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
             <button
-              type="button"
-              className="flex w-full items-center justify-between px-5 py-4 text-left"
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-            >
+  type="button"
+  onClick={() => navigate('/history/archived')}
+  className="flex w-full items-center justify-between px-5 py-4 text-left"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
               <div>
                 <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
                   Archived chat
