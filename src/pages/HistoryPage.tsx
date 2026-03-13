@@ -193,12 +193,30 @@ const HistoryPage: React.FC = () => {
         <React.Fragment key={chat.id}>
           <button
             type="button"
-            onClick={() => openChat(chat.id)}
+            onClick={() => handleChatPress(chat)}
+            onTouchStart={() => startLongPress(chat)}
+            onTouchEnd={clearLongPress}
+            onTouchMove={clearLongPress}
+            onTouchCancel={clearLongPress}
+            onMouseDown={() => startLongPress(chat)}
+            onMouseUp={clearLongPress}
+            onMouseLeave={clearLongPress}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setMenuChat(chat);
+            }}
             className="block w-full px-5 py-4 text-left"
             style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
           >
-            <div className="truncate text-[16px] font-medium tracking-[-0.02em] text-[#111111]">
-              {chat.title}
+            <div className="flex items-center justify-between gap-3">
+              <div className="truncate text-[16px] font-medium tracking-[-0.02em] text-[#111111]">
+                {chat.title}
+              </div>
+              {chat.pinned && (
+                <span className="shrink-0 text-[12px] font-medium text-[#8a8a8f]">
+                  Pinned
+                </span>
+              )}
             </div>
           </button>
           {index !== activeChats.length - 1 && <div className="h-px bg-[#f0f1f5]" />}
@@ -207,6 +225,63 @@ const HistoryPage: React.FC = () => {
     )}
   </div>
 </div>
+
+{menuChat && (
+  <div className="fixed inset-0 z-[60]">
+    <button
+      type="button"
+      aria-label="Close menu"
+      onClick={() => setMenuChat(null)}
+      className="absolute inset-0 bg-black/10"
+    />
+
+    <div className="absolute left-1/2 bottom-6 w-[calc(100%-40px)] max-w-[360px] -translate-x-1/2 overflow-hidden rounded-[24px] border border-[#ececf2] bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+      <button
+        type="button"
+        onClick={handleRename}
+        className="flex w-full items-center justify-between px-5 py-4 text-left"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+      >
+        <span className="text-[17px] font-medium text-[#111111]">Rename</span>
+      </button>
+
+      <div className="h-px bg-[#f0f1f5]" />
+
+      <button
+        type="button"
+        onClick={handleArchive}
+        className="flex w-full items-center justify-between px-5 py-4 text-left"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+      >
+        <span className="text-[17px] font-medium text-[#111111]">Archive</span>
+      </button>
+
+      <div className="h-px bg-[#f0f1f5]" />
+
+      <button
+        type="button"
+        onClick={handlePinToggle}
+        className="flex w-full items-center justify-between px-5 py-4 text-left"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+      >
+        <span className="text-[17px] font-medium text-[#111111]">
+          {menuChat.pinned ? 'Unpin chat' : 'Pin chat'}
+        </span>
+      </button>
+
+      <div className="h-px bg-[#f0f1f5]" />
+
+      <button
+        type="button"
+        onClick={handleDelete}
+        className="flex w-full items-center justify-between px-5 py-4 text-left"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+      >
+        <span className="text-[17px] font-medium text-[#e53935]">Delete</span>
+      </button>
+    </div>
+  </div>
+)}
           </div>
         </div>
       </div>
