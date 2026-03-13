@@ -36,29 +36,50 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
   };
 
   return (
-    <div className={`
-      ${isOpen ? 'w-72' : 'w-0'} 
-      transition-all duration-300 ease-in-out bg-gray-900 text-white h-full flex flex-col overflow-hidden relative z-50
-      md:relative absolute
-    `}>
-      <div className="p-4 flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 min-w-[250px]">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            ASK-GPT (v1)
-          </h1>
-          <button onClick={() => setIsOpen(false)} className="md:hidden p-2 hover:bg-gray-800 rounded">
-            ✕
-          </button>
-        </div>
-
-        {/* New Chat Button */}
-        <button 
-          onClick={createNewChat}
-          className="w-full flex items-center justify-center gap-2 border border-gray-700 hover:bg-gray-800 py-3 rounded-lg mb-6 transition-colors"
+<div className={`
+  ${isOpen ? 'w-72' : 'w-0'}
+  transition-all duration-300 ease-in-out bg-white text-[#111111] h-full flex flex-col overflow-hidden relative z-50
+  md:relative absolute border-r border-[#ececf2]
+`}>
+  <div className="p-5 flex flex-col h-full bg-white">
+    {/* Header */}
+    <div className="mb-6 min-w-[250px] space-y-4">
+      <div className="flex items-center justify-between">
+        <h1
+          className="text-[24px] font-bold tracking-[-0.03em] text-[#111111]"
+          style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
         >
-          <span>+</span> New Chat
+          ASK-GPT
+        </h1>
+
+        <button
+          onClick={() => setIsOpen(false)}
+          className="md:hidden h-[42px] w-[42px] rounded-full border border-[#ececf2] bg-white text-[26px] leading-none text-[#111111] shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+        >
+          ×
         </button>
+      </div>
+
+      <button
+        type="button"
+        className="w-full rounded-[22px] border border-[#ececf2] bg-white px-5 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+      >
+        <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
+          My Profile
+        </div>
+      </button>
+
+      <button
+        type="button"
+        className="w-full rounded-[22px] border border-[#d9edf9] bg-[#eaf7ff] px-5 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+      >
+        <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
+          Upgrade to ASK-GPT Plus
+        </div>
+      </button>
+    </div>
 
         {/* Tools Section */}
         <div className="mb-6 min-w-[250px]">
