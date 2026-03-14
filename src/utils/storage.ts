@@ -1,4 +1,4 @@
-import { Conversation } from '../types';
+import { Conversation, AuthState } from '../types';
 
 const STORAGE_KEY = 'ask_gpt_conversations';
 
@@ -106,4 +106,44 @@ export const renameConversation = (id: string, title: string) => {
     c.id === id ? { ...c, title: cleanTitle } : c
   );
   saveConversations(updated);
+};
+const AUTH_STATE_STORAGE = 'ASKGPT_AUTH_STATE';
+const GUEST_MODE_STORAGE = 'ASKGPT_GUEST_MODE';
+
+export const getDefaultAuthState = (): AuthState => ({
+  isGuest: false,
+  isLoggedIn: false,
+  hasSeenAuthScreen: false,
+  user: null,
+});
+
+export const getAuthState = (): AuthState => {
+  const raw = localStorage.getItem(AUTH_STATE_STORAGE);
+  if (!raw) return getDefaultAuthState();
+
+  try {
+    return JSON.parse(raw) as AuthState;
+  } catch {
+    return getDefaultAuthState();
+  }
+};
+
+export const saveAuthState = (authState: AuthState) => {
+  localStorage.setItem(AUTH_STATE_STORAGE, JSON.stringify(authState));
+};
+
+export const clearAuthState = () => {
+  localStorage.removeItem(AUTH_STATE_STORAGE);
+};
+
+export const hasSeenGuestMode = (): boolean => {
+  return localStorage.getItem(GUEST_MODE_STORAGE) === 'true';
+};
+
+export const setSeenGuestMode = () => {
+  localStorage.setItem(GUEST_MODE_STORAGE, 'true');
+};
+
+export const clearGuestMode = () => {
+  localStorage.removeItem(GUEST_MODE_STORAGE);
 };
