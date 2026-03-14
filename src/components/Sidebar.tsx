@@ -121,11 +121,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
       navigate(`/chat/${newId}`);
       if (window.innerWidth < 768) setIsOpen(false);
     }}
-    className="flex items-center gap-2 rounded-full border border-[#ececf2] bg-white px-4 py-3 text-left transition-all hover:bg-[#f7f7fa]"
+    className="flex min-w-0 items-center gap-2 rounded-full border border-[#ececf2] bg-white px-3 py-3 text-left transition-all hover:bg-[#f7f7fa]"
     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
   >
-    <span className="text-[16px] leading-none opacity-85">{cat.icon}</span>
-    <span className="text-[14px] font-semibold tracking-[-0.02em] text-[#111111] whitespace-nowrap">
+    <span className="shrink-0 text-[16px] leading-none opacity-85">{cat.icon}</span>
+    <span className="min-w-0 truncate text-[13px] font-semibold tracking-[-0.02em] text-[#111111]">
       {cat.name}
     </span>
   </button>
