@@ -135,22 +135,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
   ))}
 </div>
 
+{/* Footer */}
+<div className="mt-auto pt-6 border-t border-[#ececf2] space-y-1 min-w-[250px]">
 
-        {/* Footer */}
-        <div className="mt-auto pt-6 border-t border-gray-800 space-y-2 min-w-[250px]">
-          <Link
-  to="/key"
-  className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:bg-gray-800 rounded-md"
->
-  ⚙️ Settings (Unlimited)
-</Link>
-          <button 
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:bg-gray-800 rounded-md transition-colors"
-          >
-            {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-          </button>
-        </div>
+  <button className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg">
+    🔑 Your API Key
+  </button>
+
+  <button className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg">
+    ⚙ Settings & Support
+  </button>
+
+  <button className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg">
+    📜 Privacy Policy
+  </button>
+
+  <button className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-red-500 hover:bg-[#f5f5f7] rounded-lg">
+    ⎋ Log out
+  </button>
+
+</div>
       </div>
     </div>
   );
