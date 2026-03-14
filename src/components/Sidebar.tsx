@@ -152,9 +152,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
   ⚙ Settings & Support
 </Link>
 
-  <button className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg">
-    📜 Privacy Policy
-  </button>
+  <Link
+  to="/privacy-policy"
+  className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg"
+>
+  📜 Privacy Policy
+</Link>
 
   <button className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-red-500 hover:bg-[#f5f5f7] rounded-lg">
     ⎋ Log out
