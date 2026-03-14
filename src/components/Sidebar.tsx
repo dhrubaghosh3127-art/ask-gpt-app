@@ -62,7 +62,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
 
       <button
   type="button"
-        onClick={() => {
+  onClick={() => {
+    navigate('/my-profile');
+    if (window.innerWidth < 768) setIsOpen(false);
+  }}
   className="w-full rounded-[20px] border border-[#ececf2] bg-white px-5 py-3.5 text-center shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
   style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
 >
