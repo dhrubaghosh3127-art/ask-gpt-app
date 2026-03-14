@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { onAuthStateChanged, signInWithRedirect } from 'firebase/auth';
 import {
   clearGuestConversations,
   getDefaultAuthState,
   saveAuthState,
   setSeenGuestMode,
 } from '../utils/storage';
-
+import { auth, googleProvider } from '../firebase';
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="h-5 w-5">
     <path
@@ -45,7 +46,21 @@ const EmailIcon = () => (
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (!user || !user.email) return;
 
+    navigate('/complete-profile', {
+      state: {
+        uid: user.uid,
+        email: user.email,
+        provider: 'google',
+      },
+    });
+  });
+
+  return () => unsubscribe();
+}, [navigate]);
   const handleSkip = () => {
     clearGuestConversations();
     saveAuthState({
@@ -56,7 +71,13 @@ const AuthPage: React.FC = () => {
     setSeenGuestMode();
     navigate('/chat');
   };
-
+const handleGoogleSignIn = async () => {
+  try {
+    await signInWithRedirect(auth, googleProvider);
+  } catch (error) {
+    console.error('Google sign-in failed:', error);
+  }
+};
   return (
     <div className="min-h-screen bg-white text-[#111111]">
       <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-5 pb-6">
@@ -99,8 +120,9 @@ const AuthPage: React.FC = () => {
 
           <div className="space-y-4">
             <button
-              type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-full border border-[#e5e7eb] bg-white px-5 py-4 text-[16px] font-semibold tracking-[-0.02em] text-[#111111] shadow-[0_2px_10px_rgba(15,23,42,0.03)]"
+  type="button"
+  onClick={handleGoogleSignIn}
+  className="flex w-full items-center justify-center gap-3 rounded-full border border-[#e5e7eb] bg-white px-5 py-4 text-[16px] font-semibold tracking-[-0.02em] text-[#111111] shadow-[0_2px_10px_rgba(15,23,42,0.03)]"
               style={{
                 fontFamily:
                   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
