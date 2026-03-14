@@ -45,21 +45,7 @@ const EmailIcon = () => (
 );
 
 const AuthPage: React.FC = () => {
-  useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (!user || !user.email) return;
 
-    navigate('/complete-profile', {
-      state: {
-        uid: user.uid,
-        email: user.email,
-        provider: 'google',
-      },
-    });
-  });
-
-  return () => unsubscribe();
-}, [navigate]);
   const navigate = useNavigate();
 useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, (user) => {
