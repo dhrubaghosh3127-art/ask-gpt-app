@@ -7,19 +7,28 @@ const PrivacyPolicyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-[#111111]">
       <div className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-6">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="mb-4 flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f7f7f8] text-[#111111]"
-          style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-        >
-          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-        </button>
+        <div className="mb-4 flex items-center justify-between">
+  <button
+    type="button"
+    onClick={() => navigate(-1)}
+    className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f7f7f8] text-[#111111]"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5" />
+      <path d="M12 19l-7-7 7-7" />
+    </svg>
+  </button>
 
-        <div className="rounded-[24px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)] overflow-hidden">
+  <div
+    className="flex-1 pl-3 text-[18px] font-bold tracking-[-0.03em] text-[#111111]"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    ASK-GPT PRIVACY POLICY
+  </div>
+</div>
+
+<div className="rounded-[24px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)] overflow-hidden">
           <div className="h-[78vh] overflow-y-auto px-5 py-5">
             <div
               className="mb-4 text-[20px] font-bold tracking-[-0.03em] text-[#111111]"
