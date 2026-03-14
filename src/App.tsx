@@ -8,6 +8,7 @@ import ArchivedPage from './pages/ArchivedPage';
 import Sidebar from './components/Sidebar';
 import SettingsPage from './pages/SettingsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import AuthPage from './pages/AuthPage';
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -40,6 +41,7 @@ const App: React.FC = () => {
         <main className="flex-1 flex flex-col min-w-0 relative">
           <Routes>
             <Route path="/" element={<Navigate to="/chat" />} />
+            <Route path="/auth" element={<AuthPage />} />
             <Route path="/chat" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/history" element={<HistoryPage />} />
