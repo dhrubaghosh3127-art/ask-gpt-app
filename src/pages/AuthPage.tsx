@@ -1,13 +1,17 @@
-import React, { useEffect } from 'react';
+  import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { onAuthStateChanged, signInWithRedirect } from 'firebase/auth';
+import { getRedirectResult, signInWithRedirect } from 'firebase/auth';
+import { auth, googleProvider } from '../firebase';
 import {
   clearGuestConversations,
+  clearGuestMode,
+  getAuthState,
   getDefaultAuthState,
+  getUserProfile,
   saveAuthState,
   setSeenGuestMode,
 } from '../utils/storage';
-import { auth, googleProvider } from '../firebase';
+
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="h-5 w-5">
     <path
@@ -45,23 +49,56 @@ const EmailIcon = () => (
 );
 
 const AuthPage: React.FC = () => {
-
   const navigate = useNavigate();
-useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (!user || !user.email) return;
+  const [loading, setLoading] = useState(false);
 
-    navigate('/complete-profile', {
-      state: {
-        uid: user.uid,
-        email: user.email,
-        provider: 'google',
-      },
-    });
-  });
+  useEffect(() => {
+    const savedAuth = getAuthState();
 
-  return () => unsubscribe();
-}, [navigate]);
+    if (savedAuth.isLoggedIn && savedAuth.user) {
+      navigate('/chat', { replace: true });
+      return;
+    }
+
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        const firebaseUser = result?.user ?? auth.currentUser;
+
+        if (!firebaseUser || !firebaseUser.email) return;
+
+        const existingUser = getUserProfile(firebaseUser.uid);
+
+        if (existingUser) {
+          saveAuthState({
+            isGuest: false,
+            isLoggedIn: true,
+            hasSeenAuthScreen: true,
+            user: existingUser,
+          });
+
+          clearGuestMode();
+          clearGuestConversations();
+          navigate('/chat', { replace: true });
+          return;
+        }
+
+        navigate('/complete-profile', {
+          replace: true,
+          state: {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            provider: 'google',
+          },
+        });
+      } catch (error) {
+        console.error('Redirect result failed:', error);
+      }
+    };
+
+    handleRedirectResult();
+  }, [navigate]);
+
   const handleSkip = () => {
     clearGuestConversations();
     saveAuthState({
@@ -72,19 +109,27 @@ useEffect(() => {
     setSeenGuestMode();
     navigate('/chat');
   };
-const handleGoogleSignIn = async () => {
-  try {
-    await signInWithRedirect(auth, googleProvider);
-  } catch (error) {
-    console.error('Google sign-in failed:', error);
 
-    const err = error as { code?: string; message?: string };
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      await signInWithRedirect(auth, googleProvider);
+    } catch (error) {
+      setLoading(false);
+      console.error('Google sign-in failed:', error);
 
-    alert(
-      `Google sign-in failed\n\nCode: ${err.code || 'unknown'}\nMessage: ${err.message || 'no message'}`
-    );
-  }
-};
+      const err = error as { code?: string; message?: string };
+
+      alert(
+        `Google sign-in failed\n\nCode: ${err.code || 'unknown'}\nMessage: ${err.message || 'no message'}`
+      );
+    }
+  };
+
+  const handleEmailClick = () => {
+    alert('Continue with Email will be activated next.');
+  };
+
   return (
     <div className="min-h-screen bg-white text-[#111111]">
       <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-5 pb-6">
@@ -113,6 +158,7 @@ const handleGoogleSignIn = async () => {
             >
               Sign in to ASK-GPT
             </h1>
+
             <p
               className="mt-3 text-[15px] leading-6 text-[#6b7280]"
               style={{
@@ -127,20 +173,22 @@ const handleGoogleSignIn = async () => {
 
           <div className="space-y-4">
             <button
-  type="button"
-  onClick={handleGoogleSignIn}
-  className="flex w-full items-center justify-center gap-3 rounded-full border border-[#e5e7eb] bg-white px-5 py-4 text-[16px] font-semibold tracking-[-0.02em] text-[#111111] shadow-[0_2px_10px_rgba(15,23,42,0.03)]"
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-3 rounded-full border border-[#e5e7eb] bg-white px-5 py-4 text-[16px] font-semibold tracking-[-0.02em] text-[#111111] shadow-[0_2px_10px_rgba(15,23,42,0.03)] disabled:opacity-60"
               style={{
                 fontFamily:
                   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
               }}
             >
               <GoogleIcon />
-              <span>Continue with Google</span>
+              <span>{loading ? 'Please wait...' : 'Continue with Google'}</span>
             </button>
 
             <button
               type="button"
+              onClick={handleEmailClick}
               className="flex w-full items-center justify-center gap-3 rounded-full border border-[#e5e7eb] bg-white px-5 py-4 text-[16px] font-semibold tracking-[-0.02em] text-[#111111] shadow-[0_2px_10px_rgba(15,23,42,0.03)]"
               style={{
                 fontFamily:
@@ -168,4 +216,4 @@ const handleGoogleSignIn = async () => {
   );
 };
 
-export default AuthPage;
+export default AuthPage;        
