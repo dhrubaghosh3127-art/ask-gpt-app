@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ChatPage from './pages/ChatPage';
 import PremiumPage from './pages/PremiumPage';
@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import SettingsPage from './pages/SettingsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import AuthPage from './pages/AuthPage';
+import { getAuthState } from './utils/storage';
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -27,7 +28,15 @@ const App: React.FC = () => {
   }, [isDarkMode]);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+const startPath = useMemo(() => {
+  const authState = getAuthState();
 
+  if (authState.isLoggedIn && authState.user) {
+    return '/chat';
+  }
+
+  return '/auth';
+}, []);
   return (
     <Router>
       <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200 overflow-hidden">
@@ -40,7 +49,7 @@ const App: React.FC = () => {
         
         <main className="flex-1 flex flex-col min-w-0 relative">
           <Routes>
-            <Route path="/" element={<Navigate to="/chat" />} />
+            <Route path="/" element={<Navigate to={startPath} />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/chat" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
