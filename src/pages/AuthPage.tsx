@@ -72,10 +72,13 @@ useEffect(() => {
     navigate('/chat');
   };
 const handleGoogleSignIn = async () => {
+  alert('Google button clicked');
+
   try {
     await signInWithRedirect(auth, googleProvider);
   } catch (error) {
     console.error('Google sign-in failed:', error);
+    alert('Google sign-in failed');
   }
 };
   return (
