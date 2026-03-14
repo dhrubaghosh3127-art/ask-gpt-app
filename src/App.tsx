@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import SettingsPage from './pages/SettingsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import AuthPage from './pages/AuthPage';
+import CompleteProfilePage from './pages/CompleteProfilePage';
 import { getAuthState } from './utils/storage';
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -51,6 +52,7 @@ const startPath = useMemo(() => {
           <Routes>
             <Route path="/" element={<Navigate to={startPath} />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/complete-profile" element={<CompleteProfilePage />} />
             <Route path="/chat" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/history" element={<HistoryPage />} />
