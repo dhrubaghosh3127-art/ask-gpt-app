@@ -1,13 +1,17 @@
 import { Conversation, AuthState } from '../types';
 
-const STORAGE_KEY = 'ask_gpt_conversations';
+const GUEST_CONVERSATION_STORAGE_KEY = 'ask_gpt_guest_conversations';
 
 export const saveConversations = (conversations: Conversation[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+  const store = getConversationStore();
+  const key = getConversationStorageKey();
+  store.setItem(key, JSON.stringify(conversations));
 };
 
 export const getConversations = (): Conversation[] => {
-  const data = localStorage.getItem(STORAGE_KEY);
+  const store = getConversationStore();
+  const key = getConversationStorageKey();
+  const data = store.getItem(key);
   return data ? JSON.parse(data) : [];
 };
 
