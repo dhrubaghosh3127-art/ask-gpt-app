@@ -7,6 +7,7 @@ import HistoryPage from './pages/HistoryPage';
 import ArchivedPage from './pages/ArchivedPage';
 import Sidebar from './components/Sidebar';
 import SettingsPage from './pages/SettingsPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -44,6 +45,7 @@ const App: React.FC = () => {
             <Route path="/history" element={<HistoryPage />} />
 <Route path="/history/archived" element={<ArchivedPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 <Route path="/key" element={<KeySetup />} />
           </Routes>
         </main>
