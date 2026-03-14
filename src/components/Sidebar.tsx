@@ -99,37 +99,37 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
     >
       <div className="grid grid-cols-2 gap-2">
         {group.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => {
-              const newId = Date.now().toString();
-              const newConv: Conversation = {
-                id: newId,
-                title: cat.name,
-                messages: [{
-                  id: 'welcome',
-                  role: Role.MODEL,
-                  content: `Hello! I am ready to help you with **${cat.name}**. How can I assist you today?`,
-                  timestamp: Date.now()
-                }],
-                lastUpdated: Date.now(),
-                category: cat.id
-              };
-              const updated = [newConv, ...conversations];
-              saveConversations(updated);
-              setConversations(updated);
-              navigate(`/chat/${newId}`);
-              if (window.innerWidth < 768) setIsOpen(false);
-            }}
-            className="flex min-h-[64px] flex-col items-start justify-center gap-1.5 rounded-[18px] border border-[#ececf2] bg-white px-3 py-3 text-left transition-all hover:bg-[#f7f7fa]"
-            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-          >
-            <span className="text-[18px] leading-none opacity-85">{cat.icon}</span>
-            <span className="text-[13px] font-semibold tracking-[-0.02em] text-[#111111] leading-[1.15]">
-              {cat.name}
-            </span>
-          </button>
-        ))}
+  <button
+    key={cat.id}
+    onClick={() => {
+      const newId = Date.now().toString();
+      const newConv: Conversation = {
+        id: newId,
+        title: cat.name,
+        messages: [{
+          id: 'welcome',
+          role: Role.MODEL,
+          content: `Hello! I am ready to help you with **${cat.name}**. How can I assist you today?`,
+          timestamp: Date.now()
+        }],
+        lastUpdated: Date.now(),
+        category: cat.id
+      };
+      const updated = [newConv, ...conversations];
+      saveConversations(updated);
+      setConversations(updated);
+      navigate(`/chat/${newId}`);
+      if (window.innerWidth < 768) setIsOpen(false);
+    }}
+    className="flex items-center gap-2 rounded-full border border-[#ececf2] bg-white px-4 py-3 text-left transition-all hover:bg-[#f7f7fa]"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    <span className="text-[16px] leading-none opacity-85">{cat.icon}</span>
+    <span className="text-[14px] font-semibold tracking-[-0.02em] text-[#111111] whitespace-nowrap">
+      {cat.name}
+    </span>
+  </button>
+))}
       </div>
     </div>
   ))}
