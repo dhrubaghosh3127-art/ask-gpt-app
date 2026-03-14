@@ -27,4 +27,18 @@ export interface ToolCategory {
   icon: string;
   prompt: string;
 }
+export interface AppUser {
+  uid: string;
+  name: string;
+  email: string;
+  age: string;
+  provider: 'google' | 'email' | 'guest';
+  createdAt: number;
+}
 
+export interface AuthState {
+  isGuest: boolean;
+  isLoggedIn: boolean;
+  hasSeenAuthScreen: boolean;
+  user: AppUser | null;
+}
