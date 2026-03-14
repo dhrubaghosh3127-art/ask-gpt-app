@@ -151,3 +151,26 @@ export const setSeenGuestMode = () => {
 export const clearGuestMode = () => {
   localStorage.removeItem(GUEST_MODE_STORAGE);
 };
+const getConversationStore = () => {
+  const authState = getAuthState();
+
+  if (authState.isLoggedIn && authState.user?.uid) {
+    return localStorage;
+  }
+
+  return sessionStorage;
+};
+
+const getConversationStorageKey = () => {
+  const authState = getAuthState();
+
+  if (authState.isLoggedIn && authState.user?.uid) {
+    return `ask_gpt_conversations_${authState.user.uid}`;
+  }
+
+  return GUEST_CONVERSATION_STORAGE_KEY;
+};
+
+export const clearGuestConversations = () => {
+  sessionStorage.removeItem(GUEST_CONVERSATION_STORAGE_KEY);
+};
