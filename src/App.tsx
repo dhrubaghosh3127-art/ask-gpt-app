@@ -6,7 +6,7 @@ import KeySetup from './pages/KeySetup';
 import HistoryPage from './pages/HistoryPage';
 import ArchivedPage from './pages/ArchivedPage';
 import Sidebar from './components/Sidebar';
-
+import SettingsPage from './pages/SettingsPage';
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -43,6 +43,7 @@ const App: React.FC = () => {
             <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/history" element={<HistoryPage />} />
 <Route path="/history/archived" element={<ArchivedPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
 <Route path="/key" element={<KeySetup />} />
           </Routes>
         </main>
