@@ -67,44 +67,40 @@ const AuthPage: React.FC = () => {
       return;
     }
 getRedirectResult(auth).then((result) => {
-  if (result?.user) {
-    console.log("LOGIN SUCCESS", result.user.email);
-  }
-});
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (!firebaseUser || !firebaseUser.email) return;
-      if (handledRef.current) return;
+  const redirectUser = result?.user;
 
-      handledRef.current = true;
+  if (!redirectUser || !redirectUser.email) return;
+  if (handledRef.current) return;
 
-      const existingUser = getUserProfile(firebaseUser.uid);
+  handledRef.current = true;
 
-      if (existingUser) {
-        saveAuthState({
-          isGuest: false,
-          isLoggedIn: true,
-          hasSeenAuthScreen: true,
-          user: existingUser,
-        });
+  const existingUser = getUserProfile(redirectUser.uid);
 
-        clearGuestMode();
-        clearGuestConversations();
-        navigate('/chat', { replace: true });
-        return;
-      }
-
-      navigate('/complete-profile', {
-        replace: true,
-        state: {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          provider: 'google',
-        },
-      });
+  if (existingUser) {
+    saveAuthState({
+      isGuest: false,
+      isLoggedIn: true,
+      hasSeenAuthScreen: true,
+      user: existingUser,
     });
 
-    return () => unsubscribe();
-  }, [navigate]);
+    clearGuestMode();
+    clearGuestConversations();
+    navigate('/chat', { replace: true });
+    return;
+  }
+
+  navigate('/complete-profile', {
+    replace: true,
+    state: {
+      uid: redirectUser.uid,
+      email: redirectUser.email,
+      provider: 'google',
+    },
+  });
+});
+
+    }, [navigate]);
 
   const handleSkip = () => {
     clearGuestConversations();
