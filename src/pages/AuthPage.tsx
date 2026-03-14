@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { onAuthStateChanged, signInWithRedirect } from 'firebase/auth';
+import {
+  browserLocalPersistence,
+  onAuthStateChanged,
+  setPersistence,
+  signInWithRedirect,
+} from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import {
   clearGuestConversations,
@@ -108,20 +113,21 @@ const AuthPage: React.FC = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true);
-      await signInWithRedirect(auth, googleProvider);
-    } catch (error) {
-      setLoading(false);
-      console.error('Google sign-in failed:', error);
+  try {
+    setLoading(true);
+    await setPersistence(auth, browserLocalPersistence);
+    await signInWithRedirect(auth, googleProvider);
+  } catch (error) {
+    setLoading(false);
+    console.error('Google sign-in failed:', error);
 
-      const err = error as { code?: string; message?: string };
+    const err = error as { code?: string; message?: string };
 
-      alert(
-        `Google sign-in failed\n\nCode: ${err.code || 'unknown'}\nMessage: ${err.message || 'no message'}`
-      );
-    }
-  };
+    alert(
+      `Google sign-in failed\n\nCode: ${err.code || 'unknown'}\nMessage: ${err.message || 'no message'}`
+    );
+  }
+};
 
   const handleEmailClick = () => {
     alert('Continue with Email will be activated next.');
