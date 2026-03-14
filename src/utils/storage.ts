@@ -1,4 +1,4 @@
-import { Conversation, AuthState } from '../types';
+import { Conversation, AuthState, AppUser } from '../types';
 
 const GUEST_CONVERSATION_STORAGE_KEY = 'ask_gpt_guest_conversations';
 
@@ -113,7 +113,7 @@ export const renameConversation = (id: string, title: string) => {
 };
 const AUTH_STATE_STORAGE = 'ASKGPT_AUTH_STATE';
 const GUEST_MODE_STORAGE = 'ASKGPT_GUEST_MODE';
-
+const USER_PROFILE_PREFIX = 'ASKGPT_USER_PROFILE_';
 export const getDefaultAuthState = (): AuthState => ({
   isGuest: false,
   isLoggedIn: false,
@@ -150,6 +150,20 @@ export const setSeenGuestMode = () => {
 
 export const clearGuestMode = () => {
   localStorage.removeItem(GUEST_MODE_STORAGE);
+};
+export const getUserProfile = (uid: string): AppUser | null => {
+  const raw = localStorage.getItem(`${USER_PROFILE_PREFIX}${uid}`);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as AppUser;
+  } catch {
+    return null;
+  }
+};
+
+export const saveUserProfile = (user: AppUser) => {
+  localStorage.setItem(`${USER_PROFILE_PREFIX}${user.uid}`, JSON.stringify(user));
 };
 const getConversationStore = () => {
   const authState = getAuthState();
