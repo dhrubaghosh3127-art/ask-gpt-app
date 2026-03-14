@@ -83,6 +83,7 @@ const handleGoogleSignIn = async () => {
       `Google sign-in failed\n\nCode: ${err.code || 'unknown'}\nMessage: ${err.message || 'no message'}`
     );
   }
+};
   return (
     <div className="min-h-screen bg-white text-[#111111]">
       <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-5 pb-6">
