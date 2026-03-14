@@ -1,6 +1,6 @@
-  import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getRedirectResult, signInWithRedirect } from 'firebase/auth';
+import { onAuthStateChanged, signInWithRedirect } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import {
   clearGuestConversations,
@@ -51,6 +51,7 @@ const EmailIcon = () => (
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const handledRef = useRef(false);
 
   useEffect(() => {
     const savedAuth = getAuthState();
@@ -60,43 +61,39 @@ const AuthPage: React.FC = () => {
       return;
     }
 
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        const firebaseUser = result?.user ?? auth.currentUser;
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser || !firebaseUser.email) return;
+      if (handledRef.current) return;
 
-        if (!firebaseUser || !firebaseUser.email) return;
+      handledRef.current = true;
 
-        const existingUser = getUserProfile(firebaseUser.uid);
+      const existingUser = getUserProfile(firebaseUser.uid);
 
-        if (existingUser) {
-          saveAuthState({
-            isGuest: false,
-            isLoggedIn: true,
-            hasSeenAuthScreen: true,
-            user: existingUser,
-          });
-
-          clearGuestMode();
-          clearGuestConversations();
-          navigate('/chat', { replace: true });
-          return;
-        }
-
-        navigate('/complete-profile', {
-          replace: true,
-          state: {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            provider: 'google',
-          },
+      if (existingUser) {
+        saveAuthState({
+          isGuest: false,
+          isLoggedIn: true,
+          hasSeenAuthScreen: true,
+          user: existingUser,
         });
-      } catch (error) {
-        console.error('Redirect result failed:', error);
-      }
-    };
 
-    handleRedirectResult();
+        clearGuestMode();
+        clearGuestConversations();
+        navigate('/chat', { replace: true });
+        return;
+      }
+
+      navigate('/complete-profile', {
+        replace: true,
+        state: {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          provider: 'google',
+        },
+      });
+    });
+
+    return () => unsubscribe();
   }, [navigate]);
 
   const handleSkip = () => {
@@ -216,4 +213,4 @@ const AuthPage: React.FC = () => {
   );
 };
 
-export default AuthPage;        
+export default AuthPage;
