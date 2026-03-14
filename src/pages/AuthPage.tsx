@@ -5,6 +5,7 @@ import {
   onAuthStateChanged,
   setPersistence,
   signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import {
@@ -65,7 +66,11 @@ const AuthPage: React.FC = () => {
       navigate('/chat', { replace: true });
       return;
     }
-
+getRedirectResult(auth).then((result) => {
+  if (result?.user) {
+    console.log("LOGIN SUCCESS", result.user.email);
+  }
+});
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser || !firebaseUser.email) return;
       if (handledRef.current) return;
