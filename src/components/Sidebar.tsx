@@ -62,6 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
 
       <button
   type="button"
+        onClick={() => {
   className="w-full rounded-[20px] border border-[#ececf2] bg-white px-5 py-3.5 text-center shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
   style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
 >
