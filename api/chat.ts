@@ -126,6 +126,80 @@ return res.status(200).json({
   modelId: actualImageModel,
 });
     }
+    if (mode === "transcribe") {
+  if (hasUserKey) {
+    return res.status(403).json({
+      error: "Voice transcription is available only in admin mode",
+    });
+  }
+
+  const groqApiKey = process.env.GROQ_API_KEY || "";
+
+  if (!groqApiKey) {
+    return res.status(400).json({
+      error: "Missing API key (GROQ_API_KEY)",
+    });
+  }
+
+  const cleanBase64 = (audioBase64 || "")
+    .replace(/^data:.*;base64,/, "")
+    .trim();
+
+  if (!cleanBase64) {
+    return res.status(400).json({
+      error: "audioBase64 is required",
+    });
+  }
+
+  const actualMimeType = (mimeType || "audio/webm").trim() || "audio/webm";
+  const audioUrl = `data:${actualMimeType};base64,${cleanBase64}`;
+
+  const formData = new FormData();
+  formData.append("model", "whisper-large-v3-turbo");
+  formData.append("url", audioUrl);
+  formData.append("response_format", "json");
+
+  if (language && language.trim()) {
+    formData.append("language", language.trim());
+  }
+
+  const sttRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${groqApiKey}`,
+    },
+    body: formData,
+  });
+
+  const sttRaw = await sttRes.text();
+
+  let sttData: any = null;
+  try {
+    sttData = sttRaw ? JSON.parse(sttRaw) : null;
+  } catch {
+    sttData = { text: sttRaw };
+  }
+
+  if (!sttRes.ok) {
+    return res.status(sttRes.status).json({
+      error:
+        sttData?.error?.message ||
+        sttData?.error ||
+        "Transcription failed",
+      data: sttData,
+    });
+  }
+
+  const text =
+    typeof sttData?.text === "string"
+      ? sttData.text.trim()
+      : "";
+
+  return res.status(200).json({
+    text,
+    modelId: "whisper-large-v3-turbo",
+  });
+                              }
     // userKey থাকলে OpenRouter, না থাকলে Groq(admin)
     const apiUrl = hasUserKey ? OPENROUTER_URL : GROQ_URL;
     const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
