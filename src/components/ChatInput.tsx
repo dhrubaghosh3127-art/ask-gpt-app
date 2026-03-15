@@ -100,7 +100,7 @@ const handleVoiceClick = async () => {
           setInput((prev) => (prev.trim() ? `${prev} ${text.trim()}` : text.trim()));
         }
       } catch (error) {
-        console.error('Voice transcription failed:', error);
+        alert(error instanceof Error ? error.message : 'Voice transcription failed');
       } finally {
         audioChunksRef.current = [];
         mediaRecorderRef.current = null;
@@ -112,7 +112,7 @@ const handleVoiceClick = async () => {
     recorder.start();
     setIsRecording(true);
   } catch (error) {
-    console.error('Microphone access denied:', error);
+    alert(error instanceof Error ? error.message : 'Microphone access denied');
     stopStreamTracks();
     setIsRecording(false);
   }
