@@ -152,24 +152,32 @@ return res.status(200).json({
   }
 
   const actualMimeType = (mimeType || "audio/webm").trim() || "audio/webm";
-  const audioUrl = `data:${actualMimeType};base64,${cleanBase64}`;
+const audioBuffer = Buffer.from(cleanBase64, "base64");
+const audioBlob = new Blob([audioBuffer], { type: actualMimeType });
 
-  const formData = new FormData();
-  formData.append("model", "whisper-large-v3-turbo");
-  formData.append("url", audioUrl);
-  formData.append("response_format", "json");
+const ext =
+  actualMimeType.includes("wav") ? "wav" :
+  actualMimeType.includes("ogg") ? "ogg" :
+  actualMimeType.includes("mp4") ? "mp4" :
+  actualMimeType.includes("mpeg") || actualMimeType.includes("mp3") ? "mp3" :
+  "webm";
 
-  if (language && language.trim()) {
-    formData.append("language", language.trim());
-  }
+const formData = new FormData();
+formData.append("model", "whisper-large-v3-turbo");
+formData.append("file", audioBlob, `voice.${ext}`);
+formData.append("response_format", "json");
 
-  const sttRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${groqApiKey}`,
-    },
-    body: formData,
-  });
+if (language && language.trim()) {
+  formData.append("language", language.trim());
+}
+
+const sttRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${groqApiKey}`,
+  },
+  body: formData,
+});
 
   const sttRaw = await sttRes.text();
 
