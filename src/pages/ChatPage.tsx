@@ -29,7 +29,7 @@ const navigate = useNavigate();
 
 const [conversation, setConversation] = useState<Conversation | null>(null);
 const [isLoading, setIsLoading] = useState(false);
-
+const [isTranscribing, setIsTranscribing] = useState(false);
 const [isThinking, setIsThinking] = useState(false);
 const [thinkingText, setThinkingText] = useState("");
 const [thinkingOpen, setThinkingOpen] = useState(true);
@@ -317,7 +317,42 @@ const limitText = (userText: string) => {
 };
 
 
+const handleTranscribe = async (
+  audioBase64: string,
+  mimeType: string,
+  language = "bn"
+) => {
+  setIsTranscribing(true);
 
+  try {
+    const activeUserKey = getUserApiKey()?.trim() || "";
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mode: "transcribe",
+        audioBase64,
+        mimeType,
+        language,
+        userKey: activeUserKey,
+        userApiKey: activeUserKey,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data?.error || "Voice transcription failed");
+    }
+
+    return typeof data?.text === "string" ? data.text : "";
+  } finally {
+    setIsTranscribing(false);
+  }
+};
   const handleSend = async (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -744,7 +779,12 @@ const response = await getGeminiResponse({
         )}
       </div>
 
-      <ChatInput onSend={handleSend} isLoading={isLoading} />
+      <ChatInput
+  onSend={handleSend}
+  isLoading={isLoading}
+  onTranscribe={handleTranscribe}
+  isTranscribing={isTranscribing}
+/>
     </div>
   );
 };
