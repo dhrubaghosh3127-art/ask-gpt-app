@@ -148,7 +148,7 @@ const handleVoiceClick = async () => {
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.1} d="M12 19v2m-4 0h8" />
   </svg>
 </button>
-{!input.trim() && !isLoading ? (
+{!input.trim() && !isLoading && !isRecording && !isTranscribing ? (
   <button
     type="button"
     aria-label="Speak"
@@ -164,7 +164,8 @@ const handleVoiceClick = async () => {
   </button>
 ) : (
   <button
-    type={isLoading ? "button" : "submit"}
+    type={isLoading || isRecording || isTranscribing ? "button" : "submit"}
+    onClick={isRecording ? handleVoiceClick : undefined}
     className={`h-11 w-11 flex items-center justify-center transition-all ${
       isLoading
         ? 'rounded-full bg-[#111111] text-white shadow-[0_8px_20px_rgba(17,17,17,0.14)]'
