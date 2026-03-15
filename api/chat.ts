@@ -19,13 +19,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body =
       typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
 
-    const { modelId, messages, userKey, userApiKey, prompt, mode } = body as {
+    const {
+  modelId,
+  messages,
+  userKey,
+  userApiKey,
+  prompt,
+  mode,
+  audioBase64,
+  mimeType,
+  language,
+} = body as {
   modelId?: string;
   messages?: any[];
   userKey?: string;
   userApiKey?: string;
   prompt?: string;
-  mode?: "chat" | "image";
+  mode?: "chat" | "image" | "transcribe";
+  audioBase64?: string;
+  mimeType?: string;
+  language?: string;
 };
 
     if (mode !== "image" && !Array.isArray(messages)) {
