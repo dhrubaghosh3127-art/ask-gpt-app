@@ -3,16 +3,26 @@ import React, { useState, useRef, useEffect } from 'react';
 interface ChatInputProps {
   onSend: (message: string) => void;
   isLoading: boolean;
+  onTranscribe?: (audioBase64: string, mimeType: string, language?: string) => Promise<string>;
+  isTranscribing?: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading, onTranscribe, isTranscribing = false }) => {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [attachOpen, setAttachOpen] = useState(false);
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
 const uploadRef = useRef<HTMLInputElement>(null);
 const cameraRef = useRef<HTMLInputElement>(null);
+const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+const audioChunksRef = useRef<Blob[]>([]);
+const streamRef = useRef<MediaStream | null>(null);
+const [isRecording, setIsRecording] = useState(false);
 
+const stopStreamTracks = () => {
+  streamRef.current?.getTracks().forEach(track => track.stop());
+  streamRef.current = null;
+};
 const openUpload = () => { setAttachOpen(false); uploadRef.current?.click(); };
 const openCamera = () => { setAttachOpen(false); cameraRef.current?.click(); };
 const formClassName = 'relative mx-auto w-full max-w-[760px] rounded-[30px] border border-[#e8ebf0] bg-white px-5 pt-4 pb-3 shadow-[0_10px_26px_rgba(15,23,42,0.07)]'
