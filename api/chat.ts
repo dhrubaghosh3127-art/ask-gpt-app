@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   language?: string;
 };
 
-    if (mode !== "image" && !Array.isArray(messages)) {
+    if (mode === "chat" && !Array.isArray(messages)) {
   return res.status(400).json({ error: "messages are required" });
     }
 
