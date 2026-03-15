@@ -17,7 +17,7 @@ const cameraRef = useRef<HTMLInputElement>(null);
 const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 const audioChunksRef = useRef<Blob[]>([]);
 const streamRef = useRef<MediaStream | null>(null);
-const [isRecording, setIsRecording] = useState(false);
+const [isTranscribing, setIsTranscribing] = useState(false);
 
 const stopStreamTracks = () => {
   streamRef.current?.getTracks().forEach(track => track.stop());
@@ -138,9 +138,9 @@ const handleVoiceClick = async () => {
     <div className="mt-1 flex shrink-0 items-center gap-3">
       <button
   type="button"
-  aria-label="Voice"
-  className="shrink-0 h-11 w-11 rounded-full border border-[#eceff3] bg-white flex items-center justify-center shadow-[0_8px_20px_rgba(17,17,17,0.08)] transition-all"
-  onClick={() => {}}
+  aria-label={isRecording ? "Stop recording" : isTranscribing ? "Transcribing" : "Voice"}
+  className={`shrink-0 h-11 w-11 rounded-full border border-[#eceff3] bg-white flex items-center justify-center shadow-[0_8px_20px_rgba(17,17,17,0.08)] transition-all ${isRecording ? 'ring-2 ring-red-400' : ''} ${isTranscribing ? 'opacity-60' : ''}`}
+  onClick={handleVoiceClick}
 >
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.1} d="M12 14a3 3 0 003-3V6a3 3 0 00-6 0v5a3 3 0 003 3z" />
