@@ -50,7 +50,73 @@ const textareaClassName = 'min-h-[38px] flex-1 resize-none bg-transparent border
       handleSubmit();
     }
   };
+const blobToBase64 = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      resolve(result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 
+const handleVoiceClick = async () => {
+  if (isLoading || isTranscribing) return;
+
+  if (isRecording) {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+    return;
+  }
+
+  if (!onTranscribe) return;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    streamRef.current = stream;
+    audioChunksRef.current = [];
+
+    const recorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = recorder;
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) audioChunksRef.current.push(event.data);
+    };
+
+    recorder.onstop = async () => {
+      try {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: recorder.mimeType || 'audio/webm',
+        });
+
+        const audioBase64 = await blobToBase64(audioBlob);
+        const text = await onTranscribe(
+          audioBase64,
+          audioBlob.type || 'audio/webm'
+        );
+
+        if (text?.trim()) {
+          setInput((prev) => (prev.trim() ? `${prev} ${text.trim()}` : text.trim()));
+        }
+      } catch (error) {
+        console.error('Voice transcription failed:', error);
+      } finally {
+        audioChunksRef.current = [];
+        mediaRecorderRef.current = null;
+        stopStreamTracks();
+        setIsRecording(false);
+      }
+    };
+
+    recorder.start();
+    setIsRecording(true);
+  } catch (error) {
+    console.error('Microphone access denied:', error);
+    stopStreamTracks();
+    setIsRecording(false);
+  }
+};
   return (
     <div className="w-full px-4 pb-4">
       <form 
