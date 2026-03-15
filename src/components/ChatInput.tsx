@@ -125,15 +125,28 @@ const handleVoiceClick = async () => {
       >
        <div className="relative">
   <div className="flex items-start gap-3">
-    <textarea
-      ref={textareaRef}
-      rows={1}
-      value={input}
-      onChange={(e) => setInput(e.target.value)}
-      onKeyDown={handleKeyDown}
-      placeholder="Ask anything..."
-      className={textareaClassName}
-    />
+    {isRecording ? (
+  <div className={`${textareaClassName} flex items-center gap-3 select-none`}>
+    <div className="flex items-end gap-[3px] h-6">
+      <span className="w-[3px] h-[8px] rounded-full bg-black/80 animate-bounce"></span>
+      <span className="w-[3px] h-[16px] rounded-full bg-black/80 animate-bounce [animation-delay:0.12s]"></span>
+      <span className="w-[3px] h-[11px] rounded-full bg-black/80 animate-bounce [animation-delay:0.24s]"></span>
+      <span className="w-[3px] h-[18px] rounded-full bg-black/80 animate-bounce [animation-delay:0.36s]"></span>
+      <span className="w-[3px] h-[9px] rounded-full bg-black/80 animate-bounce [animation-delay:0.48s]"></span>
+    </div>
+    <span className="text-[16px] text-[#6b7280]">Listening...</span>
+  </div>
+) : (
+  <textarea
+    ref={textareaRef}
+    rows={1}
+    value={input}
+    onChange={(e) => setInput(e.target.value)}
+    onKeyDown={handleKeyDown}
+    placeholder="Ask anything..."
+    className={textareaClassName}
+  />
+)}
 
     <div className="mt-1 flex shrink-0 items-center gap-3">
       <button
