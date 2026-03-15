@@ -17,7 +17,7 @@ const cameraRef = useRef<HTMLInputElement>(null);
 const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 const audioChunksRef = useRef<Blob[]>([]);
 const streamRef = useRef<MediaStream | null>(null);
-const [isTranscribing, setIsTranscribing] = useState(false);
+const [isLoading, setIsLoading] = useState(false);
 
 const stopStreamTracks = () => {
   streamRef.current?.getTracks().forEach(track => track.stop());
