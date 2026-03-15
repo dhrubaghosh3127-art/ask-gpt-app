@@ -325,7 +325,7 @@ const handleTranscribe = async (
   setIsTranscribing(true);
 
   try {
-    const activeUserKey = getUserApiKey()?.trim() || "";
+    const activeUserKey = "";
 
     const res = await fetch("/api/chat", {
       method: "POST",
