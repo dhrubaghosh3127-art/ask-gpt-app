@@ -381,7 +381,7 @@ const handleTranscribe = async (
 
   return typeof data?.text === "string" ? data.text.trim() : "";
 };
-  const handleSend = async (content: string) => {
+  const handleSend = async (content: string, images: File[] = []) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: Role.USER,
