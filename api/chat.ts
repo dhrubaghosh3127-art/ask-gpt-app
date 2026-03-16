@@ -27,6 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   prompt,
   mode,
   audioBase64,
+  imageBase64,
   mimeType,
   language,
 } = body as {
@@ -35,8 +36,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   userKey?: string;
   userApiKey?: string;
   prompt?: string;
-  mode?: "chat" | "image" | "transcribe";
+  mode?: "chat" | "image" | "transcribe" | "vision";
   audioBase64?: string;
+  imageBase64?: string;
   mimeType?: string;
   language?: string;
 };
@@ -125,6 +127,113 @@ return res.status(200).json({
   imageUrl: `data:image/png;base64,${imageBytes}`,
   modelId: actualImageModel,
 });
+    }
+    if (mode === "vision") {
+  if (hasUserKey) {
+    return res.status(403).json({
+      error: "Image analysis is available only in admin mode",
+    });
+  }
+
+  const groqApiKey = process.env.GROQ_API_KEY || "";
+
+  if (!groqApiKey) {
+    return res.status(400).json({
+      error: "Missing API key (GROQ_API_KEY)",
+    });
+  }
+
+  const cleanImageBase64 = (imageBase64 || "")
+    .replace(/^data:.*;base64,/, "")
+    .trim();
+
+  if (!cleanImageBase64) {
+    return res.status(400).json({
+      error: "imageBase64 is required",
+    });
+  }
+
+  const actualMimeType = (mimeType || "image/jpeg").trim() || "image/jpeg";
+  const imageUrl = `data:${actualMimeType};base64,${cleanImageBase64}`;
+
+  const visionPrompt =
+    (prompt || "").trim() ||
+    "Read the image carefully and return only the main text, question, or useful visible content from the image. Do not solve it unless the image itself asks for a direct answer.";
+
+  const visionRes = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${groqApiKey}`,
+    },
+    body: JSON.stringify({
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      temperature: 0.1,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You only analyze the image and extract the useful visible text, question, or content. Keep it clean and concise. Do not add extra explanation unless necessary.",
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: visionPrompt },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ],
+        },
+      ],
+    }),
+  });
+
+  const visionRaw = await visionRes.text();
+
+  let visionData: any = null;
+  try {
+    visionData = visionRaw ? JSON.parse(visionRaw) : null;
+  } catch {
+    visionData = null;
+  }
+
+  if (!visionRes.ok) {
+    return res.status(visionRes.status).json({
+      error:
+        visionData?.error?.message ||
+        visionData?.error ||
+        visionData?.message ||
+        visionRaw.slice(0, 250) ||
+        "Image analysis failed",
+      data: visionData,
+    });
+  }
+
+  const visionMsg = visionData?.choices?.[0]?.message;
+  const visionContent = visionMsg?.content;
+
+  let extracted = "";
+
+  if (typeof visionContent === "string") {
+    extracted = visionContent;
+  } else if (Array.isArray(visionContent)) {
+    extracted = visionContent
+      .map((p: any) =>
+        typeof p === "string"
+          ? p
+          : typeof p?.text === "string"
+          ? p.text
+          : typeof p?.content === "string"
+          ? p.content
+          : ""
+      )
+      .join("");
+  }
+
+  extracted = extracted.trim();
+
+  return res.status(200).json({
+    text: extracted,
+    modelId: "meta-llama/llama-4-scout-17b-16e-instruct",
+  });
     }
     if (mode === "transcribe") {
   if (hasUserKey) {
