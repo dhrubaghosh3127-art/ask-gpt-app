@@ -381,6 +381,14 @@ const handleTranscribe = async (
 
   return typeof data?.text === "string" ? data.text.trim() : "";
 };
+  const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () =>
+      resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
   const handleSend = async (content: string, images: File[] = []) => {
     const userMessage: Message = {
       id: Date.now().toString(),
