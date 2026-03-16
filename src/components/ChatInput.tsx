@@ -323,7 +323,7 @@ const handleVoiceClick = async () => {
     type="file"
     accept="image/*"
     className="hidden"
-    onChange={(e) => setAttachedImage(e.target.files?.[0] ?? null)}
+    onChange={(e) => handleImageFile(e.target.files?.[0] ?? null)}
   />
   <input
     ref={cameraRef}
@@ -331,7 +331,7 @@ const handleVoiceClick = async () => {
     accept="image/*"
     capture="environment"
     className="hidden"
-    onChange={(e) => setAttachedImage(e.target.files?.[0] ?? null)}
+    onChange={(e) => handleImageFile(e.target.files?.[0] ?? null)}
   />
 </div> 
       </form>
