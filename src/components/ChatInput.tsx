@@ -133,6 +133,22 @@ const handleImageFile = async (file: File | null) => {
         className={formClassName}
       >
        <div className="relative">
+         {attachedImages.length > 0 && (
+  <div className="mb-3 flex gap-2 overflow-x-auto">
+    {attachedImages.map((file, idx) => (
+      <div
+        key={`${file.name}-${idx}`}
+        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-[#eceff3] bg-[#f8f8f8]"
+      >
+        <img
+          src={URL.createObjectURL(file)}
+          alt={`attachment-${idx + 1}`}
+          className="h-full w-full object-cover"
+        />
+      </div>
+    ))}
+  </div>
+)}
   <div className="flex items-start gap-3">
     {isRecording ? (
   <div className={`${textareaClassName} flex items-center gap-3 select-none`}>
