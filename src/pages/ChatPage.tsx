@@ -811,6 +811,7 @@ const response = await getGeminiResponse({
   onSend={handleSend}
   isLoading={isLoading}
   onTranscribe={handleTranscribe}
+  onImageAnalyze={handleImageAnalysis}
   isTranscribing={isTranscribing}
 />
     </div>
