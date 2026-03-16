@@ -4,10 +4,11 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   isLoading: boolean;
   onTranscribe?: (audioBase64: string, mimeType: string, language?: string) => Promise<string>;
+  onImageAnalyze?: (imageBase64: string, mimeType: string) => Promise<string>;
   isTranscribing?: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading, onTranscribe, isTranscribing = false }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading, onTranscribe, onImageAnalyze, isTranscribing = false }) => {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [attachOpen, setAttachOpen] = useState(false);
