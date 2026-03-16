@@ -118,32 +118,13 @@ const handleVoiceClick = async () => {
     setIsRecording(false);
   }
 };
-  const handleImageFile = async (file: File | null) => {
+const handleImageFile = async (file: File | null) => {
   if (!file) return;
 
-  setAttachedImage(file);
+  setAttachedImages((prev) => [...prev, file]);
 
-  if (!onImageAnalyze) return;
-
-  try {
-    const imageBase64 = await blobToBase64(file);
-    const extractedText = await onImageAnalyze(
-      imageBase64,
-      file.type || "image/jpeg"
-    );
-
-    if (extractedText.trim()) {
-      onSend(extractedText.trim());
-    } else {
-      alert("No readable text found in image");
-    }
-  } catch (error) {
-    alert(error instanceof Error ? error.message : "Image analysis failed");
-  } finally {
-    setAttachedImage(null);
-    if (uploadRef.current) uploadRef.current.value = "";
-    if (cameraRef.current) cameraRef.current.value = "";
-  }
+  if (uploadRef.current) uploadRef.current.value = "";
+  if (cameraRef.current) cameraRef.current.value = "";
 };
   return (
     <div className="w-full px-4 pb-4">
