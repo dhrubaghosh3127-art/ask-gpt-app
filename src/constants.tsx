@@ -13,7 +13,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
 
 export const MODELS = [
   { id: "llama-3.3-70b-versatile", name: "ASK-GPT 2.5 pro (Auto)" },
-  { id: "meta-llama/llama-4-maverick-17b-128e-instruct", name: "ASK-GPT (Vision)" },
+  { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: 'ASK-GPT (Vision)' },
 ];
 
 export const DEFAULT_MODEL_ID = "llama-3.3-70b-versatile";
