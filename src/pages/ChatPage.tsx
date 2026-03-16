@@ -353,6 +353,34 @@ const handleTranscribe = async (
     setIsTranscribing(false);
   }
 };
+  const handleImageAnalysis = async (
+  imageBase64: string,
+  mimeType: string
+) => {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mode: "vision",
+      imageBase64,
+      mimeType,
+      prompt:
+        "Read the image carefully and return only the main text, question, or useful visible content from the image.",
+      userKey: "",
+      userApiKey: "",
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data?.error || "Image analysis failed");
+  }
+
+  return typeof data?.text === "string" ? data.text.trim() : "";
+};
   const handleSend = async (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
