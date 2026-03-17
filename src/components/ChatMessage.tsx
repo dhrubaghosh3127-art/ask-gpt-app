@@ -66,7 +66,7 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
       ) : null}
 
       {message.content ? (
-        <div className={`${isUser ? 'inline-block max-w-full rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : 'w-full'}`}>
+       <div className={`${isUser ? 'ml-auto inline-block max-w-full rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : 'w-full'}`}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
