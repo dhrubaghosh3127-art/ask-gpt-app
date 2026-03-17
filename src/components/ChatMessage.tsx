@@ -36,37 +36,37 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
             {isUser ? 'You' : 'ASK-GPT'}
           </div>
           
-          <div className={`${isUser ? 'w-full max-w-[95%]' : 'w-full max-w-none bg-transparent text-gray-900'}`}>
-  {isEditing ? (
-    <div className={`flex flex-col gap-2 ${isUser ? 'rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : ''}`}>
-      <textarea
-        value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
-        className="w-full p-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg"
-        rows={3}
-      />
-      <div className="flex gap-2">
-        <button onClick={handleSaveEdit} className="px-3 py-1 bg-blue-600 text-white rounded text-xs">Save</button>
-        <button onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-500 text-white rounded text-xs">Cancel</button>
-      </div>
+          <>
+  {message.attachments?.length ? (
+    <div className={`mb-2 flex w-full flex-wrap gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      {message.attachments.map((img, idx) => (
+        <img
+          key={`${message.id}-img-${idx}`}
+          src={img.dataUrl}
+          alt={`attachment-${idx + 1}`}
+          className="w-[220px] max-w-[85vw] rounded-2xl border border-black/5 object-cover"
+        />
+      ))}
     </div>
-  ) : (
-    <>
-      {message.attachments?.length ? (
-        <div className={`mb-2 flex flex-wrap gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
-          {message.attachments.map((img, idx) => (
-            <img
-              key={`${message.id}-img-${idx}`}
-              src={img.dataUrl}
-              alt={`attachment-${idx + 1}`}
-              className="w-[200px] max-w-full rounded-2xl border border-black/5 object-cover"
-            />
-          ))}
-        </div>
-      ) : null}
+  ) : null}
 
-      {message.content ? (
-       <div className={`${isUser ? 'ml-auto inline-block max-w-full rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : 'w-full'}`}>
+  <div className={`${isUser ? 'max-w-[95%] rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : 'w-full max-w-none bg-transparent text-gray-900'}`}>
+    {isEditing ? (
+      <div className="flex flex-col gap-2">
+        <textarea
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          className="w-full p-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg"
+          rows={3}
+        />
+        <div className="flex gap-2">
+          <button onClick={handleSaveEdit} className="px-3 py-1 bg-blue-600 text-white rounded text-xs">Save</button>
+          <button onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-500 text-white rounded text-xs">Cancel</button>
+        </div>
+      </div>
+    ) : (
+      <>
+        {message.content ? (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
@@ -86,12 +86,11 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
           >
             {message.content}
           </ReactMarkdown>
-        </div>
-      ) : null}
-    </>
-  )}
-</div>
-          
+        ) : null}
+      </>
+    )}
+  </div>
+</>
           
           <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={handleCopy} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center gap-1">
