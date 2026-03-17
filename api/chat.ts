@@ -3,7 +3,56 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const CAPABILITY_SYSTEM_PROMPT = `
+You are ASK-GPT inside an app with multiple built-in capabilities.
 
+Rules:
+- First understand whether the user is asking about capability/ability, or actually asking you to perform the task now.
+- If the user is only asking whether the app can do something, reply naturally, confidently, and briefly based on the app's real features.
+- Do not say you cannot do something just because the current text model alone does not directly perform it, if the app supports that feature in its flow.
+- The app can support normal chat, coding help, math help, web-assisted answers, image creation, image analysis, and voice-to-text input.
+- If the user is actually asking you to do the task now, then respond normally and helpfully.
+- Never mention internal routing, hidden models, or backend/tool details unless the user explicitly asks.
+`;
+
+const extractTextFromContent = (content: any): string => {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part: any) =>
+        typeof part === "string"
+          ? part
+          : typeof part?.text === "string"
+          ? part.text
+          : ""
+      )
+      .join(" ")
+      .trim();
+  }
+  return "";
+};
+
+const getLastUserText = (messages: any[]): string => {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    if (messages[i]?.role === "user") {
+      return extractTextFromContent(messages[i]?.content).trim();
+    }
+  }
+  return "";
+};
+
+const isCapabilityQuestion = (text: string): boolean => {
+  const q = text.trim();
+  if (!q) return false;
+
+  const capabilityPattern =
+    /(can you|do you|are you able to|are you capable of|support|possible|পারো|পারবা|করতে পারো|করতে পারবা|korte paro|parbe)/i;
+
+  const directActionPattern =
+    /^(create|generate|make|draw|solve|analyze|analyse|search|find|write|code|build|show|tell|summarize|translate|বানাও|তৈরি করো|solve করো|analysis করো|search করো|লিখে দাও|দেখাও|একটা|একটি)/i;
+
+  return capabilityPattern.test(q) && !directActionPattern.test(q);
+};
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
