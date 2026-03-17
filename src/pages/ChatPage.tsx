@@ -407,7 +407,21 @@ const userMessage: Message = {
   attachments: attachmentPayload,
   timestamp: Date.now()
 };
+const imageContexts =
+  images.length > 0
+    ? (await Promise.all(
+        images.map(async (file) =>
+          handleImageAnalysis(
+            await fileToBase64(file),
+            file.type || "image/jpeg"
+          )
+        )
+      )).filter((text) => text.trim())
+    : [];
 
+const effectiveContent = [content.trim(), ...imageContexts]
+  .filter((text) => text.trim())
+  .join("\n\n");
    const updatedMessages = [...(conversation?.messages || []), userMessage];
 const apiHistory = updatedMessages.slice(-12);
 updateConversation(updatedMessages);
