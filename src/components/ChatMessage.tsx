@@ -51,26 +51,43 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
                 </div>
               </div>
             ) : (
-             <ReactMarkdown
-  remarkPlugins={[remarkGfm]}
-  components={{
-    pre: MdPre,
-    a: ({ href, children }) => {
-      const url = href || "";
-      const isInternal = url.startsWith("/") || url.startsWith("#");
-      if (isInternal) return <Link to={url} className="underline">{children}</Link>;
-      return (
-        <a href={url} target="_blank" rel="noreferrer" className="underline">
-          {children}
-        </a>
-      );
-    },
-  }}
-  className="markdown text-[14px] leading-relaxed"
->
-  {message.content}
-</ReactMarkdown>
-            )}
+  <>
+    {message.attachments?.length ? (
+      <div className="mb-2 flex flex-wrap gap-2">
+        {message.attachments.map((img, idx) => (
+          <img
+            key={`${message.id}-img-${idx}`}
+            src={img.dataUrl}
+            alt={`attachment-${idx + 1}`}
+            className="max-h-48 rounded-2xl border border-black/5 object-cover"
+          />
+        ))}
+      </div>
+    ) : null}
+
+    {message.content ? (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          pre: MdPre,
+          a: ({ href, children }) => {
+            const url = href || "";
+            const isInternal = url.startsWith("/") || url.startsWith("#");
+            if (isInternal) return <Link to={url} className="underline">{children}</Link>;
+            return (
+              <a href={url} target="_blank" rel="noreferrer" className="underline">
+                {children}
+              </a>
+            );
+          },
+        }}
+        className="markdown text-[14px] leading-relaxed"
+      >
+        {message.content}
+      </ReactMarkdown>
+    ) : null}
+  </>
+)}
           </div>
           
           <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
