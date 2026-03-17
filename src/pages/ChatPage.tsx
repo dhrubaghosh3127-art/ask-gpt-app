@@ -422,6 +422,7 @@ const imageContexts =
 const effectiveContent = [content.trim(), ...imageContexts]
   .filter((text) => text.trim())
   .join("\n\n");
+    const routeContent = images.length > 0 ? effectiveContent : content;
    const updatedMessages = [...(conversation?.messages || []), userMessage];
 const apiHistory = updatedMessages.slice(-12);
 updateConversation(updatedMessages);
