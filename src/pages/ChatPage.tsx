@@ -488,14 +488,21 @@ const autoModel =
   hasUserKey && selectedModel === DEFAULT_MODEL_ID
     ? pickAutoModelId(content)
     : adminAutoModel;
-
+const routeModelId =
+  images.length > 0 && !hasUserKey && selectedModel === DEFAULT_MODEL_ID
+    ? shouldUseWebSearch(routeContent)
+      ? ADMIN_WEB_ID
+      : shouldUseDeepSeek(routeContent)
+      ? ADMIN_THINK_ID
+      : ADMIN_DEFAULT_ID
+    : autoModel;
 const isThinkingModel =
-  autoModel === AUTO_THINK_ID ||
-  autoModel === ADMIN_THINK_ID ||
-  autoModel === ADMIN_WEB_ID;
+  routeModelId === AUTO_THINK_ID ||
+  routeModelId === ADMIN_THINK_ID ||
+  routeModelId === ADMIN_WEB_ID;
 
 if (isThinkingModel) {
-  if (autoModel === ADMIN_WEB_ID) {
+  if (routeModelId === ADMIN_WEB_ID) {
     startThinking("Searching web", WEB_SEARCH_LINES);
   } else {
     startThinking("Thinking", THINKING_LINES);
@@ -505,9 +512,9 @@ if (isThinkingModel) {
 }
 
 const response = await getGeminiResponse({
-  prompt: content,
+  prompt: images.length > 0 ? routeContent : content,
   history: apiHistory,
-  modelId: autoModel,
+  modelId: routeModelId,
   systemInstruction: systemPrompt,
 });
       
