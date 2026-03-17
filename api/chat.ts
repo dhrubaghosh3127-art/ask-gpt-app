@@ -418,6 +418,8 @@ const finalMessages =
 if (finalModelId === "openai/gpt-oss-120b") {
   requestBody.max_completion_tokens = 4096;
   requestBody.reasoning_effort = "high";
+} else if (finalModelId === "groq/compound") {
+  // no app-side max token cap for groq compound
 } else {
   requestBody.max_tokens = 2048;
 }
