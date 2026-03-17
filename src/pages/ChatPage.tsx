@@ -390,12 +390,23 @@ const handleTranscribe = async (
     reader.readAsDataURL(file);
   });
   const handleSend = async (content: string, images: File[] = []) => {
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: Role.USER,
-      content,
-      timestamp: Date.now()
-    };
+    const attachmentPayload =
+  images.length > 0
+    ? await Promise.all(
+        images.map(async (file) => ({
+          dataUrl: await fileToBase64(file),
+          mimeType: file.type || "image/jpeg",
+        }))
+      )
+    : [];
+
+const userMessage: Message = {
+  id: Date.now().toString(),
+  role: Role.USER,
+  content,
+  attachments: attachmentPayload,
+  timestamp: Date.now()
+};
 
    const updatedMessages = [...(conversation?.messages || []), userMessage];
 const apiHistory = updatedMessages.slice(-12);
