@@ -166,15 +166,16 @@ const handleImageFile = async (file: File | null) => {
     <span className="text-[16px] text-[#6b7280]">Listening...</span>
   </div>
 ) : (
-  <textarea
-    ref={textareaRef}
-    rows={1}
-    value={input}
-    onChange={(e) => setInput(e.target.value)}
-    onKeyDown={handleKeyDown}
-    placeholder="Ask anything..."
-    className={textareaClassName}
-  />
+<textarea
+  ref={textareaRef}
+  rows={1}
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  onKeyDown={handleKeyDown}
+  placeholder="Ask anything..."
+  className={textareaClassName}
+  style={{ caretColor: 'var(--accent-caret)' }}
+/>
 )}
 
     <div className="mt-1 flex shrink-0 items-center gap-3">
@@ -192,10 +193,11 @@ const handleImageFile = async (file: File | null) => {
 </button>
 {!input.trim() && !isLoading && !isRecording && !isTranscribing ? (
   <button
-    type="button"
-    aria-label="Speak"
-    className="h-11 px-[14px] rounded-full bg-[#111111] text-white flex items-center justify-center gap-[7px] shadow-[0_8px_20px_rgba(17,17,17,0.14)] transition-all"
-  >
+  type="button"
+  aria-label="Speak"
+  className="h-11 px-[14px] rounded-full bg-[#111111] text-white flex items-center justify-center gap-[7px] shadow-[0_8px_20px_rgba(17,17,17,0.14)] transition-all"
+  style={{ backgroundColor: 'var(--accent-send-button)' }}
+>
     <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 9v6" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M10 6v12" />
