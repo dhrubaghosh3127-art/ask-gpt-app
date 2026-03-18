@@ -164,7 +164,84 @@ const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'
                 </div>
               </div>
             </button>
+{appearanceOpen && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+    onClick={() => setAppearanceOpen(false)}
+  >
+    <div
+      className="w-full max-w-[430px] rounded-[28px] bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+      onClick={(e) => e.stopPropagation()}
+      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+    >
+      <div className="px-2 pb-3 text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+        Appearance
+      </div>
 
+      <div className="space-y-[2px]">
+        <button
+          type="button"
+          onClick={() => {
+            setAppearanceMode('system');
+            setAppearanceOpen(false);
+          }}
+          className={`${rowBase} rounded-t-[24px] rounded-b-[8px]`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <IconWrap><SystemModeIcon /></IconWrap>
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em]">System (Default)</div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">Follow device theme</div>
+              </div>
+            </div>
+            <div className={`h-5 w-5 rounded-full border-2 ${appearanceMode === 'system' ? 'border-[#111111] bg-[#111111]' : 'border-[#d1d1d6] bg-transparent'}`} />
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAppearanceMode('light');
+            setAppearanceOpen(false);
+          }}
+          className={`${rowBase} rounded-t-[8px] rounded-b-[8px]`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <IconWrap><SunIcon /></IconWrap>
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em]">Light</div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">Always use light mode</div>
+              </div>
+            </div>
+            <div className={`h-5 w-5 rounded-full border-2 ${appearanceMode === 'light' ? 'border-[#111111] bg-[#111111]' : 'border-[#d1d1d6] bg-transparent'}`} />
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAppearanceMode('dark');
+            setAppearanceOpen(false);
+          }}
+          className={`${rowBase} rounded-t-[8px] rounded-b-[24px]`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <IconWrap><MoonIcon /></IconWrap>
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em]">Dark</div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">Always use dark mode</div>
+              </div>
+            </div>
+            <div className={`h-5 w-5 rounded-full border-2 ${appearanceMode === 'dark' ? 'border-[#111111] bg-[#111111]' : 'border-[#d1d1d6] bg-transparent'}`} />
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
             <button
               type="button"
               className={`${rowBase} rounded-t-[8px] rounded-b-[24px]`}
