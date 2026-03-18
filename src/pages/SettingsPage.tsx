@@ -245,10 +245,11 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
   </div>
 )}
             <button
-              type="button"
-              className={`${rowBase} rounded-t-[8px] rounded-b-[24px]`}
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-            >
+  type="button"
+  onClick={() => setAccentOpen((v) => !v)}
+  className={`${rowBase} rounded-t-[8px] rounded-b-[24px]`}
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <IconWrap><PaletteIcon /></IconWrap>
@@ -261,7 +262,104 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
               </div>
             </button>
           </div>
+{accentOpen && (
+  <div
+    className="fixed inset-0 z-50"
+    onClick={() => setAccentOpen(false)}
+  >
+    <div className="flex h-full items-start justify-end px-6 pt-[250px]">
+      <div
+        className="w-[320px] rounded-[28px] bg-white p-3 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+        onClick={(e) => e.stopPropagation()}
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+      >
+        <button
+          type="button"
+          onClick={() => { setAccentColor('default'); setAccentOpen(false); }}
+          className="flex w-full items-center justify-between rounded-[20px] px-4 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-5 rounded-full bg-[#9b9b9b]" />
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">Default</span>
+          </div>
+          {accentColor === 'default' && <span className="text-[28px] leading-none text-[#111111]">✓</span>}
+        </button>
 
+        <button
+          type="button"
+          onClick={() => { setAccentColor('blue'); setAccentOpen(false); }}
+          className="flex w-full items-center justify-between rounded-[20px] px-4 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-5 rounded-full bg-[#2196f3]" />
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">Blue</span>
+          </div>
+          {accentColor === 'blue' && <span className="text-[28px] leading-none text-[#111111]">✓</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setAccentColor('green'); setAccentOpen(false); }}
+          className="flex w-full items-center justify-between rounded-[20px] px-4 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-5 rounded-full bg-[#13b94a]" />
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">Green</span>
+          </div>
+          {accentColor === 'green' && <span className="text-[28px] leading-none text-[#111111]">✓</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setAccentColor('yellow'); setAccentOpen(false); }}
+          className="flex w-full items-center justify-between rounded-[20px] px-4 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-5 rounded-full bg-[#f4c400]" />
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">Yellow</span>
+          </div>
+          {accentColor === 'yellow' && <span className="text-[28px] leading-none text-[#111111]">✓</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setAccentColor('pink'); setAccentOpen(false); }}
+          className="flex w-full items-center justify-between rounded-[20px] px-4 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-5 rounded-full bg-[#f06292]" />
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">Pink</span>
+          </div>
+          {accentColor === 'pink' && <span className="text-[28px] leading-none text-[#111111]">✓</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setAccentColor('orange'); setAccentOpen(false); }}
+          className="flex w-full items-center justify-between rounded-[20px] px-4 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-5 rounded-full bg-[#ff6d1f]" />
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">Orange</span>
+          </div>
+          {accentColor === 'orange' && <span className="text-[28px] leading-none text-[#111111]">✓</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setAccentColor('purple'); setAccentOpen(false); }}
+          className="flex w-full items-center justify-between rounded-[20px] px-4 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-5 rounded-full bg-[#8e4de8]" />
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">Purple · Plus</span>
+          </div>
+          {accentColor === 'purple' && <span className="text-[28px] leading-none text-[#111111]">✓</span>}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
           <div className="space-y-[2px]">
             {items.map((item, index) => (
               <button
