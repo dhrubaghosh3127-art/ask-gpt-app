@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const IconWrap: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -105,7 +105,8 @@ const rowBase =
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
-
+const [appearanceOpen, setAppearanceOpen] = useState(false);
+const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'>('system');
   const items = [
     { icon: <GearIcon />, label: 'General' },
     { icon: <BellIcon />, label: 'Notifications' },
