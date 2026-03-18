@@ -279,24 +279,90 @@ const selectedAccent =
     </div>
   </div>
 )}
-            <button
-              type="button"
-              className={`${rowBase} rounded-t-[8px] rounded-b-[24px]`}
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <IconWrap><PaletteIcon /></IconWrap>
-                  <div>
-                    <div className="text-[15px] font-semibold tracking-[-0.02em]">Accent color</div>
-                    <div className="mt-0.5 text-[12px] text-[#7c7c82]">Default</div>
-                  </div>
-                </div>
-                <IconWrap><ChevronDownIcon /></IconWrap>
-              </div>
-            </button>
+            <div className="relative">
+  <button
+    type="button"
+    onClick={() => setAccentOpen((v) => !v)}
+    className={`${rowBase} w-full rounded-t-[8px] rounded-b-[24px]`}
+    style={{
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+    }}
+  >
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <IconWrap>
+          <PaletteIcon />
+        </IconWrap>
+
+        <div>
+          <div className="text-[15px] font-semibold tracking-[-0.02em]">
+            Accent color
           </div>
 
+          <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#7c7c82]">
+            <span className={`h-3 w-3 rounded-full ${selectedAccent.dotClass}`} />
+            <span>{selectedAccent.label}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={`${accentOpen ? 'rotate-180' : ''} transition-transform`}>
+        <IconWrap>
+          <ChevronDownIcon />
+        </IconWrap>
+      </div>
+    </div>
+  </button>
+
+  {accentOpen && (
+    <>
+      <button
+        type="button"
+        aria-label="Close accent color popup"
+        className="fixed inset-0 z-20"
+        onClick={() => setAccentOpen(false)}
+      />
+
+      <div
+        className="absolute right-0 top-[calc(100%+10px)] z-30 w-[290px] overflow-hidden rounded-[28px] border border-[#e7eaf0] bg-white p-2 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+        }}
+      >
+        {accentOptions.map((option, index) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => handleAccentSelect(option.value)}
+            className={`w-full px-4 py-3 text-left hover:bg-[#f6f7f8] ${
+              index === 0 ? 'rounded-t-[24px]' : ''
+            } ${index === accentOptions.length - 1 ? 'rounded-b-[24px]' : ''}`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className={`h-4 w-4 rounded-full ${option.dotClass}`} />
+                <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  {option.label}
+                </span>
+              </div>
+
+              <span
+                className={`text-[18px] text-[#111111] ${
+                  accentColor === option.value ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                ✓
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </>
+  )}
+</div>
           <div className="space-y-[2px]">
             {items.map((item, index) => (
               <button
