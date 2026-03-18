@@ -125,45 +125,52 @@ const HistoryPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-[#111111]">
       <div className="mx-auto w-full max-w-[430px] px-5 pt-8 pb-10">
-       <div className="space-y-2">
-  <button
-    type="button"
-    onClick={openNewChat}
-    className="w-full rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
-    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-  >
-    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-      New chat
-    </div>
-  </button>
+        <div className="space-y-4">
+          <button
+            type="button"
+            onClick={openNewChat}
+            className="w-full rounded-[22px] border border-[#ececf2] bg-white px-5 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+          >
+            <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
+              New chat
+            </div>
+          </button>
 
-  <button
-    type="button"
-    onClick={() => navigate('/history/archived')}
-    className="w-full rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
-    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-  >
-    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-      Archived chat
-    </div>
-    <div className="mt-1 text-[12px] text-[#8a8a8f]">
-      {archivedChats.length} archived chat{archivedChats.length === 1 ? '' : 's'}
-    </div>
-  </button>
+          <div className="overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+            <button
+  type="button"
+  onClick={() => navigate('/history/archived')}
+  className="flex w-full items-center justify-between px-5 py-4 text-left"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+              <div>
+                <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Archived chat
+                </div>
+                <div className="mt-1 text-[13px] text-[#8a8a8f]">
+                  {archivedChats.length} archived chat{archivedChats.length === 1 ? '' : 's'}
+                </div>
+              </div>
+            </button>
 
-  <button
-    type="button"
-    className="w-full rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
-    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-  >
-    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-      Upgrade to ASK-GPT Plus
-    </div>
-    <div className="mt-1 text-[12px] text-[#8a8a8f]">
-      Premium features coming soon
-    </div>
-  </button>
-</div> 
+            <div className="h-px bg-[#f0f1f5]" />
+
+            <button
+              type="button"
+              className="flex w-full items-center justify-between px-5 py-4 text-left"
+              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+            >
+              <div>
+                <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Upgrade to ASK-GPT Plus
+                </div>
+                <div className="mt-1 text-[13px] text-[#8a8a8f]">
+                  Premium features coming soon
+                </div>
+              </div>
+            </button>
+          </div>
 
           <div className="pt-3">
             <div
