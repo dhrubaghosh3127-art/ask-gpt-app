@@ -160,7 +160,7 @@ const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'
                 <IconWrap><SunIcon /></IconWrap>
                 <div>
                   <div className="text-[15px] font-semibold tracking-[-0.02em]">Appearance</div>
-                  <div className="mt-0.5 text-[12px] text-[#7c7c82]">System (Default)</div>
+                  <div className="mt-0.5 text-[12px] text-[#7c7c82]">{appearanceMode === 'system' ? 'System (Default)' : appearanceMode === 'light' ? 'Light' : 'Dark'}</div>
                 </div>
               </div>
             </button>
