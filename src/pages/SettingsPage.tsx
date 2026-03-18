@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const IconWrap: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -99,7 +99,19 @@ const ChevronDownIcon = () => (
     <path d="M6 9l6 6 6-6" />
   </svg>
 );
+const SystemModeIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="12" rx="2" />
+    <path d="M8 20h8" />
+    <path d="M12 16v4" />
+  </svg>
+);
 
+const MoonIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+  </svg>
+);
 const rowBase =
   'w-full bg-[#f7f7f8] px-4 py-3 text-left';
 
@@ -107,6 +119,13 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
 const [appearanceOpen, setAppearanceOpen] = useState(false);
 const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'>('system');
+  useEffect(() => {
+  const root = document.documentElement;
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const shouldDark = appearanceMode === 'dark' || (appearanceMode === 'system' && systemDark);
+
+  root.classList.toggle('dark', shouldDark);
+}, [appearanceMode]);
   const items = [
     { icon: <GearIcon />, label: 'General' },
     { icon: <BellIcon />, label: 'Notifications' },
@@ -132,10 +151,11 @@ const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'
         <div className="space-y-5">
           <div className="space-y-[2px]">
             <button
-              type="button"
-              className={`${rowBase} rounded-t-[24px] rounded-b-[8px]`}
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-            >
+  type="button"
+  onClick={() => setAppearanceOpen(true)}
+  className={`${rowBase} rounded-t-[24px] rounded-b-[8px]`}
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
               <div className="flex items-center gap-3">
                 <IconWrap><SunIcon /></IconWrap>
                 <div>
