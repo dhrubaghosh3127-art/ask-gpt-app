@@ -50,7 +50,10 @@ const MdPre=(p:any)=>{const r=p.children?.props?.children,t=(Array.isArray(r)?r.
     </div>
   ) : null}
 
-  <div className={`${isUser ? 'max-w-[95%] rounded-2xl bg-blue-200 text-gray-900 px-4 py-3 shadow-sm' : 'w-full max-w-none bg-transparent text-gray-900'}`}>
+  <div
+  className={`${isUser ? 'max-w-[95%] rounded-2xl text-gray-900 px-4 py-3 shadow-sm' : 'w-full max-w-none bg-transparent text-gray-900'}`}
+  style={isUser ? { backgroundColor: 'var(--accent-user-bubble)' } : undefined}
+>
     {isEditing ? (
       <div className="flex flex-col gap-2">
         <textarea
