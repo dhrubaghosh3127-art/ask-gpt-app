@@ -125,104 +125,95 @@ const HistoryPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-[#111111]">
       <div className="mx-auto w-full max-w-[430px] px-5 pt-8 pb-10">
-        <div className="space-y-4">
-          <button
-            type="button"
-            onClick={openNewChat}
-            className="w-full rounded-[22px] border border-[#ececf2] bg-white px-5 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
-            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-          >
-            <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
-              New chat
-            </div>
-          </button>
+<div className="space-y-2">
+  <button
+    type="button"
+    onClick={openNewChat}
+    className="w-full rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+      New chat
+    </div>
+  </button>
 
-          <div className="overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-            <button
-  type="button"
-  onClick={() => navigate('/history/archived')}
-  className="flex w-full items-center justify-between px-5 py-4 text-left"
-  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
->
-              <div>
-                <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
-                  Archived chat
-                </div>
-                <div className="mt-1 text-[13px] text-[#8a8a8f]">
-                  {archivedChats.length} archived chat{archivedChats.length === 1 ? '' : 's'}
-                </div>
-              </div>
-            </button>
+  <button
+    type="button"
+    onClick={() => navigate('/history/archived')}
+    className="w-full rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+      Archived chat
+    </div>
+    <div className="mt-1 text-[12px] text-[#8a8a8f]">
+      {archivedChats.length} archived chat{archivedChats.length === 1 ? '' : 's'}
+    </div>
+  </button>
 
-            <div className="h-px bg-[#f0f1f5]" />
-
-            <button
-              type="button"
-              className="flex w-full items-center justify-between px-5 py-4 text-left"
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-            >
-              <div>
-                <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
-                  Upgrade to ASK-GPT Plus
-                </div>
-                <div className="mt-1 text-[13px] text-[#8a8a8f]">
-                  Premium features coming soon
-                </div>
-              </div>
-            </button>
-          </div>
-
+  <button
+    type="button"
+    className="w-full rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+      Upgrade to ASK-GPT Plus
+    </div>
+    <div className="mt-1 text-[12px] text-[#8a8a8f]">
+      Premium features coming soon
+    </div>
+  </button>
+</div>
           <div className="pt-3">
-            <div
-              className="mb-3 px-1 text-[15px] font-semibold tracking-[-0.01em] text-[#111111]"
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-            >
-              Your ASK-GPT history
-            </div>
+  <div
+    className="mb-2 px-1 text-[12px] font-medium uppercase tracking-[0.1em] text-[#9ca3af]"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    Your ASK-GPT history
+  </div>
+</div>
 
       <div className="h-[420px] overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-  <div className="h-full overflow-y-auto">
+  <div className="h-full overflow-y-auto p-2">
     {activeChats.length === 0 ? (
       <div
-        className="px-5 py-5 text-[14px] text-[#8a8a8f]"
-        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-      >
-        No chat history yet
-      </div>
+  className="rounded-[18px] bg-[#f7f7f8] px-4 py-4 text-[13px] text-[#8a8a8f]"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+  No chat history yet
+</div>
     ) : (
-      activeChats.map((chat, index) => (
-        <React.Fragment key={chat.id}>
-          <button
-            type="button"
-            onClick={() => handleChatPress(chat)}
-            onTouchStart={() => startLongPress(chat)}
-            onTouchEnd={clearLongPress}
-            onTouchMove={clearLongPress}
-            onTouchCancel={clearLongPress}
-            onMouseDown={() => startLongPress(chat)}
-            onMouseUp={clearLongPress}
-            onMouseLeave={clearLongPress}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setMenuChat(chat);
-            }}
-            className="block w-full px-5 py-4 text-left"
-            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="truncate text-[16px] font-medium tracking-[-0.02em] text-[#111111]">
-                {chat.title}
-              </div>
-              {chat.pinned && (
-                <span className="shrink-0 text-[12px] font-medium text-[#8a8a8f]">
-                  Pinned
-                </span>
-              )}
-            </div>
-          </button>
-          {index !== activeChats.length - 1 && <div className="h-px bg-[#f0f1f5]" />}
-        </React.Fragment>
-      ))
+      activeChats.map((chat) => (
+  <button
+    key={chat.id}
+    type="button"
+    onClick={() => handleChatPress(chat)}
+    onTouchStart={() => startLongPress(chat)}
+    onTouchEnd={clearLongPress}
+    onTouchMove={clearLongPress}
+    onTouchCancel={clearLongPress}
+    onMouseDown={() => startLongPress(chat)}
+    onMouseUp={clearLongPress}
+    onMouseLeave={clearLongPress}
+    onContextMenu={(e) => {
+      e.preventDefault();
+      setMenuChat(chat);
+    }}
+    className="mb-2 block w-full rounded-[18px] bg-[#f7f7f8] px-4 py-3.5 text-left shadow-[0_2px_8px_rgba(15,23,42,0.03)] last:mb-0"
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
+    <div className="flex items-center justify-between gap-3">
+      <div className="truncate text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+        {chat.title}
+      </div>
+      {chat.pinned && (
+        <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[11px] font-medium text-[#8a8a8f]">
+          Pinned
+        </span>
+      )}
+    </div>
+  </button>
+))
     )}
   </div>
 </div>
