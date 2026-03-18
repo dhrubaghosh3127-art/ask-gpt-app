@@ -133,6 +133,53 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
   useEffect(() => {
   localStorage.setItem('accentColor', accentColor);
 }, [accentColor]);
+  useEffect(() => {
+  const root = document.documentElement;
+
+  const palette = {
+    default: {
+      bubble: '#bfdbfe',
+      send: '#111111',
+      caret: '#111111',
+    },
+    blue: {
+      bubble: '#bfdbfe',
+      send: '#2563eb',
+      caret: '#2563eb',
+    },
+    green: {
+      bubble: '#bbf7d0',
+      send: '#16a34a',
+      caret: '#16a34a',
+    },
+    yellow: {
+      bubble: '#fef08a',
+      send: '#eab308',
+      caret: '#eab308',
+    },
+    pink: {
+      bubble: '#fbcfe8',
+      send: '#ec4899',
+      caret: '#ec4899',
+    },
+    orange: {
+      bubble: '#fed7aa',
+      send: '#f97316',
+      caret: '#f97316',
+    },
+    purple: {
+      bubble: '#ddd6fe',
+      send: '#8b5cf6',
+      caret: '#8b5cf6',
+    },
+  } as const;
+
+  const current = palette[accentColor];
+
+  root.style.setProperty('--accent-user-bubble', current.bubble);
+  root.style.setProperty('--accent-send-button', current.send);
+  root.style.setProperty('--accent-caret', current.caret);
+}, [accentColor]);
   const items = [
     { icon: <GearIcon />, label: 'General' },
     { icon: <BellIcon />, label: 'Notifications' },
