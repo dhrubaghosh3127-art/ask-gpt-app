@@ -114,7 +114,7 @@ const MoonIcon = () => (
 const rowBase =
   'w-full bg-[#f7f7f8] px-4 py-3 text-left dark:bg-[#17171a]';
 
-const SettingsPage: React.FC = () => {
+const SettingsPage: React.FC<{ isDarkMode: boolean; setIsDarkMode: React.Dispatch<React.SetStateAction<boolean>> }> = ({ isDarkMode, setIsDarkMode }) => {
   const navigate = useNavigate();
 const [appearanceOpen, setAppearanceOpen] = useState(false);
 const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'>('system');
@@ -221,9 +221,10 @@ const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'
         <button
           type="button"
           onClick={() => {
-            setAppearanceMode('dark');
-            setAppearanceOpen(false);
-          }}
+  setAppearanceMode('dark');
+  setIsDarkMode(true);
+  setAppearanceOpen(false);
+}}
           className={`${rowBase} rounded-t-[8px] rounded-b-[24px]`}
         >
           <div className="flex items-center justify-between gap-3">
