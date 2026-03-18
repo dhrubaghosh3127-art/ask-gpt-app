@@ -267,12 +267,12 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
     className="fixed inset-0 z-50"
     onClick={() => setAccentOpen(false)}
   >
-    <div className="flex h-full items-start justify-end px-6 pt-[250px]">
-      <div
-        className="w-[320px] rounded-[28px] bg-white p-3 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-        onClick={(e) => e.stopPropagation()}
-        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-      >
+ <div className="flex h-full items-center justify-end px-4">
+  <div
+    className="w-[250px] rounded-[28px] bg-white p-3 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+    onClick={(e) => e.stopPropagation()}
+    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+  >
         <button
           type="button"
           onClick={() => { setAccentColor('default'); setAccentOpen(false); }}
