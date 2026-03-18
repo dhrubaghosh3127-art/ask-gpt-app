@@ -112,7 +112,7 @@ const MoonIcon = () => (
   </svg>
 );
 const rowBase =
-  'w-full bg-[#f7f7f8] px-4 py-3 text-left';
+  'w-full bg-[#f7f7f8] px-4 py-3 text-left dark:bg-[#17171a]';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -136,7 +136,7 @@ const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'
   ];
 
   return (
-    <div className="min-h-screen bg-white text-[#111111]">
+    <div className="min-h-screen bg-white text-[#111111] dark:bg-[#0b0b0c] dark:text-white">
       <div className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-5">
         <button
           type="button"
