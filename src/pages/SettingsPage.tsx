@@ -111,6 +111,33 @@ const MoonIcon = () => (
     <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
   </svg>
 );
+type AccentColor =
+  | 'default'
+  | 'blue'
+  | 'green'
+  | 'yellow'
+  | 'pink'
+  | 'orange'
+  | 'purple';
+
+const ACCENT_STORAGE_KEY = 'askgpt-accent-color';
+
+const accentOptions: {
+  value: AccentColor;
+  label: string;
+  dotClass: string;
+}[] = [
+  { value: 'default', label: 'Default', dotClass: 'bg-[#9ca3af]' },
+  { value: 'blue', label: 'Blue', dotClass: 'bg-[#3b82f6]' },
+  { value: 'green', label: 'Green', dotClass: 'bg-[#22c55e]' },
+  { value: 'yellow', label: 'Yellow', dotClass: 'bg-[#eab308]' },
+  { value: 'pink', label: 'Pink', dotClass: 'bg-[#ec4899]' },
+  { value: 'orange', label: 'Orange', dotClass: 'bg-[#f97316]' },
+  { value: 'purple', label: 'Purple • Plus', dotClass: 'bg-[#8b5cf6]' },
+];
+
+const isAccentColor = (value: string | null): value is AccentColor =>
+  !!value && accentOptions.some((option) => option.value === value);
 const rowBase =
   'w-full bg-[#f7f7f8] px-4 py-3 text-left dark:bg-[#17171a]';
 
@@ -118,6 +145,16 @@ const SettingsPage: React.FC<{ isDarkMode: boolean; setIsDarkMode: React.Dispatc
   const navigate = useNavigate();
 const [appearanceOpen, setAppearanceOpen] = useState(false);
 const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'>('system');
+  const [accentOpen, setAccentOpen] = useState(false);
+
+const [accentColor, setAccentColor] = useState<AccentColor>(() => {
+  if (typeof window === 'undefined') return 'default';
+  const saved = window.localStorage.getItem(ACCENT_STORAGE_KEY);
+  return isAccentColor(saved) ? saved : 'default';
+});
+
+const selectedAccent =
+  accentOptions.find((option) => option.value === accentColor) ?? accentOptions[0];
   useEffect(() => {
   const root = document.documentElement;
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
