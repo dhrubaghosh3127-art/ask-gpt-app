@@ -21,13 +21,70 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
+  const root = document.documentElement;
+
+  if (isDarkMode) {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+
+  localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+
+  const savedAccent =
+    (localStorage.getItem('accentColor') as
+      | 'default'
+      | 'blue'
+      | 'green'
+      | 'yellow'
+      | 'pink'
+      | 'orange'
+      | 'purple') || 'default';
+
+  const palette = {
+    default: {
+      bubble: '#bfdbfe',
+      send: '#111111',
+      caret: '#111111',
+    },
+    blue: {
+      bubble: '#bfdbfe',
+      send: '#2563eb',
+      caret: '#2563eb',
+    },
+    green: {
+      bubble: '#bbf7d0',
+      send: '#16a34a',
+      caret: '#16a34a',
+    },
+    yellow: {
+      bubble: '#fef08a',
+      send: '#eab308',
+      caret: '#eab308',
+    },
+    pink: {
+      bubble: '#fbcfe8',
+      send: '#ec4899',
+      caret: '#ec4899',
+    },
+    orange: {
+      bubble: '#fed7aa',
+      send: '#f97316',
+      caret: '#f97316',
+    },
+    purple: {
+      bubble: '#ddd6fe',
+      send: '#8b5cf6',
+      caret: '#8b5cf6',
+    },
+  } as const;
+
+  const current = palette[savedAccent];
+
+  root.style.setProperty('--accent-user-bubble', current.bubble);
+  root.style.setProperty('--accent-send-button', current.send);
+  root.style.setProperty('--accent-caret', current.caret);
+}, [isDarkMode]);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 const startPath = useMemo(() => {
