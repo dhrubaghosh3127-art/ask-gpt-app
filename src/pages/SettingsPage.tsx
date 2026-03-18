@@ -118,6 +118,8 @@ const SettingsPage: React.FC<{ isDarkMode: boolean; setIsDarkMode: React.Dispatc
   const navigate = useNavigate();
 const [appearanceOpen, setAppearanceOpen] = useState(false);
 const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'>('system');
+const [accentOpen, setAccentOpen] = useState(false);
+const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'yellow' | 'pink' | 'orange' | 'purple'>('default');
   useEffect(() => {
   const root = document.documentElement;
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
