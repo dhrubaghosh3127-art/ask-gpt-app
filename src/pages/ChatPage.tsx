@@ -616,7 +616,7 @@ const response = await getGeminiResponse({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-white">
+    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-white text-[#111111] dark:bg-[#0b0b0c] dark:text-white">
       <Header 
         toggleSidebar={toggleSidebar} 
         selectedModel={selectedModel} 
