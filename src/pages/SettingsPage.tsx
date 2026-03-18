@@ -13,7 +13,6 @@ const ArrowLeftIcon = () => (
     <path d="M12 19l-7-7 7-7" />
   </svg>
 );
-
 const SunIcon = () => (
   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="4" />
