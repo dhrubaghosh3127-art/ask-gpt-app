@@ -59,7 +59,7 @@ const startPath = useMemo(() => {
             <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
             <Route path="/history" element={<HistoryPage />} />
 <Route path="/history/archived" element={<ArchivedPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings" element={<SettingsPage isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 <Route path="/key" element={<KeySetup />} />
           </Routes>
