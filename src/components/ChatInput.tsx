@@ -208,14 +208,15 @@ const handleImageFile = async (file: File | null) => {
   </button>
 ) : (
   <button
-    type={isLoading || isRecording || isTranscribing ? "button" : "submit"}
-    onClick={isRecording ? handleVoiceClick : undefined}
-    className={`h-11 w-11 flex items-center justify-center transition-all ${
-      isLoading
-        ? 'rounded-full bg-[#111111] text-white shadow-[0_8px_20px_rgba(17,17,17,0.14)]'
-        : 'rounded-[16px] bg-[#111111] text-white shadow-[0_8px_20px_rgba(17,17,17,0.14)]'
-    }`}
-  >
+  type={isLoading || isRecording || isTranscribing ? 'button' : 'submit'}
+  onClick={isRecording ? handleVoiceClick : undefined}
+  className={`h-11 w-11 flex items-center justify-center transition-all ${
+    isLoading
+      ? 'rounded-full bg-[#111111] text-white shadow-[0_8px_20px_rgba(17,17,17,0.14)]'
+      : 'rounded-[16px] bg-[#111111] text-white shadow-[0_8px_20px_rgba(17,17,17,0.14)]'
+  }`}
+  style={{ backgroundColor: 'var(--accent-send-button)' }}
+>
     {isLoading ? (
       <div className="h-[10px] w-[10px] rounded-[3px] bg-white" />
     ) : (
