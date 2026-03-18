@@ -119,7 +119,10 @@ const SettingsPage: React.FC<{ isDarkMode: boolean; setIsDarkMode: React.Dispatc
 const [appearanceOpen, setAppearanceOpen] = useState(false);
 const [appearanceMode, setAppearanceMode] = useState<'system' | 'light' | 'dark'>('system');
 const [accentOpen, setAccentOpen] = useState(false);
-const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'yellow' | 'pink' | 'orange' | 'purple'>('default');
+const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'yellow' | 'pink' | 'orange' | 'purple'>(() => {
+  const saved = localStorage.getItem('accentColor');
+  return (saved as 'default' | 'blue' | 'green' | 'yellow' | 'pink' | 'orange' | 'purple') || 'default';
+});
   useEffect(() => {
   const root = document.documentElement;
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -127,6 +130,9 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
 
   root.classList.toggle('dark', shouldDark);
 }, [appearanceMode]);
+  useEffect(() => {
+  localStorage.setItem('accentColor', accentColor);
+}, [accentColor]);
   const items = [
     { icon: <GearIcon />, label: 'General' },
     { icon: <BellIcon />, label: 'Notifications' },
