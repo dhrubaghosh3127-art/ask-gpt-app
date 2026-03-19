@@ -308,8 +308,8 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
                 <div className="flex items-center gap-3">
                   <IconWrap><PaletteIcon /></IconWrap>
                   <div>
-                    <div className="text-[15px] font-semibold tracking-[-0.02em]">Accent color</div>
-                    <div className="mt-0.5 text-[12px] text-[#7c7c82]">Default</div>
+                    <div className="text-[15px] font-semibold tracking-[-0.02em]">{t('accent_color', 'Accent color')}</div>
+<div className="mt-0.5 text-[12px] text-[#7c7c82]">{t('default', 'Default')}</div>
                   </div>
                 </div>
                 <IconWrap><ChevronDownIcon /></IconWrap>
@@ -420,8 +420,8 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
   key={item.label}
   type="button"
   onClick={() => {
-    if (item.label === 'General') navigate('/general');
-  }}
+  if (item.key === 'general') navigate('/general');
+}}
   className={`${rowBase} ${
     index === 0 ? 'rounded-t-[24px] rounded-b-[8px]' : ''
   } ${
@@ -446,7 +446,7 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
           >
             <div className="flex items-center gap-3 text-[#ef4444]">
               <IconWrap><LogoutIcon /></IconWrap>
-              <div className="text-[15px] font-semibold tracking-[-0.02em]">Log out</div>
+              <div className="text-[15px] font-semibold tracking-[-0.02em]">{t('log_out', 'Log out')}</div>
             </div>
           </button>
         </div>
