@@ -130,7 +130,6 @@ const [allNotifications, setAllNotifications] = useState(() => {
 const [openSheet, setOpenSheet] = useState<null | 'all' | 'reply'>(
   null
 );
-const [replyComplete, setReplyComplete] = useState(false);
 
 useEffect(() => {
   localStorage.setItem('notifications_all', allNotifications ? 'on' : 'off');
@@ -282,6 +281,7 @@ onClick={() => {
 
             <button
               type="button"
+              onClick={() => setReplyComplete((v) => !v)}
               className="flex w-full items-center justify-between rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
             >
               <div>
@@ -293,8 +293,16 @@ onClick={() => {
                 </div>
               </div>
 
-              <div className="h-6 w-10 rounded-full bg-[#d1d1d6]">
-                <div className="mt-[2px] h-5 w-5 translate-x-[2px] rounded-full bg-white" />
+              <div
+                className={`h-6 w-10 rounded-full transition-colors ${
+                  replyComplete ? 'bg-[#111111]' : 'bg-[#d1d1d6]'
+                }`}
+              >
+                <div
+                  className={`mt-[2px] h-5 w-5 rounded-full bg-white transition-transform ${
+                    replyComplete ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                  }`}
+                />
               </div>
             </button>
           </div>
