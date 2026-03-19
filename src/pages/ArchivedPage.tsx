@@ -7,6 +7,7 @@ import {
   renameConversation,
   unarchiveConversation,
 } from '../utils/storage';
+import { t } from '../utils/i18n';
 
 const ArchivedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ const ArchivedPage: React.FC = () => {
           className="mb-4 text-[24px] font-bold tracking-[-0.03em] text-[#111111]"
           style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
         >
-          Archived chat
+          {t('archived_chat', 'Archived chat')}
         </div>
 
         <div className="h-[420px] overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
