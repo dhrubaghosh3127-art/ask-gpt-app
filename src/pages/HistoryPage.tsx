@@ -678,7 +678,7 @@ const historyText = {
         className="flex w-full items-center justify-between px-5 py-4 text-left"
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
       >
-        <span className="text-[17px] font-medium text-[#111111]">Rename</span>
+        <span className="text-[17px] font-medium text-[#111111]">{historyText.rename}</span>
       </button>
 
       <div className="h-px bg-[#f0f1f5]" />
@@ -689,7 +689,7 @@ const historyText = {
         className="flex w-full items-center justify-between px-5 py-4 text-left"
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
       >
-        <span className="text-[17px] font-medium text-[#111111]">Archive</span>
+        <span className="text-[17px] font-medium text-[#111111]">{historyText.archive}</span>
       </button>
 
       <div className="h-px bg-[#f0f1f5]" />
@@ -701,8 +701,8 @@ const historyText = {
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
       >
         <span className="text-[17px] font-medium text-[#111111]">
-          {menuChat.pinned ? 'Unpin chat' : 'Pin chat'}
-        </span>
+  {menuChat.pinned ? historyText.unpinChat : historyText.pinChat}
+</span>
       </button>
 
       <div className="h-px bg-[#f0f1f5]" />
@@ -713,7 +713,7 @@ const historyText = {
         className="flex w-full items-center justify-between px-5 py-4 text-left"
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
       >
-        <span className="text-[17px] font-medium text-[#e53935]">Delete</span>
+        <span className="text-[17px] font-medium text-[#e53935]">{historyText.deleteText}</span>
       </button>
     </div>
   </div>
