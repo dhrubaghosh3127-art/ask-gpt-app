@@ -107,7 +107,7 @@ const startPath = useMemo(() => {
       setIsDarkMode={setIsDarkMode}
     />
 
-    <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden h-[100dvh] max-h-[100dvh]">
+    <main className="relative flex min-w-0 min-h-0 flex-1 flex-col overflow-hidden">
       <Routes>
         <Route path="/" element={<Navigate to={startPath} />} />
         <Route path="/auth" element={<AuthPage />} />
