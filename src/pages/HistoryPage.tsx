@@ -619,11 +619,11 @@ const historyText = {
   <div className="h-full overflow-y-auto">
     {activeChats.length === 0 ? (
       <div
-        className="px-5 py-5 text-[14px] text-[#8a8a8f]"
-        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-      >
-        No chat history yet
-      </div>
+  className="px-5 py-5 text-[14px] text-[#8a8a8f]"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+  {historyText.noHistory}
+</div>
     ) : (
       activeChats.map((chat, index) => (
         <React.Fragment key={chat.id}>
@@ -650,8 +650,8 @@ const historyText = {
               </div>
               {chat.pinned && (
                 <span className="shrink-0 text-[12px] font-medium text-[#8a8a8f]">
-                  Pinned
-                </span>
+  {historyText.pinned}
+</span>
               )}
             </div>
           </button>
