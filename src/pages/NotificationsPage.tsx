@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const IconWrap: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -123,6 +123,17 @@ const rowBase =
 
 const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
+const [allNotifications, setAllNotifications] = useState(() => {
+  if (typeof window === 'undefined') return true;
+  return localStorage.getItem('notifications_all') !== 'off';
+});
+const [openSheet, setOpenSheet] = useState<null | 'all'>(
+  null
+);
+
+useEffect(() => {
+  localStorage.setItem('notifications_all', allNotifications ? 'on' : 'off');
+}, [allNotifications]);
 
   const items = [
     {
@@ -179,6 +190,9 @@ const NotificationsPage: React.FC = () => {
               <button
                 key={item.label}
                 type="button"
+onClick={() => {
+  if (index === 0) setOpenSheet('all');
+}}
                 className={`${rowBase} ${
                   index === 0 ? 'rounded-t-[24px] rounded-b-[8px]' : ''
                 } ${
@@ -206,6 +220,50 @@ const NotificationsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {openSheet === 'all' && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setOpenSheet(null)}
+        >
+          <div
+            className="w-full max-w-[430px] rounded-[28px] bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+          >
+            <div className="px-2 pb-3 text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+              All notifications
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAllNotifications((v) => !v)}
+              className="flex w-full items-center justify-between rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+            >
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Push
+                </div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">
+                  Manage all app notifications
+                </div>
+              </div>
+
+              <div
+                className={`h-6 w-10 rounded-full transition-colors ${
+                  allNotifications ? 'bg-[#111111]' : 'bg-[#d1d1d6]'
+                }`}
+              >
+                <div
+                  className={`mt-[2px] h-5 w-5 rounded-full bg-white transition-transform ${
+                    allNotifications ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
