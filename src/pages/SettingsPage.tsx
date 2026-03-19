@@ -416,22 +416,25 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
           <div className="space-y-[2px]">
             {items.map((item, index) => (
               <button
-                key={item.label}
-                type="button"
-                className={`${rowBase} ${
-                  index === 0 ? 'rounded-t-[24px] rounded-b-[8px]' : ''
-                } ${
-                  index > 0 && index < items.length - 1 ? 'rounded-[8px]' : ''
-                } ${
-                  index === items.length - 1 ? 'rounded-t-[8px] rounded-b-[24px]' : ''
-                }`}
-                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-              >
-                <div className="flex items-center gap-3">
-                  <IconWrap>{item.icon}</IconWrap>
-                  <div className="text-[15px] font-semibold tracking-[-0.02em]">{item.label}</div>
-                </div>
-              </button>
+  key={item.label}
+  type="button"
+  onClick={() => {
+    if (item.label === 'General') navigate('/general');
+  }}
+  className={`${rowBase} ${
+    index === 0 ? 'rounded-t-[24px] rounded-b-[8px]' : ''
+  } ${
+    index > 0 && index < items.length - 1 ? 'rounded-[8px]' : ''
+  } ${
+    index === items.length - 1 ? 'rounded-t-[8px] rounded-b-[24px]' : ''
+  }`}
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+  <div className="flex items-center gap-3">
+    <IconWrap>{item.icon}</IconWrap>
+    <div className="text-[15px] font-semibold tracking-[-0.02em]">{item.label}</div>
+  </div>
+</button>
             ))}
           </div>
 
