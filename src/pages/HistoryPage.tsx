@@ -533,8 +533,8 @@ const historyText = {
             style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
           >
             <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
-              New chat
-            </div>
+  {historyText.newChat}
+</div>
           </button>
 
           <div className="overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
@@ -545,13 +545,48 @@ const historyText = {
   style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
 >
               <div>
-                <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
-                  Archived chat
-                </div>
-                <div className="mt-1 text-[13px] text-[#8a8a8f]">
-                  {archivedChats.length} archived chat{archivedChats.length === 1 ? '' : 's'}
-                </div>
-              </div>
+  <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
+    {historyText.archivedChat}
+  </div>
+  <div className="mt-1 text-[13px] text-[#8a8a8f]">
+    {archivedChats.length}{' '}
+    {appLanguage === 'bangla'
+      ? `আর্কাইভড চ্যাট${archivedChats.length === 1 ? '' : ''}`
+      : appLanguage === 'hindi'
+      ? `संग्रहित चैट${archivedChats.length === 1 ? '' : ''}`
+      : appLanguage === 'urdu'
+      ? `آرکائیوڈ چیٹ${archivedChats.length === 1 ? '' : ''}`
+      : appLanguage === 'arabic'
+      ? `دردشة مؤرشفة${archivedChats.length === 1 ? '' : ''}`
+      : appLanguage === 'spanish'
+      ? `chat archivado${archivedChats.length === 1 ? '' : 's'}`
+      : appLanguage === 'french'
+      ? `chat archivé${archivedChats.length === 1 ? '' : 's'}`
+      : appLanguage === 'german'
+      ? `archivierte Chats`
+      : appLanguage === 'portuguese'
+      ? `chat arquivado${archivedChats.length === 1 ? '' : 's'}`
+      : appLanguage === 'russian'
+      ? `архивный чат`
+      : appLanguage === 'turkish'
+      ? `arşivlenmiş sohbet`
+      : appLanguage === 'indonesian'
+      ? `chat arsip`
+      : appLanguage === 'chinese'
+      ? `个已归档聊天`
+      : appLanguage === 'japanese'
+      ? `件のアーカイブ済みチャット`
+      : appLanguage === 'korean'
+      ? `개의 보관된 채팅`
+      : appLanguage === 'italian'
+      ? `chat archiviat${archivedChats.length === 1 ? 'o' : 'i'}`
+      : appLanguage === 'thai'
+      ? `แชตที่เก็บถาวร`
+      : appLanguage === 'vietnamese'
+      ? `đoạn chat đã lưu trữ`
+      : `archived chat${archivedChats.length === 1 ? '' : 's'}`}
+  </div>
+</div>
             </button>
 
             <div className="h-px bg-[#f0f1f5]" />
@@ -562,23 +597,23 @@ const historyText = {
               style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
             >
               <div>
-                <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
-                  Upgrade to ASK-GPT Plus
-                </div>
-                <div className="mt-1 text-[13px] text-[#8a8a8f]">
-                  Premium features coming soon
-                </div>
-              </div>
+  <div className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
+    {historyText.upgrade}
+  </div>
+  <div className="mt-1 text-[13px] text-[#8a8a8f]">
+    {historyText.premiumSoon}
+  </div>
+</div>
             </button>
           </div>
 
           <div className="pt-3">
             <div
-              className="mb-3 px-1 text-[15px] font-semibold tracking-[-0.01em] text-[#111111]"
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-            >
-              Your ASK-GPT history
-            </div>
+  className="mb-3 px-1 text-[15px] font-semibold tracking-[-0.01em] text-[#111111]"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+  {historyText.yourHistory}
+</div>
 
       <div className="h-[420px] overflow-hidden rounded-[22px] border border-[#ececf2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
   <div className="h-full overflow-y-auto">
