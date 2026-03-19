@@ -616,14 +616,14 @@ const response = await getGeminiResponse({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
+    <div className="flex h-full min-h-0 max-h-full flex-1 flex-col overflow-hidden overscroll-none bg-white">
       <Header 
         toggleSidebar={toggleSidebar} 
         selectedModel={selectedModel} 
         setSelectedModel={setSelectedModel} 
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-4 pt-24 pb-24">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-4 pt-24 pb-24">
         {(!conversation || conversation.messages.length === 0) ? (
           <div className="flex flex-col items-center justify-center min-h-[52vh] px-6 text-center pb-10">
             <div className="w-full max-w-[340px] mx-auto flex flex-col items-center text-center gap-4">
