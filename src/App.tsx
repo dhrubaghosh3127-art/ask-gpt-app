@@ -7,6 +7,7 @@ import HistoryPage from './pages/HistoryPage';
 import ArchivedPage from './pages/ArchivedPage';
 import Sidebar from './components/Sidebar';
 import SettingsPage from './pages/SettingsPage';
+import GeneralPage from './pages/GeneralPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import AuthPage from './pages/AuthPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
@@ -117,6 +118,7 @@ const startPath = useMemo(() => {
             <Route path="/history" element={<HistoryPage />} />
 <Route path="/history/archived" element={<ArchivedPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/general" element={<GeneralPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 <Route path="/key" element={<KeySetup />} />
           </Routes>
