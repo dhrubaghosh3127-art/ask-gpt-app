@@ -623,7 +623,7 @@ const response = await getGeminiResponse({
         setSelectedModel={setSelectedModel} 
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-4 pt-24 pb-[170px]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-4 pt-24 pb-24">
         {(!conversation || conversation.messages.length === 0) ? (
           <div className="flex flex-col items-center justify-center min-h-[52vh] px-6 text-center pb-10">
             <div className="w-full max-w-[340px] mx-auto flex flex-col items-center text-center gap-4">
@@ -850,14 +850,13 @@ const response = await getGeminiResponse({
 
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[430px] bg-white">
   <ChatInput
-    onSend={handleSend}
-    isLoading={isLoading}
-    onTranscribe={handleTranscribe}
-    onImageAnalyze={handleImageAnalysis}
-    isTranscribing={isTranscribing}
-  />
+  onSend={handleSend}
+  isLoading={isLoading}
+  onTranscribe={handleTranscribe}
+  onImageAnalyze={handleImageAnalysis}
+  isTranscribing={isTranscribing}
+/>
 </div>
-    </div>
   );
 };
 
