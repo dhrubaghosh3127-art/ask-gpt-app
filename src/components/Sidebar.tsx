@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Conversation, Role } from '../types';
 import { getConversations, saveConversations } from '../utils/storage';
 import { TOOL_CATEGORIES } from '../constants';
+import { getAppLanguage, t } from '../utils/i18n';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -14,6 +15,53 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsDarkMode }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const navigate = useNavigate();
+const appLanguage = getAppLanguage();
+
+const sidebarText = {
+  myProfile: t('my_profile', 'My Profile'),
+  yourApiKey: t('your_api_key', 'Your API Key'),
+  settingsSupport: t('settings_support', 'Settings & Support'),
+  privacyPolicy: t('privacy_policy', 'Privacy Policy'),
+  logOut: t('log_out', 'Log out'),
+  categories:
+    appLanguage === 'bangla' ? 'ক্যাটাগরিজ' :
+    appLanguage === 'hindi' ? 'श्रेणियाँ' :
+    appLanguage === 'urdu' ? 'کیٹیگریز' :
+    appLanguage === 'arabic' ? 'الفئات' :
+    appLanguage === 'spanish' ? 'Categorías' :
+    appLanguage === 'french' ? 'Catégories' :
+    appLanguage === 'german' ? 'Kategorien' :
+    appLanguage === 'portuguese' ? 'Categorias' :
+    appLanguage === 'russian' ? 'Категории' :
+    appLanguage === 'turkish' ? 'Kategoriler' :
+    appLanguage === 'indonesian' ? 'Kategori' :
+    appLanguage === 'chinese' ? '分类' :
+    appLanguage === 'japanese' ? 'カテゴリー' :
+    appLanguage === 'korean' ? '카테고리' :
+    appLanguage === 'italian' ? 'Categorie' :
+    appLanguage === 'thai' ? 'หมวดหมู่' :
+    appLanguage === 'vietnamese' ? 'Danh mục' :
+    'Categories',
+  upgrade:
+    appLanguage === 'bangla' ? 'ASK-GPT প্লাসে আপগ্রেড' :
+    appLanguage === 'hindi' ? 'ASK-GPT प्लस में अपग्रेड' :
+    appLanguage === 'urdu' ? 'ASK-GPT پلس میں اپ گریڈ' :
+    appLanguage === 'arabic' ? 'الترقية إلى ASK-GPT Plus' :
+    appLanguage === 'spanish' ? 'Actualizar a ASK-GPT Plus' :
+    appLanguage === 'french' ? 'Passer à ASK-GPT Plus' :
+    appLanguage === 'german' ? 'Auf ASK-GPT Plus upgraden' :
+    appLanguage === 'portuguese' ? 'Atualizar para ASK-GPT Plus' :
+    appLanguage === 'russian' ? 'Перейти на ASK-GPT Plus' :
+    appLanguage === 'turkish' ? 'ASK-GPT Plus’a yükselt' :
+    appLanguage === 'indonesian' ? 'Upgrade ke ASK-GPT Plus' :
+    appLanguage === 'chinese' ? '升级到 ASK-GPT Plus' :
+    appLanguage === 'japanese' ? 'ASK-GPT Plus にアップグレード' :
+    appLanguage === 'korean' ? 'ASK-GPT Plus로 업그레이드' :
+    appLanguage === 'italian' ? 'Passa a ASK-GPT Plus' :
+    appLanguage === 'thai' ? 'อัปเกรดเป็น ASK-GPT Plus' :
+    appLanguage === 'vietnamese' ? 'Nâng cấp lên ASK-GPT Plus' :
+    'Upgrade to ASK-GPT Plus',
+};
   
 
   useEffect(() => {
@@ -70,8 +118,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
   style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
 >
   <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-    My Profile
-  </div>
+  {sidebarText.myProfile}
+</div>
 </button>
 
       <button
@@ -80,18 +128,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
   style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
 >
   <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-    Upgrade to ASK-GPT Plus
-  </div>
+  {sidebarText.upgrade}
+</div>
 </button>
     </div>
 {/* Tools Section */}
 <div className="mb-5 min-w-[250px] space-y-2.5">
   <h2
-    className="px-1 text-[12px] font-semibold uppercase tracking-[0.11em] text-[#9aa0aa]"
-    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-  >
-    Categories
-  </h2>
+  className="px-1 text-[12px] font-semibold uppercase tracking-[0.11em] text-[#9aa0aa]"
+  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+>
+  {sidebarText.categories}
+</h2>
 
   {[
     TOOL_CATEGORIES.slice(0, 4),
@@ -146,25 +194,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isDarkMode, setIsD
   to="/key"
   className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg"
 >
-  🔑 Your API Key
+  🔑 {sidebarText.yourApiKey}
 </Link>
 
   <Link
   to="/settings"
   className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg"
 >
-  ⚙ Settings & Support
+  ⚙ {sidebarText.settingsSupport}
 </Link>
 
   <Link
   to="/privacy-policy"
   className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg"
 >
-  📜 Privacy Policy
+  📜 {sidebarText.privacyPolicy}
 </Link>
 
   <button className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-red-500 hover:bg-[#f5f5f7] rounded-lg">
-    ⎋ Log out
+    ⎋ {sidebarText.logOut}
   </button>
 
 </div>
