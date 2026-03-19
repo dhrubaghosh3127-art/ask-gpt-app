@@ -99,32 +99,32 @@ const startPath = useMemo(() => {
 }, []);
   return (
     <Router>
-      <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200 overflow-hidden">
-        <Sidebar 
-          isOpen={isSidebarOpen} 
-          setIsOpen={setIsSidebarOpen} 
-          isDarkMode={isDarkMode} 
-          setIsDarkMode={setIsDarkMode} 
-        />
-        
-        <main className="flex-1 flex flex-col min-w-0 relative">
-          <Routes>
-            <Route path="/" element={<Navigate to={startPath} />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/complete-profile" element={<CompleteProfilePage />} />
-            <Route path="/my-profile" element={<MyProfilePage />} />
-            <Route path="/chat" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
-            <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
-            <Route path="/history" element={<HistoryPage />} />
-<Route path="/history/archived" element={<ArchivedPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/general" element={<GeneralPage />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-<Route path="/key" element={<KeySetup />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+  <div className="flex h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <Sidebar
+      isOpen={isSidebarOpen}
+      setIsOpen={setIsSidebarOpen}
+      isDarkMode={isDarkMode}
+      setIsDarkMode={setIsDarkMode}
+    />
+
+    <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden h-[100dvh] max-h-[100dvh]">
+      <Routes>
+        <Route path="/" element={<Navigate to={startPath} />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/complete-profile" element={<CompleteProfilePage />} />
+        <Route path="/my-profile" element={<MyProfilePage />} />
+        <Route path="/chat" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
+        <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
+        <Route path="/history" element={<HistoryPage />} />
+        <Route path="/history/archived" element={<ArchivedPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/general" element={<GeneralPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/key" element={<KeySetup />} />
+      </Routes>
+    </main>
+  </div>
+</Router>
   );
 };
 
