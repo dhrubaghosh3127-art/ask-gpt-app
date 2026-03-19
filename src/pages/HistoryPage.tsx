@@ -484,7 +484,7 @@ const historyText = {
 
   const handleRename = () => {
     if (!menuChat) return;
-    const nextTitle = window.prompt('Rename chat', menuChat.title);
+    const nextTitle = window.prompt(historyText.rename, menuChat.title);
     if (!nextTitle || !nextTitle.trim()) return;
     renameConversation(menuChat.id, nextTitle);
     setMenuChat(null);
@@ -511,7 +511,7 @@ const historyText = {
 
   const handleDelete = () => {
     if (!menuChat) return;
-    const ok = window.confirm(`Delete "${menuChat.title}"?`);
+    const ok = window.confirm(`${historyText.deleteText} "${menuChat.title}"?`);
     if (!ok) return;
     deleteConversation(menuChat.id);
     setMenuChat(null);
