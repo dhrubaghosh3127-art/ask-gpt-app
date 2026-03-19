@@ -127,10 +127,14 @@ const [allNotifications, setAllNotifications] = useState(() => {
   if (typeof window === 'undefined') return true;
   return localStorage.getItem('notifications_all') !== 'off';
 });
-const [openSheet, setOpenSheet] = useState<null | 'all' | 'reply'>(
-  null
-);
+const [openSheet, setOpenSheet] = useState<
+  null | 'all' | 'reply' | 'sound' | 'vibration' | 'updates' | 'preview'
+>(null);
 const [replyComplete, setReplyComplete] = useState(false);
+const [soundEnabled, setSoundEnabled] = useState(false);
+const [vibrationEnabled, setVibrationEnabled] = useState(false);
+const [updatesEnabled, setUpdatesEnabled] = useState(false);
+const [previewEnabled, setPreviewEnabled] = useState(false);
 
 useEffect(() => {
   localStorage.setItem('notifications_all', allNotifications ? 'on' : 'off');
@@ -194,6 +198,10 @@ useEffect(() => {
 onClick={() => {
   if (index === 0) setOpenSheet('all');
   if (index === 1) setOpenSheet('reply');
+  if (index === 2) setOpenSheet('sound');
+  if (index === 3) setOpenSheet('vibration');
+  if (index === 4) setOpenSheet('updates');
+  if (index === 5) setOpenSheet('preview');
 }}
                 className={`${rowBase} ${
                   index === 0 ? 'rounded-t-[24px] rounded-b-[8px]' : ''
@@ -302,6 +310,181 @@ onClick={() => {
                 <div
                   className={`mt-[2px] h-5 w-5 rounded-full bg-white transition-transform ${
                     replyComplete ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+      {openSheet === 'sound' && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setOpenSheet(null)}
+        >
+          <div
+            className="w-full max-w-[430px] rounded-[28px] bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+          >
+            <div className="px-2 pb-3 text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+              Sound
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSoundEnabled((v) => !v)}
+              className="flex w-full items-center justify-between rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+            >
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Sound
+                </div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">
+                  Play a sound for notifications
+                </div>
+              </div>
+
+              <div
+                className={`h-6 w-10 rounded-full transition-colors ${
+                  soundEnabled ? 'bg-[#111111]' : 'bg-[#d1d1d6]'
+                }`}
+              >
+                <div
+                  className={`mt-[2px] h-5 w-5 rounded-full bg-white transition-transform ${
+                    soundEnabled ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {openSheet === 'vibration' && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setOpenSheet(null)}
+        >
+          <div
+            className="w-full max-w-[430px] rounded-[28px] bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+          >
+            <div className="px-2 pb-3 text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+              Vibration
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setVibrationEnabled((v) => !v)}
+              className="flex w-full items-center justify-between rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+            >
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Vibration
+                </div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">
+                  Vibrate when notifications arrive
+                </div>
+              </div>
+
+              <div
+                className={`h-6 w-10 rounded-full transition-colors ${
+                  vibrationEnabled ? 'bg-[#111111]' : 'bg-[#d1d1d6]'
+                }`}
+              >
+                <div
+                  className={`mt-[2px] h-5 w-5 rounded-full bg-white transition-transform ${
+                    vibrationEnabled ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {openSheet === 'updates' && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setOpenSheet(null)}
+        >
+          <div
+            className="w-full max-w-[430px] rounded-[28px] bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+          >
+            <div className="px-2 pb-3 text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+              Updates & new features
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setUpdatesEnabled((v) => !v)}
+              className="flex w-full items-center justify-between rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+            >
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Updates & new features
+                </div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">
+                  Product news and important updates
+                </div>
+              </div>
+
+              <div
+                className={`h-6 w-10 rounded-full transition-colors ${
+                  updatesEnabled ? 'bg-[#111111]' : 'bg-[#d1d1d6]'
+                }`}
+              >
+                <div
+                  className={`mt-[2px] h-5 w-5 rounded-full bg-white transition-transform ${
+                    updatesEnabled ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {openSheet === 'preview' && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setOpenSheet(null)}
+        >
+          <div
+            className="w-full max-w-[430px] rounded-[28px] bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+          >
+            <div className="px-2 pb-3 text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+              Notification preview
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setPreviewEnabled((v) => !v)}
+              className="flex w-full items-center justify-between rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+            >
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Notification preview
+                </div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">
+                  Choose how much content is shown
+                </div>
+              </div>
+
+              <div
+                className={`h-6 w-10 rounded-full transition-colors ${
+                  previewEnabled ? 'bg-[#111111]' : 'bg-[#d1d1d6]'
+                }`}
+              >
+                <div
+                  className={`mt-[2px] h-5 w-5 rounded-full bg-white transition-transform ${
+                    previewEnabled ? 'translate-x-[18px]' : 'translate-x-[2px]'
                   }`}
                 />
               </div>
