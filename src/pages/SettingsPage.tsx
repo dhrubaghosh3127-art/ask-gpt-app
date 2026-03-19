@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { t } from '../utils/i18n';
 
 const IconWrap: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <span className="flex h-5 w-5 items-center justify-center text-[#111111]">
@@ -181,14 +182,14 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
   root.style.setProperty('--accent-caret', current.caret);
 }, [accentColor]);
   const items = [
-    { icon: <GearIcon />, label: 'General' },
-    { icon: <BellIcon />, label: 'Notifications' },
-    { icon: <VoiceIcon />, label: 'Voice' },
-    { icon: <DatabaseIcon />, label: 'Data controls' },
-    { icon: <ShieldIcon />, label: 'Security' },
-    { icon: <BugIcon />, label: 'Report bug' },
-    { icon: <InfoIcon />, label: 'About' },
-  ];
+  { key: 'general', icon: <GearIcon />, label: t('general', 'General') },
+  { key: 'notifications', icon: <BellIcon />, label: t('notifications', 'Notifications') },
+  { key: 'voice', icon: <VoiceIcon />, label: t('voice', 'Voice') },
+  { key: 'data_controls', icon: <DatabaseIcon />, label: t('data_controls', 'Data controls') },
+  { key: 'security', icon: <ShieldIcon />, label: t('security', 'Security') },
+  { key: 'report_bug', icon: <BugIcon />, label: t('report_bug', 'Report bug') },
+  { key: 'about', icon: <InfoIcon />, label: t('about', 'About') },
+];
 
   return (
     <div className="min-h-screen bg-white text-[#111111] dark:bg-[#0b0b0c] dark:text-white">
@@ -213,8 +214,8 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
               <div className="flex items-center gap-3">
                 <IconWrap><SunIcon /></IconWrap>
                 <div>
-                  <div className="text-[15px] font-semibold tracking-[-0.02em]">Appearance</div>
-                  <div className="mt-0.5 text-[12px] text-[#7c7c82]">{appearanceMode === 'system' ? 'System (Default)' : appearanceMode === 'light' ? 'Light' : 'Dark'}</div>
+                  <div className="text-[15px] font-semibold tracking-[-0.02em]">{t('appearance', 'Appearance')}</div>
+<div className="mt-0.5 text-[12px] text-[#7c7c82]">{appearanceMode === 'system' ? `System (${t('default', 'Default')})` : appearanceMode === 'light' ? 'Light' : 'Dark'}</div>
                 </div>
               </div>
             </button>
