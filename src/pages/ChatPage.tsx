@@ -848,7 +848,7 @@ const response = await getGeminiResponse({
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[430px] bg-white">
+    
   <ChatInput
   onSend={handleSend}
   isLoading={isLoading}
