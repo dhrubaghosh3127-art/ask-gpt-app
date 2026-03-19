@@ -127,7 +127,7 @@ const [allNotifications, setAllNotifications] = useState(() => {
   if (typeof window === 'undefined') return true;
   return localStorage.getItem('notifications_all') !== 'off';
 });
-const [openSheet, setOpenSheet] = useState<null | 'all'>(
+const [openSheet, setOpenSheet] = useState<null | 'all' | 'reply'>(
   null
 );
 
@@ -192,6 +192,7 @@ useEffect(() => {
                 type="button"
 onClick={() => {
   if (index === 0) setOpenSheet('all');
+  if (index === 1) setOpenSheet('reply');
 }}
                 className={`${rowBase} ${
                   index === 0 ? 'rounded-t-[24px] rounded-b-[8px]' : ''
@@ -259,6 +260,40 @@ onClick={() => {
                     allNotifications ? 'translate-x-[18px]' : 'translate-x-[2px]'
                   }`}
                 />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+      {openSheet === 'reply' && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setOpenSheet(null)}
+        >
+          <div
+            className="w-full max-w-[430px] rounded-[28px] bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
+          >
+            <div className="px-2 pb-3 text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+              Reply complete
+            </div>
+
+            <button
+              type="button"
+              className="flex w-full items-center justify-between rounded-[20px] bg-[#f7f7f8] px-4 py-4 text-left"
+            >
+              <div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Reply complete
+                </div>
+                <div className="mt-0.5 text-[12px] text-[#7c7c82]">
+                  Get notified when answers are ready
+                </div>
+              </div>
+
+              <div className="h-6 w-10 rounded-full bg-[#d1d1d6]">
+                <div className="mt-[2px] h-5 w-5 translate-x-[2px] rounded-full bg-white" />
               </div>
             </button>
           </div>
