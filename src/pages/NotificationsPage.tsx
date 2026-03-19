@@ -130,6 +130,7 @@ const [allNotifications, setAllNotifications] = useState(() => {
 const [openSheet, setOpenSheet] = useState<null | 'all' | 'reply'>(
   null
 );
+const [replyComplete, setReplyComplete] = useState(false);
 
 useEffect(() => {
   localStorage.setItem('notifications_all', allNotifications ? 'on' : 'off');
