@@ -65,10 +65,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const body =
-      typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
+     const body =
+  typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
 
-    const {
+const {
   modelId,
   messages,
   userKey,
@@ -97,9 +97,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   voiceIntelligence?: "standard" | "advanced";
   advancedTranscribe?: boolean;
 };
-    if (mode === "chat" && !Array.isArray(messages)) {
+
+if (mode === "chat" && !Array.isArray(messages)) {
   return res.status(400).json({ error: "messages are required" });
-    }
+}
+
+const { USE_CONTROLLER_V2 } = await import("../src/config/featureFlags");
+
+if (USE_CONTROLLER_V2 && mode === "chat") {
+  const { runControllerV2 } = await import("../src/services/controllerV2");
+
+  const controllerResult = await runControllerV2({
+    prompt:
+      typeof prompt === "string" && prompt.trim()
+        ? prompt.trim()
+        : getLastUserText(Array.isArray(messages) ? messages : []),
+    messages: Array.isArray(messages) ? messages : [],
+    systemInstruction:
+      typeof systemInstruction === "string" ? systemInstruction : "",
+    hasImage: Boolean(imageBase64),
+    imageContext: "",
+  });
+
+  if (controllerResult.ok && controllerResult.finalText.trim()) {
+    return res.status(200).json({
+      text: controllerResult.finalText.trim(),
+      modelId: "controller-v2",
+    });
+  }
+}
 
     const keyFromClient = (userKey ?? userApiKey ?? "").trim();
     const hasUserKey = keyFromClient.length > 0;
