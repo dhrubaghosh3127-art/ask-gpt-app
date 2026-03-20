@@ -146,11 +146,12 @@ const updatedConv: Conversation = conversation
     if (!id) navigate(`/chat/${currentId}`);
   };
 const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
-  const AUTO_FLASH_ID = "google/gemini-2.5-flash";
-const AUTO_THINK_ID = "deepseek/deepseek-r1";
+  const AUTO_FLASH_ID = "llama-3.3-70b-versatile";
+const AUTO_THINK_ID = "qwen/qwen3-32b";
+const AUTO_WEB_ID = "groq/compound";
 const ADMIN_DEFAULT_ID = "llama-3.3-70b-versatile";
-const ADMIN_THINK_ID = "openai/gpt-oss-120b"
-  const ADMIN_WEB_ID = "groq/compound";
+const ADMIN_THINK_ID = "openai/gpt-oss-120b";
+const ADMIN_WEB_ID = "groq/compound";
 const shouldUseDeepSeek = (text: string) => {
   const t = (text || "").toLowerCase();
   const hasDigit = /[0-9০-৯]/.test(t);
@@ -238,7 +239,11 @@ const shouldUseWebSearch = (text: string) => {
   );
 };
 const pickAutoModelId = (text: string) =>
-  shouldUseDeepSeek(text) ? AUTO_THINK_ID : AUTO_FLASH_ID;
+  shouldUseWebSearch(text)
+    ? AUTO_WEB_ID
+    : shouldUseDeepSeek(text)
+      ? AUTO_THINK_ID
+      : AUTO_FLASH_ID;
   const shouldCreateImage = (text: string) => {
   const t = (text || "").toLowerCase().trim();
 
