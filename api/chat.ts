@@ -102,7 +102,7 @@ if (mode === "chat" && !Array.isArray(messages)) {
   return res.status(400).json({ error: "messages are required" });
 }
 
-const { USE_CONTROLLER_V2 } = await import("../src/config/featureFlags");
+const USE_CONTROLLER_V2 = false;
 
 if (USE_CONTROLLER_V2 && mode === "chat") {
   try {
