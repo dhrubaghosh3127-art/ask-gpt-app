@@ -382,10 +382,7 @@ const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
       return res.status(400).json({ error: "modelId is required" });
     }
 
-    const finalModelId =
-  hasUserKey
-    ? (modelId || "google/gemini-2.5-flash")
-    : (modelId || "llama-3.3-70b-versatile");
+    const finalModelId = modelId || "llama-3.3-70b-versatile";
   const ossSystem = {
   role: "system",
   content:
@@ -399,16 +396,20 @@ const capabilitySystem = {
   content: CAPABILITY_SYSTEM_PROMPT,
 };
 
+const useThinkingSystem =
+  finalModelId === "openai/gpt-oss-120b" ||
+  finalModelId === "qwen/qwen3-32b";
+
 const finalMessages =
   capabilityMode
     ? [
         capabilitySystem,
-        ...(finalModelId === "openai/gpt-oss-120b" ? [ossSystem] : []),
+        ...(useThinkingSystem ? [ossSystem] : []),
         ...messages,
       ]
-    : finalModelId === "openai/gpt-oss-120b"
-    ? [ossSystem, ...messages]
-    : messages;
+    : useThinkingSystem
+      ? [ossSystem, ...messages]
+      : messages;
     const requestBody: Record<string, any> = {
   model: finalModelId,
   messages: finalMessages,
@@ -418,6 +419,10 @@ const finalMessages =
 if (finalModelId === "openai/gpt-oss-120b") {
   requestBody.max_completion_tokens = 4096;
   requestBody.reasoning_effort = "high";
+} else if (finalModelId === "qwen/qwen3-32b") {
+  requestBody.max_tokens = 4096;
+  requestBody.reasoning_effort = "default";
+  requestBody.reasoning_format = "hidden";
 } else if (finalModelId === "groq/compound") {
   // no app-side max token cap for groq compound
 } else {
