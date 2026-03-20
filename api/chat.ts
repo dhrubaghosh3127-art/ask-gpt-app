@@ -105,27 +105,42 @@ if (mode === "chat" && !Array.isArray(messages)) {
 const { USE_CONTROLLER_V2 } = await import("../src/config/featureFlags");
 
 if (USE_CONTROLLER_V2 && mode === "chat") {
-  const { runControllerV2 } = await import("../src/services/controllerV2");
+  try {
+    const { runControllerV2Engine } = await import(
+      "../src/services/controllerV2Engine"
+    );
 
-  const controllerResult = await runControllerV2({
-    prompt:
-      typeof prompt === "string" && prompt.trim()
-        ? prompt.trim()
-        : getLastUserText(Array.isArray(messages) ? messages : []),
-    messages: Array.isArray(messages) ? messages : [],
-    systemInstruction:
-      typeof systemInstruction === "string" ? systemInstruction : "",
-    hasImage: Boolean(imageBase64),
-    imageContext: "",
-  });
+    const controllerApiKey = (userKey ?? userApiKey ?? "").trim();
 
-  if (controllerResult.ok && controllerResult.finalText.trim()) {
-    return res.status(200).json({
-      text: controllerResult.finalText.trim(),
-      modelId: "controller-v2",
-    });
+    if (controllerApiKey) {
+      const controllerResult = await runControllerV2Engine({
+        apiKey: controllerApiKey,
+        prompt:
+          typeof prompt === "string" && prompt.trim()
+            ? prompt.trim()
+            : getLastUserText(Array.isArray(messages) ? messages : []),
+        messages: Array.isArray(messages) ? messages : [],
+        systemInstruction:
+          typeof systemInstruction === "string" ? systemInstruction : "",
+        hasImage: Boolean(imageBase64),
+        imageContext: "",
+        imageBase64:
+          typeof imageBase64 === "string" ? imageBase64 : "",
+        mimeType:
+          typeof mimeType === "string" ? mimeType : "",
+      });
+
+      if (controllerResult.ok && controllerResult.finalText.trim()) {
+        return res.status(200).json({
+          text: controllerResult.finalText.trim(),
+          modelId: "controller-v2",
+        });
+      }
+    }
+  } catch (error) {
+    console.error("controller_v2_fallback", error);
   }
-}
+  }
 
     const keyFromClient = (userKey ?? userApiKey ?? "").trim();
     const hasUserKey = keyFromClient.length > 0;
