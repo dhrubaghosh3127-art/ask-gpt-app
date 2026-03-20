@@ -74,24 +74,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   userKey,
   userApiKey,
   prompt,
+  systemInstruction,
   mode,
   audioBase64,
   imageBase64,
   mimeType,
   language,
+  voiceIntelligence,
+  advancedTranscribe,
 } = body as {
   modelId?: string;
   messages?: any[];
   userKey?: string;
   userApiKey?: string;
   prompt?: string;
+  systemInstruction?: string;
   mode?: "chat" | "image" | "transcribe" | "vision";
   audioBase64?: string;
   imageBase64?: string;
   mimeType?: string;
   language?: string;
+  voiceIntelligence?: "standard" | "advanced";
+  advancedTranscribe?: boolean;
 };
-
     if (mode === "chat" && !Array.isArray(messages)) {
   return res.status(400).json({ error: "messages are required" });
     }
@@ -396,20 +401,30 @@ const capabilitySystem = {
   content: CAPABILITY_SYSTEM_PROMPT,
 };
 
+const customSystem =
+  typeof systemInstruction === "string" && systemInstruction.trim()
+    ? {
+        role: "system",
+        content: systemInstruction.trim(),
+      }
+    : null;
+
 const useThinkingSystem =
   finalModelId === "openai/gpt-oss-120b" ||
   finalModelId === "qwen/qwen3-32b";
 
-const finalMessages =
-  capabilityMode
-    ? [
-        capabilitySystem,
-        ...(useThinkingSystem ? [ossSystem] : []),
-        ...messages,
-      ]
-    : useThinkingSystem
-      ? [ossSystem, ...messages]
-      : messages;
+const finalMessages = capabilityMode
+  ? [
+      ...(customSystem ? [customSystem] : []),
+      capabilitySystem,
+      ...(useThinkingSystem ? [ossSystem] : []),
+      ...messages,
+    ]
+  : [
+      ...(customSystem ? [customSystem] : []),
+      ...(useThinkingSystem ? [ossSystem] : []),
+      ...messages,
+    ];
     const requestBody: Record<string, any> = {
   model: finalModelId,
   messages: finalMessages,
@@ -464,7 +479,7 @@ const upstream = await fetch(apiUrl, {
       });
     }
 
-    const provider = hasUserKey ? "openrouter" : "groq";
+    const provider = "groq";
 const debugPrefix = `[${provider} | ${finalModelId}]`;
 
 const msg0 = data?.choices?.[0]?.message;
