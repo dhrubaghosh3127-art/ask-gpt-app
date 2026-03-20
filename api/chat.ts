@@ -367,8 +367,8 @@ const sttRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions"
   });
                               }
     // userKey থাকলে OpenRouter, না থাকলে Groq(admin)
-    const apiUrl = hasUserKey ? OPENROUTER_URL : GROQ_URL;
-    const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
+    const apiUrl = GROQ_URL;
+const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
 
     if (!apiKey) {
       return res.status(400).json({
