@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import GeneralPage from './pages/GeneralPage';
+import VoicePage from './pages/VoicePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import AuthPage from './pages/AuthPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
@@ -121,6 +122,7 @@ const startPath = useMemo(() => {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/general" element={<GeneralPage />} />
+<Route path="/voice" element={<VoicePage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/key" element={<KeySetup />} />
       </Routes>
