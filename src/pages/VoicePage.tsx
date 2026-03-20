@@ -98,8 +98,13 @@ const VoicePage: React.FC = () => {
   const navigate = useNavigate();
 
   const [selectedIntelligence, setSelectedIntelligence] = useState<
-    'Standard' | 'Advanced'
-  >('Advanced');
+  'Standard' | 'Advanced'
+>(() => {
+  if (typeof window === 'undefined') return 'Advanced';
+  return localStorage.getItem('voice_intelligence') === 'standard'
+    ? 'Standard'
+    : 'Advanced';
+});
   const [selectedLanguage, setSelectedLanguage] =
     useState('Auto-Detect');
 
@@ -194,9 +199,13 @@ const VoicePage: React.FC = () => {
                 key={item}
                 type="button"
                 onClick={() => {
-                  setSelectedIntelligence(item);
-                  setIntelligenceOpen(false);
-                }}
+  setSelectedIntelligence(item);
+  localStorage.setItem(
+    'voice_intelligence',
+    item === 'Standard' ? 'standard' : 'advanced'
+  );
+  setIntelligenceOpen(false);
+}}
                 className={`flex w-full items-center justify-between px-4 py-4 text-left ${
                   index === 0 ? 'rounded-t-[20px]' : 'rounded-b-[20px]'
                 }`}
