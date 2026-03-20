@@ -333,13 +333,15 @@ const handleTranscribe = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        mode: "transcribe",
-        audioBase64,
-        mimeType,
-        language,
-        userKey: activeUserKey,
-        userApiKey: activeUserKey,
-      }),
+  mode: 'transcribe',
+  audioBase64,
+  mimeType,
+  language,
+  voiceIntelligence: getVoiceIntelligenceMode(),
+  advancedTranscribe: getVoiceIntelligenceMode() === 'advanced',
+  userKey: activeUserKey,
+  userApiKey: activeUserKey,
+}),
     });
 
     const data = await res.json().catch(() => ({}));
