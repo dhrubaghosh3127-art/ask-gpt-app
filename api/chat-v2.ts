@@ -69,7 +69,7 @@ export default async function handler(
   }
 let runControllerV2Engine: any;
 try {
-  const mod = await import("../src/services/controllerV2Engine");
+  const mod = await import("./_lib/controllerV2Engine");
   runControllerV2Engine = mod.runControllerV2Engine;
 } catch (error) {
   return res.status(500).json({
