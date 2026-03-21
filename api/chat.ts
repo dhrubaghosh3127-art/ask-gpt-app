@@ -102,24 +102,7 @@ if (mode === "chat" && !Array.isArray(messages)) {
   return res.status(400).json({ error: "messages are required" });
 }
 
-const USE_CONTROLLER_V2 = false;
-const CONTROLLER_V2_SMOKE_TEST = false;
-
-if (CONTROLLER_V2_SMOKE_TEST && mode === "chat") {
-  try {
-    await import("../src/services/controllerV2Engine");
-
-    return res.status(200).json({
-      text: "[controller-v2] smoke test ok",
-      modelId: "controller-v2-smoke",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: "controller_v2_import_failed",
-      details: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
+const { USE_CONTROLLER_V2 } = await import("../src/config/featureFlags");
 
 if (USE_CONTROLLER_V2 && mode === "chat") {
   try {
