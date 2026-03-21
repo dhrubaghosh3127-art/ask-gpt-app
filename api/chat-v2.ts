@@ -120,35 +120,54 @@ try {
         ? prompt.trim()
         : getLastUserText(messages);
 
-    const controllerResult = await runControllerV2Engine({
-      apiKey,
-      prompt: resolvedPrompt,
-      messages,
-      systemInstruction:
-        typeof systemInstruction === "string" ? systemInstruction : "",
-      hasImage: Boolean(imageBase64),
-      imageContext: "",
-      imageBase64: typeof imageBase64 === "string" ? imageBase64 : "",
-      mimeType: typeof mimeType === "string" ? mimeType : "",
-    });
+    let controllerResult: any = null;
 
-    if (controllerResult?.ok && controllerResult?.finalText?.trim()) {
-      return res.status(200).json({
-        text: controllerResult.finalText.trim(),
-        modelId: "controller-v2",
-        meta: {
-          plan: controllerResult.plan ?? null,
-          hasImageContext: Boolean(controllerResult.imageContext),
-          usedReasoning: Boolean(controllerResult.reasoningOutput),
-          usedWeb: Boolean(controllerResult.webOutput),
-          usedFast: Boolean(controllerResult.fastOutput),
-          usedRefine: Boolean(controllerResult.refinedOutput),
-        },
-      });
-    }
+try {
+  controllerResult = await runControllerV2Engine({
+    apiKey,
+    prompt: resolvedPrompt,
+    messages,
+    systemInstruction:
+      typeof systemInstruction === "string" ? systemInstruction : "",
+    hasImage: Boolean(imageBase64),
+    imageContext: "",
+    imageBase64: typeof imageBase64 === "string" ? imageBase64 : "",
+    mimeType: typeof mimeType === "string" ? mimeType : "",
+  });
+} catch (error) {
+  return res.status(500).json({
+    error: `controller_v2_engine_crashed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
 
-    console.error("chat-v2 fallback: controller failed", controllerResult);
-    return oldChatHandler(req, res);
+if (
+  controllerResult?.ok &&
+  typeof controllerResult?.finalText === "string" &&
+  controllerResult.finalText.trim()
+) {
+  return res.status(200).json({
+    text: controllerResult.finalText.trim(),
+    modelId: "controller-v2",
+  });
+}
+
+return res.status(500).json({
+  error: `controller_v2_failed: ${String(
+    controllerResult?.reason || "empty finalText"
+  )}`,
+  planExists: Boolean(controllerResult?.plan),
+  hasImageContext: Boolean(controllerResult?.imageContext),
+  usedReasoning: Boolean(controllerResult?.reasoningOutput),
+  usedWeb: Boolean(controllerResult?.webOutput),
+  usedFast: Boolean(controllerResult?.fastOutput),
+  usedRefine: Boolean(controllerResult?.refinedOutput),
+  finalTextPreview:
+    typeof controllerResult?.finalText === "string"
+      ? controllerResult.finalText.slice(0, 300)
+      : "",
+});
   } catch (error) {
     console.error("chat-v2 fallback: route crashed", error);
     return oldChatHandler(req, res);
