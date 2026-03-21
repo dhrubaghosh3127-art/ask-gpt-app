@@ -1,15 +1,15 @@
 import {
   CONTROLLER_V2_MODELS,
   ControllerV2Input,
-  buildControllerV2FastPrompt,
   buildControllerV2ReasoningPrompt,
   buildControllerV2WebPrompt,
-} from "./controllerV2";
-import { callControllerV2Model } from "./controllerV2Api";
+  buildControllerV2FastPrompt,
+} from "./controllerV2.js";
+import { callControllerV2Model } from "./controllerV2Api.js";
 import {
   extractControllerV2MessageText,
   isControllerV2Empty,
-} from "./controllerV2Runtime";
+} from "./controllerV2Runtime.js";
 
 export interface ControllerV2HelperCallResult {
   ok: boolean;
