@@ -1,4 +1,4 @@
-import { CONTROLLER_V2_CONFIG } from "../../src/config/featureFlags";
+import { CONTROLLER_V2_CONFIG } from "./featureFlags.js";
 import {
   ControllerV2Input,
   ControllerV2Result,
