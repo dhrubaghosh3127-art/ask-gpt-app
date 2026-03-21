@@ -103,6 +103,23 @@ if (mode === "chat" && !Array.isArray(messages)) {
 }
 
 const USE_CONTROLLER_V2 = false;
+const CONTROLLER_V2_SMOKE_TEST = true;
+
+if (CONTROLLER_V2_SMOKE_TEST && mode === "chat") {
+  try {
+    await import("../src/services/controllerV2Engine");
+
+    return res.status(200).json({
+      text: "[controller-v2] smoke test ok",
+      modelId: "controller-v2-smoke",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "controller_v2_import_failed",
+      details: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
 
 if (USE_CONTROLLER_V2 && mode === "chat") {
   try {
@@ -124,10 +141,8 @@ if (USE_CONTROLLER_V2 && mode === "chat") {
           typeof systemInstruction === "string" ? systemInstruction : "",
         hasImage: Boolean(imageBase64),
         imageContext: "",
-        imageBase64:
-          typeof imageBase64 === "string" ? imageBase64 : "",
-        mimeType:
-          typeof mimeType === "string" ? mimeType : "",
+        imageBase64: typeof imageBase64 === "string" ? imageBase64 : "",
+        mimeType: typeof mimeType === "string" ? mimeType : "",
       });
 
       if (controllerResult.ok && controllerResult.finalText.trim()) {
@@ -140,7 +155,7 @@ if (USE_CONTROLLER_V2 && mode === "chat") {
   } catch (error) {
     console.error("controller_v2_fallback", error);
   }
-  }
+        }
 
     const keyFromClient = (userKey ?? userApiKey ?? "").trim();
     const hasUserKey = keyFromClient.length > 0;
