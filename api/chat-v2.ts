@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import oldChatHandler from "./chat";
-import { runControllerV2Engine } from "../src/services/controllerV2Engine";
+
 
 type ChatV2Body = {
   modelId?: string;
@@ -68,7 +67,29 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+let oldChatHandler: any;
+try {
+  const mod = await import("./chat");
+  oldChatHandler = mod.default;
+} catch (error) {
+  return res.status(500).json({
+    error: `old_chat_import_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
 
+let runControllerV2Engine: any;
+try {
+  const mod = await import("../src/services/controllerV2Engine");
+  runControllerV2Engine = mod.runControllerV2Engine;
+} catch (error) {
+  return res.status(500).json({
+    error: `controller_v2_engine_import_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
   try {
     const body =
       typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
