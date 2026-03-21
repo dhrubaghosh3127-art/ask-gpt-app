@@ -54,9 +54,25 @@ if (!res.ok) {
   );
 }
 
-if (!data) {
+  if (!data) {
   throw new Error(rawText.slice(0, 500) || 'Invalid JSON response');
 }
 
-return String(data?.text || '').trim();
+const trace = data?.trace || {};
+const traceParts = [
+  trace.planner,
+  trace.reasoning,
+  trace.web,
+  trace.fast,
+  trace.refine,
+  trace.final,
+].filter(Boolean);
+
+const traceLine = traceParts.length
+  ? `[Trace] ${traceParts.join(" → ")}`
+  : "";
+
+const finalText = String(data?.text || '').trim();
+
+return traceLine ? `${traceLine}\n\n${finalText}` : finalText;
 };
