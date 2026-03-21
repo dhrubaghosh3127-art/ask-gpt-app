@@ -31,13 +31,32 @@ content: m.content,
   ];
 const userKey = getUserApiKey();
   const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ modelId, messages, userApiKey: userKey })
-  });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ modelId, messages, userApiKey: userKey })
+});
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || "API Error");
+const rawText = await res.text();
 
-  return String(data?.text || "").trim();
+let data: any = null;
+try {
+  data = rawText ? JSON.parse(rawText) : null;
+} catch {
+  data = null;
+}
+
+if (!res.ok) {
+  throw new Error(
+    data?.error ||
+      data?.details ||
+      rawText.slice(0, 500) ||
+      'API Error'
+  );
+}
+
+if (!data) {
+  throw new Error(rawText.slice(0, 500) || 'Invalid JSON response');
+}
+
+return String(data?.text || '').trim();
 };
