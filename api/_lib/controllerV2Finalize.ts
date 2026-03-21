@@ -1,14 +1,14 @@
 import {
-  ControllerV2Input,
   CONTROLLER_V2_MODELS,
+  ControllerV2Input,
   buildControllerV2RefineMessages,
   buildControllerV2FinalMessages,
-} from "./controllerV2";
-import { callControllerV2Model } from "./controllerV2Api";
+} from "./controllerV2.js";
+import { callControllerV2Model } from "./controllerV2Api.js";
 import {
   extractControllerV2MessageText,
   isControllerV2Empty,
-} from "./controllerV2Runtime";
+} from "./controllerV2Runtime.js";
 
 export interface ControllerV2FinalizeResult {
   ok: boolean;
