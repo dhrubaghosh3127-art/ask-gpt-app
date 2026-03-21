@@ -67,18 +67,6 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
-let oldChatHandler: any;
-try {
-  const mod = await import("./chat");
-  oldChatHandler = mod.default;
-} catch (error) {
-  return res.status(500).json({
-    error: `old_chat_import_failed: ${
-      error instanceof Error ? error.message : String(error)
-    }`,
-  });
-}
-
 let runControllerV2Engine: any;
 try {
   const mod = await import("../src/services/controllerV2Engine");
