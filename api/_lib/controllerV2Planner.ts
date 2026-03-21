@@ -5,12 +5,12 @@ import {
   ControllerV2Plan,
   buildControllerV2PlanMessages,
   parseControllerV2Plan,
-} from "./controllerV2";
-import { callControllerV2Model } from "./controllerV2Api";
+} from "./controllerV2.js";
+import { callControllerV2Model } from "./controllerV2Api.js";
 import {
   extractControllerV2MessageText,
   isControllerV2Empty,
-} from "./controllerV2Runtime";
+} from "./controllerV2Runtime.js";
 
 export interface ControllerV2PlannerResult {
   ok: boolean;
