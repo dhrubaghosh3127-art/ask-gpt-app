@@ -108,12 +108,10 @@ try {
   });
     }
 
-    const apiKey = (
-      userKey ??
-      userApiKey ??
-      process.env.GROQ_API_KEY ??
-      ""
-    ).trim();
+    const apiKey =
+  (typeof userKey === "string" && userKey.trim()) ||
+  (typeof userApiKey === "string" && userApiKey.trim()) ||
+  (process.env.GROQ_API_KEY || "").trim();
 
     if (!apiKey) {
   return res.status(400).json({
