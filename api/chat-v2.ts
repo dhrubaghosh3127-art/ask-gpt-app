@@ -155,12 +155,28 @@ if (
   text: controllerResult.finalText.trim(),
   modelId: "controller-v2",
   trace: {
-    planner: controllerResult?.plan ? "openai/gpt-oss-120b" : "",
-    reasoning: controllerResult?.reasoningOutput ? "qwen/qwen3-32b" : "",
-    web: controllerResult?.webOutput ? "groq/compound" : "",
-    fast: controllerResult?.fastOutput ? "llama-3.3-70b-versatile" : "",
-    refine: controllerResult?.refinedOutput ? "openai/gpt-oss-120b" : "",
-    final: "openai/gpt-oss-120b",
+    planner: controllerResult?.plan
+      ? `openai/gpt-oss-120b [plan r=${Boolean(
+          controllerResult.plan.needs_reasoning
+        )} w=${Boolean(controllerResult.plan.needs_web)} s=${Boolean(
+          controllerResult.plan.is_simple
+        )} c=${typeof controllerResult.plan.confidence === "number"
+          ? controllerResult.plan.confidence.toFixed(2)
+          : "0.00"}]`
+      : "openai/gpt-oss-120b [plan missing]",
+    reasoning: controllerResult?.reasoningOutput
+      ? "qwen/qwen3-32b [used]"
+      : "",
+    web: controllerResult?.webOutput
+      ? "groq/compound [used]"
+      : "",
+    fast: controllerResult?.fastOutput
+      ? "llama-3.3-70b-versatile [used]"
+      : "",
+    refine: controllerResult?.refinedOutput
+      ? "openai/gpt-oss-120b [used]"
+      : "",
+    final: "openai/gpt-oss-120b [final]",
   },
 });
 }
