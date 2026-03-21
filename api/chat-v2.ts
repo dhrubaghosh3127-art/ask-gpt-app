@@ -67,17 +67,101 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
-let runControllerV2Engine: any;
+const smoke: Record<string, boolean> = {};
+
 try {
-  const mod = await import("./_lib/controllerV2Engine.js");
-  runControllerV2Engine = mod.runControllerV2Engine;
+  await import("./_lib/controllerV2.js");
+  smoke.controllerV2 = true;
 } catch (error) {
   return res.status(500).json({
-    error: `controller_v2_engine_import_failed: ${
+    error: `smoke_controllerV2_failed: ${
       error instanceof Error ? error.message : String(error)
     }`,
   });
 }
+
+try {
+  await import("./_lib/controllerV2Image.js");
+  smoke.controllerV2Image = true;
+} catch (error) {
+  return res.status(500).json({
+    error: `smoke_controllerV2Image_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
+
+try {
+  await import("./_lib/controllerV2Api.js");
+  smoke.controllerV2Api = true;
+} catch (error) {
+  return res.status(500).json({
+    error: `smoke_controllerV2Api_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
+
+try {
+  await import("./_lib/controllerV2Runtime.js");
+  smoke.controllerV2Runtime = true;
+} catch (error) {
+  return res.status(500).json({
+    error: `smoke_controllerV2Runtime_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
+
+try {
+  await import("./_lib/controllerV2Planner.js");
+  smoke.controllerV2Planner = true;
+} catch (error) {
+  return res.status(500).json({
+    error: `smoke_controllerV2Planner_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
+
+try {
+  await import("./_lib/controllerV2Helpers.js");
+  smoke.controllerV2Helpers = true;
+} catch (error) {
+  return res.status(500).json({
+    error: `smoke_controllerV2Helpers_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
+
+try {
+  await import("./_lib/controllerV2Finalize.js");
+  smoke.controllerV2Finalize = true;
+} catch (error) {
+  return res.status(500).json({
+    error: `smoke_controllerV2Finalize_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
+
+try {
+  await import("./_lib/controllerV2Engine.js");
+  smoke.controllerV2Engine = true;
+} catch (error) {
+  return res.status(500).json({
+    error: `smoke_controllerV2Engine_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
+}
+
+return res.status(200).json({
+  text: "[chat-v2] smoke ok",
+  modelId: "chat-v2-smoke",
+  smoke,
+});
   try {
     const body =
       typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
