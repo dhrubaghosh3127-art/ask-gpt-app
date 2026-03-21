@@ -151,10 +151,18 @@ if (
   typeof controllerResult?.finalText === "string" &&
   controllerResult.finalText.trim()
 ) {
-  return res.status(200).json({
-    text: controllerResult.finalText.trim(),
-    modelId: "controller-v2",
-  });
+ return res.status(200).json({
+  text: controllerResult.finalText.trim(),
+  modelId: "controller-v2",
+  trace: {
+    planner: controllerResult?.plan ? "openai/gpt-oss-120b" : "",
+    reasoning: controllerResult?.reasoningOutput ? "qwen/qwen3-32b" : "",
+    web: controllerResult?.webOutput ? "groq/compound" : "",
+    fast: controllerResult?.fastOutput ? "llama-3.3-70b-versatile" : "",
+    refine: controllerResult?.refinedOutput ? "openai/gpt-oss-120b" : "",
+    final: "openai/gpt-oss-120b",
+  },
+});
 }
 
 return res.status(500).json({
