@@ -97,11 +97,15 @@ try {
       typeof mode === "string" ? mode : Array.isArray(messages) ? "chat" : "";
 
     if (effectiveMode !== "chat") {
-      return oldChatHandler(req, res);
+  return res.status(400).json({
+    error: `chat_v2_only_supports_chat_mode: ${String(effectiveMode || "unknown")}`,
+  });
     }
 
     if (!Array.isArray(messages)) {
-      return oldChatHandler(req, res);
+  return res.status(400).json({
+    error: "messages_are_required",
+  });
     }
 
     const apiKey = (
@@ -112,7 +116,9 @@ try {
     ).trim();
 
     if (!apiKey) {
-      return oldChatHandler(req, res);
+  return res.status(400).json({
+    error: "missing_api_key",
+  });
     }
 
     const resolvedPrompt =
@@ -169,7 +175,10 @@ return res.status(500).json({
       : "",
 });
   } catch (error) {
-    console.error("chat-v2 fallback: route crashed", error);
-    return oldChatHandler(req, res);
+  return res.status(500).json({
+    error: `chat_v2_route_crashed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
   }
 }
