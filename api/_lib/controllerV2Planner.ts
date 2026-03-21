@@ -10,6 +10,7 @@ import { callControllerV2Model } from "./controllerV2Api.js";
 import {
   extractControllerV2MessageText,
   isControllerV2Empty,
+  parseControllerV2Json,
 } from "./controllerV2Runtime.js";
 
 export interface ControllerV2PlannerResult {
@@ -40,20 +41,29 @@ export const runControllerV2Planner = async (
     };
   }
 
-  const rawText = extractControllerV2MessageText(response.data);
+const rawText = extractControllerV2MessageText(response.data);
 
-  if (isControllerV2Empty(rawText)) {
-    return {
-      ok: false,
-      plan: DEFAULT_CONTROLLER_V2_PLAN,
-      rawText: "",
-      error: "planner_empty_output",
-    };
-  }
-
+if (isControllerV2Empty(rawText)) {
   return {
-    ok: true,
-    plan: parseControllerV2Plan(rawText),
-    rawText,
+    ok: false,
+    plan: DEFAULT_CONTROLLER_V2_PLAN,
+    rawText: "",
+    error: "planner_empty_output",
   };
+}
+
+const parsedJson = parseControllerV2Json(rawText);
+
+const normalizedPlanText =
+  parsedJson &&
+  typeof parsedJson === "object" &&
+  !Array.isArray(parsedJson)
+    ? JSON.stringify(parsedJson)
+    : rawText;
+
+return {
+  ok: true,
+  plan: parseControllerV2Plan(normalizedPlanText),
+  rawText,
+};
 };
