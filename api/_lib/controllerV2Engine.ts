@@ -4,18 +4,18 @@ import {
   ControllerV2Result,
   ControllerV2Plan,
   DEFAULT_CONTROLLER_V2_PLAN,
-} from "./controllerV2";
-import { analyzeControllerV2Image } from "./controllerV2Image";
-import { runControllerV2Planner } from "./controllerV2Planner";
+} from "./controllerV2.js";
+import { analyzeControllerV2Image } from "./controllerV2Image.js";
+import { runControllerV2Planner } from "./controllerV2Planner.js";
 import {
   runControllerV2ReasoningHelper,
   runControllerV2WebHelper,
   runControllerV2FastHelper,
-} from "./controllerV2Helpers";
+} from "./controllerV2Helpers.js";
 import {
   runControllerV2Refine,
   runControllerV2Final,
-} from "./controllerV2Finalize";
+} from "./controllerV2Finalize.js";
 
 export interface ControllerV2EngineInput extends ControllerV2Input {
   apiKey: string;
