@@ -1,4 +1,4 @@
-export const USE_CONTROLLER_V2 = false;
+export const USE_CONTROLLER_V2 = true;
 
 export const CONTROLLER_V2_CONFIG = {
   plannerMinConfidence: 0.45,
