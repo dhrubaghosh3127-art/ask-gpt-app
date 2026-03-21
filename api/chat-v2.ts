@@ -103,49 +103,11 @@ if (mode === "chat" && !Array.isArray(messages)) {
 }
 
   const controllerApiKey = (userKey ?? userApiKey ?? "").trim();
-
 if (mode === "chat") {
-  try {
-    if (!controllerApiKey) {
-      return res.status(400).json({ error: "Missing API key (userKey)" });
-    }
-
-    const { runControllerV2Engine } = await import(
-      "../src/services/controllerV2Engine"
-    );
-
-    const controllerResult = await runControllerV2Engine({
-      apiKey: controllerApiKey,
-      prompt:
-        typeof prompt === "string" && prompt.trim()
-          ? prompt.trim()
-          : getLastUserText(Array.isArray(messages) ? messages : []),
-      messages: Array.isArray(messages) ? messages : [],
-      systemInstruction:
-        typeof systemInstruction === "string" ? systemInstruction : "",
-      hasImage: Boolean(imageBase64),
-      imageContext: "",
-      imageBase64: typeof imageBase64 === "string" ? imageBase64 : "",
-      mimeType: typeof mimeType === "string" ? mimeType : "",
-    });
-
-    if (controllerResult.ok && controllerResult.finalText.trim()) {
-      return res.status(200).json({
-        text: controllerResult.finalText.trim(),
-        modelId: "controller-v2",
-      });
-    }
-
-    return res.status(500).json({
-      error: controllerResult.reason || "controller_v2_failed",
-      data: controllerResult,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: "controller_v2_route_failed",
-      details: error instanceof Error ? error.message : String(error),
-    });
-  }
+  return res.status(200).json({
+    text: "[chat-v2] direct hit ok",
+    modelId: "chat-v2-test",
+  });
 }
 
     const keyFromClient = (userKey ?? userApiKey ?? "").trim();
