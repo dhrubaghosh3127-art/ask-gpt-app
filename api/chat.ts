@@ -102,7 +102,7 @@ if (mode === "chat" && !Array.isArray(messages)) {
   return res.status(400).json({ error: "messages are required" });
 }
 
-const USE_CONTROLLER_V2 = false;
+const USE_CONTROLLER_V2 = true;
 const CONTROLLER_V2_SMOKE_TEST = true;
 
 if (CONTROLLER_V2_SMOKE_TEST && mode === "chat") {
