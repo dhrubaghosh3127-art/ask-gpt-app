@@ -20,7 +20,10 @@ export interface ControllerV2PlannerResult {
   error?: string;
 }
 
-const normalizePlan = (plan: ControllerV2Plan): ControllerV2Plan => {
+const normalizePlan = (
+  plan: ControllerV2Plan,
+  prompt: string
+): ControllerV2Plan => {
   const normalized: ControllerV2Plan = {
     needs_reasoning: Boolean(plan.needs_reasoning),
     needs_web: Boolean(plan.needs_web),
@@ -40,18 +43,83 @@ const normalizePlan = (plan: ControllerV2Plan): ControllerV2Plan => {
         : 0,
   };
 
-  // Locked rules from your final logic
+  const t = (prompt || "").toLowerCase();
 
-  // Any math => always pro-search first
-  if (normalized.is_math) {
+  const hasMathSignal =
+    /prove|proof|theorem|lemma|inequality|equation|integral|derivative|sum|geometry|algebra|trig|trigonometry|calculus|olympiad|find x|solve for|sin|cos|tan|log|sqrt|frac|\d+\s*[\+\-\*\/=]\s*\d+|≥|≤|∑|∫/.test(
+      t
+    );
+
+  const hasCurrentSignal =
+    /ajke|aajke|today|current|latest|news|tarik|date|time|live|recent|breaking|update/.test(
+      t
+    );
+
+  const hasSimpleSignal =
+    /^(hi|hello|hey|kmn acho|kemon acho|valo ki kortecho|what'?s up|yo)[!. ]*$/i.test(
+      prompt || ""
+    );
+
+  const hasOpenReasoningSignal =
+    /compare|difference|which is better|pros and cons|analyze|analysis|strategy|context|example|real world|external|research/.test(
+      t
+    );
+
+  // Hard lock: any math => always pro-search first
+  if (hasMathSignal) {
+    normalized.is_math = true;
     normalized.needs_reasoning = true;
     normalized.needs_web = true;
     normalized.search_mode = "pro";
+    normalized.reasoning_scope = "open";
+    normalized.is_simple = false;
+    normalized.confidence = Math.max(normalized.confidence, 0.95);
+  }
+
+  // Current/news/date/time => web needed
+  if (hasCurrentSignal && !normalized.is_math) {
+    normalized.needs_web = true;
+    if (!normalized.needs_reasoning) {
+      normalized.search_mode = "fast";
+    }
+    normalized.is_simple = false;
+    normalized.confidence = Math.max(normalized.confidence, 0.9);
+  }
+
+  // Hard non-math open reasoning => pro-search first
+  if (
+    hasOpenReasoningSignal &&
+    !normalized.is_math &&
+    normalized.needs_reasoning
+  ) {
+    normalized.needs_web = true;
+    normalized.search_mode = "pro";
+    normalized.reasoning_scope = "open";
+    normalized.is_simple = false;
+  }
+
+  // Force simple greeting/direct tiny request
+  if (hasSimpleSignal && !hasCurrentSignal && !hasMathSignal) {
+    normalized.is_simple = true;
+    normalized.needs_reasoning = false;
+    normalized.needs_web = false;
+    normalized.search_mode = "none";
+    normalized.reasoning_scope = "none";
+    normalized.confidence = Math.max(normalized.confidence, 0.95);
   }
 
   // Pro / fast search means web is required
   if (normalized.search_mode === "pro" || normalized.search_mode === "fast") {
     normalized.needs_web = true;
+  }
+
+  // Hard non-math reasoning must have a scope
+  if (
+    normalized.needs_reasoning &&
+    !normalized.is_math &&
+    normalized.reasoning_scope === "none"
+  ) {
+    normalized.reasoning_scope = normalized.needs_web ? "open" : "closed";
   }
 
   // Very simple non-web path
@@ -62,34 +130,6 @@ const normalizePlan = (plan: ControllerV2Plan): ControllerV2Plan => {
   ) {
     normalized.search_mode = "none";
     normalized.reasoning_scope = "none";
-  }
-
-  // Hard non-math reasoning must have a scope
-  if (
-    normalized.needs_reasoning &&
-    !normalized.is_math &&
-    normalized.reasoning_scope === "none"
-  ) {
-    normalized.reasoning_scope = "closed";
-  }
-
-  // Open-scope hard reasoning => pro-search first
-  if (
-    normalized.needs_reasoning &&
-    !normalized.is_math &&
-    normalized.reasoning_scope === "open"
-  ) {
-    normalized.needs_web = true;
-    normalized.search_mode = "pro";
-  }
-
-  // Fast web path only when non-math and no reasoning
-  if (
-    normalized.needs_web &&
-    normalized.search_mode === "fast" &&
-    (normalized.is_math || normalized.needs_reasoning)
-  ) {
-    normalized.search_mode = "pro";
   }
 
   return normalized;
