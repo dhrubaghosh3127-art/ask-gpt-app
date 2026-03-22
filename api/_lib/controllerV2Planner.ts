@@ -1,8 +1,8 @@
 import {
   CONTROLLER_V2_MODELS,
-  DEFAULT_CONTROLLER_V2_PLAN,
   ControllerV2Input,
   ControllerV2Plan,
+  DEFAULT_CONTROLLER_V2_PLAN,
   buildControllerV2PlanMessages,
   parseControllerV2Plan,
 } from "./controllerV2.js";
@@ -20,16 +20,92 @@ export interface ControllerV2PlannerResult {
   error?: string;
 }
 
+const normalizePlan = (plan: ControllerV2Plan): ControllerV2Plan => {
+  const normalized: ControllerV2Plan = {
+    needs_reasoning: Boolean(plan.needs_reasoning),
+    needs_web: Boolean(plan.needs_web),
+    is_simple: Boolean(plan.is_simple),
+    search_mode:
+      plan.search_mode === "fast" || plan.search_mode === "pro"
+        ? plan.search_mode
+        : "none",
+    is_math: Boolean(plan.is_math),
+    reasoning_scope:
+      plan.reasoning_scope === "closed" || plan.reasoning_scope === "open"
+        ? plan.reasoning_scope
+        : "none",
+    confidence:
+      typeof plan.confidence === "number"
+        ? Math.max(0, Math.min(1, plan.confidence))
+        : 0,
+  };
+
+  // Locked rules from your final logic
+
+  // Any math => always pro-search first
+  if (normalized.is_math) {
+    normalized.needs_reasoning = true;
+    normalized.needs_web = true;
+    normalized.search_mode = "pro";
+  }
+
+  // Pro / fast search means web is required
+  if (normalized.search_mode === "pro" || normalized.search_mode === "fast") {
+    normalized.needs_web = true;
+  }
+
+  // Very simple non-web path
+  if (
+    normalized.is_simple &&
+    !normalized.needs_reasoning &&
+    !normalized.needs_web
+  ) {
+    normalized.search_mode = "none";
+    normalized.reasoning_scope = "none";
+  }
+
+  // Hard non-math reasoning must have a scope
+  if (
+    normalized.needs_reasoning &&
+    !normalized.is_math &&
+    normalized.reasoning_scope === "none"
+  ) {
+    normalized.reasoning_scope = "closed";
+  }
+
+  // Open-scope hard reasoning => pro-search first
+  if (
+    normalized.needs_reasoning &&
+    !normalized.is_math &&
+    normalized.reasoning_scope === "open"
+  ) {
+    normalized.needs_web = true;
+    normalized.search_mode = "pro";
+  }
+
+  // Fast web path only when non-math and no reasoning
+  if (
+    normalized.needs_web &&
+    normalized.search_mode === "fast" &&
+    (normalized.is_math || normalized.needs_reasoning)
+  ) {
+    normalized.search_mode = "pro";
+  }
+
+  return normalized;
+};
+
 export const runControllerV2Planner = async (
   apiKey: string,
   input: ControllerV2Input
 ): Promise<ControllerV2PlannerResult> => {
   const response = await callControllerV2Model({
     apiKey,
-    model: CONTROLLER_V2_MODELS.mainBrain,
+    model: CONTROLLER_V2_MODELS.planner,
     messages: buildControllerV2PlanMessages(input),
     temperature: 0.1,
     maxCompletionTokens: 500,
+    reasoningEffort: "high",
   });
 
   if (!response.ok) {
@@ -41,29 +117,32 @@ export const runControllerV2Planner = async (
     };
   }
 
-const rawText = extractControllerV2MessageText(response.data);
+  const rawText = extractControllerV2MessageText(response.data);
 
-if (isControllerV2Empty(rawText)) {
+  if (isControllerV2Empty(rawText)) {
+    return {
+      ok: false,
+      plan: DEFAULT_CONTROLLER_V2_PLAN,
+      rawText: "",
+      error: "planner_empty_output",
+    };
+  }
+
+  const parsedJson = parseControllerV2Json(rawText);
+
+  const normalizedPlanText =
+    parsedJson &&
+    typeof parsedJson === "object" &&
+    !Array.isArray(parsedJson)
+      ? JSON.stringify(parsedJson)
+      : rawText;
+
+  const parsedPlan = parseControllerV2Plan(normalizedPlanText);
+  const finalPlan = normalizePlan(parsedPlan);
+
   return {
-    ok: false,
-    plan: DEFAULT_CONTROLLER_V2_PLAN,
-    rawText: "",
-    error: "planner_empty_output",
+    ok: true,
+    plan: finalPlan,
+    rawText,
   };
-}
-
-const parsedJson = parseControllerV2Json(rawText);
-
-const normalizedPlanText =
-  parsedJson &&
-  typeof parsedJson === "object" &&
-  !Array.isArray(parsedJson)
-    ? JSON.stringify(parsedJson)
-    : rawText;
-
-return {
-  ok: true,
-  plan: parseControllerV2Plan(normalizedPlanText),
-  rawText,
-};
 };
