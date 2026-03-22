@@ -45,33 +45,62 @@ export const CONTROLLER_V2_MODELS = {
   fast: "llama-3.3-70b-versatile",
 } as const;
 
-export const CONTROLLER_V2_PLAN_PROMPT = `You are the main planner.
-Understand the user's request deeply using:
-- the user prompt
+export const CONTROLLER_V2_PLAN_PROMPT = `You are the main routing planner for a multi-stage assistant.
+
+Your only job is to classify the user's request and return ONLY one minified JSON object.
+
+DO NOT:
+- explain anything
+- chat with the user
+- restate the conversation
+- summarize history
+- add markdown
+- add code fences
+- add any text before or after JSON
+
+Use:
+- the current user request
 - recent chat history
 - hidden image context if present
 
-Return ONLY valid JSON.
-
-Schema:
+Return exactly this schema:
 {
-  "needs_reasoning": true/false,
-  "needs_web": true/false,
-  "is_simple": true/false,
-  "search_mode": "none" | "fast" | "pro",
-  "is_math": true/false,
-  "reasoning_scope": "none" | "closed" | "open",
-  "confidence": 0-1
+  "needs_reasoning": true,
+  "needs_web": true,
+  "is_simple": false,
+  "search_mode": "pro",
+  "is_math": false,
+  "reasoning_scope": "open",
+  "confidence": 0.84
 }
 
-Rules:
-- is_math = true for math / proof / formula / equation / olympiad-style quantitative reasoning
-- reasoning_scope = "closed" when external info is not needed
-- reasoning_scope = "open" when external hints/context/examples/current facts are useful
-- if is_math = true, search_mode should normally be "pro"
-- if latest/current/news/factual web info is needed, needs_web = true
-- if very simple non-web request, is_simple = true
-- output JSON only, no markdown, no explanation`;
+Field meaning:
+- needs_reasoning: deep solving / analysis / proof / multi-step logic is needed
+- needs_web: web/current/external information is needed
+- is_simple: very simple direct non-web request
+- search_mode:
+  - "none" = no web
+  - "fast" = one quick factual/current web pass
+  - "pro" = main search + support search
+- is_math: any math / proof / theorem / formula / equation / olympiad / quantitative reasoning
+- reasoning_scope:
+  - "none" = no deep reasoning needed
+  - "closed" = deep reasoning only, no external info needed
+  - "open" = deep reasoning plus external hints/context/examples/current info useful
+
+Locked rules:
+- Any math / proof / theorem / formula / equation / olympiad / geometry / algebra / inequality / trig / calculus / integral / derivative / sum => is_math=true, needs_reasoning=true, needs_web=true, search_mode="pro"
+- Any current/news/latest/today/date/time/live/recent/fresh info => needs_web=true
+- If current/factual but not hard reasoning => search_mode="fast"
+- If hard reasoning with external context/comparison/examples needed => needs_reasoning=true, needs_web=true, reasoning_scope="open", search_mode="pro"
+- If hard reasoning but external info not needed => needs_reasoning=true, reasoning_scope="closed"
+- Very simple greeting / tiny direct request with no web and no deep reasoning => is_simple=true, needs_reasoning=false, needs_web=false, search_mode="none", reasoning_scope="none"
+
+Important:
+- Prefer "pro" for any math.
+- Prefer "fast" for date/news/current simple factual requests.
+- confidence must be a number from 0 to 1.
+- Return ONLY minified JSON.`;
 
 export const CONTROLLER_V2_SEARCH_EXTRACT_PROMPT = `You are extracting only useful support from search results.
 Never copy the full answer.
