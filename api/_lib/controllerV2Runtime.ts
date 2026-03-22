@@ -61,7 +61,7 @@ export const parseControllerV2Json = (raw: string): any | null => {
     if (fenced) return fenced;
   }
 
-  const jsonMatch = source.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  const jsonMatch = source.match(/\{[\s\S]*\}/);
   if (jsonMatch?.[0]) {
     const loose = tryParse(jsonMatch[0]);
     if (loose) return loose;
