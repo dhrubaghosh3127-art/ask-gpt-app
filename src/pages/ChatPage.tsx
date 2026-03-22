@@ -519,13 +519,26 @@ if (isThinkingModel) {
   stopThinking();
 }
 
-const response = await getGeminiResponse({
+      const response = await getGeminiResponse({
   prompt: images.length > 0 ? routeContent : content,
   history: apiHistory,
   modelId: routeModelId,
   systemInstruction: systemPrompt,
+  imageBase64: (() => {
+    const firstImage: any = images?.[0];
+    return typeof firstImage === "string"
+      ? firstImage
+      : firstImage?.base64 ||
+          firstImage?.imageBase64 ||
+          firstImage?.dataUrl ||
+          firstImage?.url ||
+          "";
+  })(),
+  mimeType: (() => {
+    const firstImage: any = images?.[0];
+    return firstImage?.mimeType || firstImage?.type || "image/jpeg";
+  })(),
 });
-      
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: Role.MODEL,
@@ -607,6 +620,20 @@ const response = await getGeminiResponse({
   history: previousMessages.slice(-12),
   modelId: regenModelId,
   systemInstruction: systemPrompt,
+  imageBase64: (() => {
+    const firstImage: any = images?.[0];
+    return typeof firstImage === "string"
+      ? firstImage
+      : firstImage?.base64 ||
+          firstImage?.imageBase64 ||
+          firstImage?.dataUrl ||
+          firstImage?.url ||
+          "";
+  })(),
+  mimeType: (() => {
+    const firstImage: any = images?.[0];
+    return firstImage?.mimeType || firstImage?.type || "image/jpeg";
+  })(),
 });
       const botMessage: Message = {
         id: Date.now().toString(),
