@@ -43,71 +43,40 @@ const normalizePlan = (
         : 0,
   };
 
-  const t = (prompt || "").toLowerCase();
+  void prompt;
 
-  const hasMathSignal =
-    /prove|proof|theorem|lemma|inequality|equation|integral|derivative|sum|geometry|algebra|trig|trigonometry|calculus|olympiad|find x|solve for|sin|cos|tan|log|sqrt|frac|\d+\s*[\+\-\*\/=]\s*\d+|≥|≤|∑|∫/.test(
-      t
-    );
+// No word-based or symbol-based routing here.
+// Respect planner intent and only enforce internal consistency.
 
-  const hasCurrentSignal =
-    /ajke|aajke|today|current|latest|news|tarik|date|time|live|recent|breaking|update/.test(
-      t
-    );
+if (normalized.is_math) {
+  normalized.needs_reasoning = true;
+  normalized.needs_web = true;
+  normalized.search_mode = "pro";
 
-  const hasSimpleSignal =
-    /^(hi|hello|hey|kmn acho|kemon acho|valo ki kortecho|what'?s up|yo)[!. ]*$/i.test(
-      prompt || ""
-    );
-
-  const hasOpenReasoningSignal =
-    /compare|difference|which is better|pros and cons|analyze|analysis|strategy|context|example|real world|external|research/.test(
-      t
-    );
-
-  // Hard lock: any math => always pro-search first
-  if (hasMathSignal) {
-    normalized.is_math = true;
-    normalized.needs_reasoning = true;
-    normalized.needs_web = true;
-    normalized.search_mode = "pro";
+  if (normalized.reasoning_scope === "none") {
     normalized.reasoning_scope = "open";
-    normalized.is_simple = false;
-    normalized.confidence = Math.max(normalized.confidence, 0.95);
   }
 
-  // Current/news/date/time => web needed
-  if (hasCurrentSignal && !normalized.is_math) {
-    normalized.needs_web = true;
-    if (!normalized.needs_reasoning) {
-      normalized.search_mode = "fast";
-    }
-    normalized.is_simple = false;
-    normalized.confidence = Math.max(normalized.confidence, 0.9);
-  }
+  normalized.is_simple = false;
+  normalized.confidence = Math.max(normalized.confidence, 0.9);
+}
 
-  // Hard non-math open reasoning => pro-search first
-  if (
-    hasOpenReasoningSignal &&
-    !normalized.is_math &&
-    normalized.needs_reasoning
-  ) {
-    normalized.needs_web = true;
-    normalized.search_mode = "pro";
-    normalized.reasoning_scope = "open";
-    normalized.is_simple = false;
-  }
+if (
+  normalized.needs_reasoning &&
+  !normalized.is_math &&
+  normalized.reasoning_scope === "none"
+) {
+  normalized.reasoning_scope = normalized.needs_web ? "open" : "closed";
+}
 
-  // Force simple greeting/direct tiny request
-  if (hasSimpleSignal && !hasCurrentSignal && !hasMathSignal) {
-    normalized.is_simple = true;
-    normalized.needs_reasoning = false;
-    normalized.needs_web = false;
-    normalized.search_mode = "none";
-    normalized.reasoning_scope = "none";
-    normalized.confidence = Math.max(normalized.confidence, 0.95);
-  }
-
+if (
+  normalized.is_simple &&
+  !normalized.needs_reasoning &&
+  !normalized.needs_web
+) {
+  normalized.search_mode = "none";
+  normalized.reasoning_scope = "none";
+}
   // Pro / fast search means web is required
   if (normalized.search_mode === "pro" || normalized.search_mode === "fast") {
     normalized.needs_web = true;
