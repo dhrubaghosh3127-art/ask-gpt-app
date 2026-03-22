@@ -139,18 +139,90 @@ export const runControllerV2Planner = async (
 
   const parsedJson = parseControllerV2Json(rawText);
 
-  const normalizedPlanText =
-    parsedJson &&
-    typeof parsedJson === "object" &&
-    !Array.isArray(parsedJson)
-      ? JSON.stringify(parsedJson)
-      : rawText;
+if (
+  parsedJson &&
+  typeof parsedJson === "object" &&
+  !Array.isArray(parsedJson)
+) {
+  const parsedPlan = parseControllerV2Plan(JSON.stringify(parsedJson));
+  const finalPlan = normalizePlan(parsedPlan, input.prompt || "");
 
-  const parsedPlan = parseControllerV2Plan(normalizedPlanText);
+  return {
+    ok: true,
+    plan: finalPlan,
+    rawText,
+  };
+}
+
+const repairResponse = await callControllerV2Model({
+  apiKey,
+  model: CONTROLLER_V2_MODELS.planner,
+  messages: [
+    {
+      role: "system",
+      content: `You are a JSON plan repairer.
+
+Convert the classifier text into ONLY one minified JSON object.
+
+Return exactly this schema:
+{
+  "needs_reasoning": true,
+  "needs_web": true,
+  "is_simple": false,
+  "search_mode": "pro",
+  "is_math": false,
+  "reasoning_scope": "open",
+  "confidence": 0.84
+}
+
+Rules:
+- no explanation
+- no markdown
+- no prose
+- no analysis
+- no text before or after JSON
+- output ONLY minified JSON`,
+    },
+    {
+      role: "user",
+      content: `Current user request:
+${input.prompt || ""}
+
+Classifier text:
+${rawText}`,
+    },
+  ],
+  temperature: 0,
+  maxCompletionTokens: 120,
+  reasoningEffort: "low",
+});
+
+if (repairResponse.ok) {
+  const repairedRawText = extractControllerV2MessageText(repairResponse.data);
+  const repairedJson = parseControllerV2Json(repairedRawText);
+
+  if (
+    repairedJson &&
+    typeof repairedJson === "object" &&
+    !Array.isArray(repairedJson)
+  ) {
+    const repairedPlan = parseControllerV2Plan(JSON.stringify(repairedJson));
+    const finalPlan = normalizePlan(repairedPlan, input.prompt || "");
+
+    return {
+      ok: true,
+      plan: finalPlan,
+      rawText,
+    };
+  }
+}
+
+const parsedPlan = parseControllerV2Plan(rawText);
+const finalPlan = normalizePlan(parsedPlan, input.prompt || "");
 
 return {
   ok: true,
-  plan: normalizePlan(parsedPlan, input.prompt || ""),
+  plan: finalPlan,
   rawText,
 };
 };
