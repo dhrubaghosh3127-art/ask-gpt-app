@@ -21,6 +21,40 @@ export const CONTROLLER_V2_IMAGE_MODEL =
 export const CONTROLLER_V2_GROQ_VISION_URL =
   "https://api.groq.com/openai/v1/chat/completions";
 
+const extractVisionText = (data: any): string => {
+  const msg = data?.choices?.[0]?.message ?? null;
+  const content = msg?.content;
+
+  if (typeof content === "string") {
+    return content.trim();
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .map((part: any) =>
+        typeof part === "string"
+          ? part
+          : typeof part?.text === "string"
+            ? part.text
+            : typeof part?.content === "string"
+              ? part.content
+              : ""
+      )
+      .join(" ")
+      .trim();
+  }
+
+  if (typeof data?.output_text === "string") {
+    return data.output_text.trim();
+  }
+
+  if (typeof msg?.reasoning === "string") {
+    return msg.reasoning.trim();
+  }
+
+  return "";
+};
+
 export const analyzeControllerV2Image = async (
   input: ControllerV2ImageAnalysisInput
 ): Promise<ControllerV2ImageAnalysisResult> => {
@@ -36,28 +70,24 @@ export const analyzeControllerV2Image = async (
       status: 400,
       rawText: "",
       data: null,
-      error: "imageBase64 is required",
+      error: "imageBase64_is_required",
     };
   }
 
   const actualMimeType = (input.mimeType || "image/jpeg").trim() || "image/jpeg";
   const imageUrl = `data:${actualMimeType};base64,${cleanImageBase64}`;
 
-  const prompt = (input.userPrompt || "").trim()
-    ? `Analyze this image carefully in the context of the user's request.
-
-User request:
-${input.userPrompt.trim()}
-
-Return only the useful image understanding result.
-Include visible text if important, but do not do OCR-only output.
-Describe what is actually in the image, such as UI, screenshot, math, objects, layout, and relevant visual meaning.
-Do not mention hidden tools, routing, or internal system details.`
-    : `Analyze this image carefully.
-Return only the useful image understanding result.
-Include visible text if important, but do not do OCR-only output.
-Describe what is actually in the image, such as UI, screenshot, math, objects, layout, and relevant visual meaning.
-Do not mention hidden tools, routing, or internal system details.`;
+  const prompt = [
+    "Analyze this image carefully in the context of the user's request.",
+    input.userPrompt?.trim() ? `User request:\n${input.userPrompt.trim()}` : "",
+    "Return only the useful image understanding result.",
+    "Include visible text if important, but do not do OCR-only output.",
+    "Describe what is actually in the image, such as UI, screenshot, math, objects, layout, and relevant visual meaning.",
+    "Do not solve the full problem unless the visible image itself directly states the needed answer.",
+    "Do not mention hidden tools, routing, or internal system details.",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   const response = await fetch(CONTROLLER_V2_GROQ_VISION_URL, {
     method: "POST",
@@ -105,32 +135,11 @@ Do not mention hidden tools, routing, or internal system details.`;
         data?.error ||
         data?.message ||
         rawText.slice(0, 300) ||
-        "Controller V2 image analysis failed",
+        "controller_v2_image_analysis_failed",
     };
   }
 
-  const msg = data?.choices?.[0]?.message || null;
-  const content = msg?.content;
-
-  const text =
-    typeof content === "string"
-      ? content.trim()
-      : Array.isArray(content)
-        ? content
-            .map((part: any) =>
-              typeof part === "string"
-                ? part
-                : typeof part?.text === "string"
-                  ? part.text
-                  : typeof part?.content === "string"
-                    ? part.content
-                    : ""
-            )
-            .join(" ")
-            .trim()
-        : typeof data?.output_text === "string"
-          ? data.output_text.trim()
-          : "";
+  const text = extractVisionText(data);
 
   return {
     ok: true,
