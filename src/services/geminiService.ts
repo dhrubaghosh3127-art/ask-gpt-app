@@ -88,7 +88,28 @@ const traceLine = traceParts.length
   ? `[Trace] ${traceParts.join(" → ")}`
   : "";
 
-const finalText = String(data?.text || '').trim();
+const finalText = String(data?.text || "").trim();
 
-return traceLine ? `${traceLine}\n\n${finalText}` : finalText;
-};
+const debug = data?.debug || {};
+const debugParts = [
+  debug?.plan ? `[Debug plan] ${JSON.stringify(debug.plan)}` : "",
+  debug?.plannerRawPreview
+    ? `[Debug plannerRaw] ${String(debug.plannerRawPreview)}`
+    : "",
+  debug?.imageContextPreview
+    ? `[Debug imageContext] ${String(debug.imageContextPreview)}`
+    : "",
+  typeof debug?.usedMainSearch === "boolean"
+    ? `[Debug used] mainSearch=${debug.usedMainSearch} supportSearch=${Boolean(
+        debug?.usedSupportSearch
+      )} reasoning=${Boolean(debug?.usedReasoning)} verify=${Boolean(
+        debug?.usedVerify
+      )} fast=${Boolean(debug?.usedFast)} refine=${Boolean(debug?.usedRefine)}`
+    : "",
+].filter(Boolean);
+
+const debugBlock = debugParts.length ? `\n\n${debugParts.join("\n")}` : "";
+
+return traceLine
+  ? `${traceLine}${debugBlock}\n\n${finalText}`
+  : `${debugParts.join("\n")}${debugParts.length ? "\n\n" : ""}${finalText}`;
