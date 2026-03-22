@@ -240,11 +240,47 @@ export const parseControllerV2Plan = (raw: string): ControllerV2Plan => {
 };
 
 export const buildControllerV2PlanMessages = (input: ControllerV2Input) => {
-  const userBlock = [
-    `User request:\n${input.prompt || ""}`,
+  const compactHistory = (input.messages || [])
+    .slice(-8)
+    .map((msg: any, index: number) => {
+      const role =
+        msg?.role === "assistant" || msg?.role === "model"
+          ? "assistant"
+          : msg?.role === "system"
+            ? "system"
+            : "user";
+
+      const content =
+        typeof msg?.content === "string"
+          ? msg.content.trim()
+          : Array.isArray(msg?.content)
+            ? msg.content
+                .map((part: any) =>
+                  typeof part === "string"
+                    ? part
+                    : typeof part?.text === "string"
+                      ? part.text
+                      : typeof part?.content === "string"
+                        ? part.content
+                        : ""
+                )
+                .join(" ")
+                .trim()
+            : "";
+
+      return `${index + 1}. ${role}: ${(content || "").slice(0, 400)}`;
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  const plannerInput = [
+    "Classify the current request.",
+    `Current user request:\n${(input.prompt || "").trim()}`,
     input.imageContext?.trim()
       ? `Hidden image context:\n${input.imageContext.trim()}`
       : "",
+    compactHistory ? `Recent compact history:\n${compactHistory}` : "",
+    "Return ONLY minified JSON.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -262,10 +298,9 @@ export const buildControllerV2PlanMessages = (input: ControllerV2Input) => {
       role: "system",
       content: CONTROLLER_V2_PLAN_PROMPT,
     },
-    ...input.messages,
     {
       role: "user",
-      content: userBlock,
+      content: plannerInput,
     },
   ];
 };
