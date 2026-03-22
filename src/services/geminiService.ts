@@ -12,11 +12,15 @@ export const getGeminiResponse = async ({
   history,
   modelId,
   systemInstruction = "",
+  imageBase64,
+  mimeType,
 }: {
   prompt: string;
   history: Message[];
   modelId: string;
   systemInstruction?: string;
+  imageBase64?: string;
+  mimeType?: string;
 }): Promise<string> => {
   const messages = [
     {
@@ -31,9 +35,19 @@ content: m.content,
   ];
 const userKey = getUserApiKey();
   const res = await fetch(API_URL, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ modelId, messages, userApiKey: userKey })
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    mode: "chat",
+    modelId,
+    prompt,
+    messages,
+    systemInstruction,
+    imageBase64,
+    mimeType,
+    userApiKey: userKey,
+    userKey,
+  }),
 });
 
 const rawText = await res.text();
@@ -60,9 +74,11 @@ if (!res.ok) {
 
 const trace = data?.trace || {};
 const traceParts = [
+  trace.image,
   trace.planner,
+  trace.search,
   trace.reasoning,
-  trace.web,
+  trace.verify,
   trace.fast,
   trace.refine,
   trace.final,
