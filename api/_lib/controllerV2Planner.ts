@@ -178,11 +178,10 @@ export const runControllerV2Planner = async (
       : rawText;
 
   const parsedPlan = parseControllerV2Plan(normalizedPlanText);
-  const finalPlan = normalizePlan(parsedPlan);
 
-  return {
-    ok: true,
-    plan: finalPlan,
-    rawText,
-  };
+return {
+  ok: true,
+  plan: normalizePlan(parsedPlan, input.prompt || ""),
+  rawText,
+};
 };
