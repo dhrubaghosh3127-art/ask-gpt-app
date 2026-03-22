@@ -168,86 +168,109 @@ export const runControllerV2Engine = async (
   }
 
   // 4) Math rule: always pro-search first -> qwen -> GPT verify -> one retry max
-  if (plan.is_math) {
-    const reasoningResult = await runControllerV2ReasoningHelper(
+if (plan.is_math) {
+  let mathContext = [
+    searchExtract,
+    supportSearchOutput,
+    mainSearchOutput,
+    webOutput,
+  ]
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+
+  const reasoningResult = await runControllerV2ReasoningHelper(
+    input.apiKey,
+    workingInput,
+    mathContext
+  );
+
+  if (reasoningResult.ok && reasoningResult.text.trim()) {
+    reasoningOutput = reasoningResult.text.trim();
+  }
+
+  if (reasoningOutput) {
+    const verifyResult = await runControllerV2Verify(
       input.apiKey,
       workingInput,
-      searchExtract
+      reasoningOutput,
+      mathContext
     );
 
-    if (reasoningResult.ok) {
-      reasoningOutput = reasoningResult.text.trim();
+    if (verifyResult.ok && verifyResult.text.trim()) {
+      verifyOutput = verifyResult.text.trim();
+    }
+  }
+
+  const shouldRetryMath =
+    !reasoningOutput || isWeakVerifierOutput(verifyOutput);
+
+  if (shouldRetryMath) {
+    const retryInput = buildRetryInput(
+      workingInput,
+      mathContext,
+      reasoningOutput,
+      verifyOutput
+    );
+
+    const retrySearchResult = await runControllerV2WebHelper(
+      input.apiKey,
+      retryInput,
+      "pro"
+    );
+
+    if (retrySearchResult.ok) {
+      const retryExtract = [
+        retrySearchResult.searchExtract?.trim() || "",
+        retrySearchResult.supportSearchOutput?.trim() || "",
+        retrySearchResult.mainSearchOutput?.trim() || "",
+        retrySearchResult.text?.trim() || "",
+      ]
+        .filter(Boolean)
+        .join("\n\n")
+        .trim();
+
+      mathContext = [mathContext, retryExtract]
+        .filter(Boolean)
+        .join("\n\n")
+        .trim();
+
+      if (retrySearchResult.mainSearchOutput?.trim()) {
+        mainSearchOutput = retrySearchResult.mainSearchOutput.trim();
+      }
+
+      if (retrySearchResult.supportSearchOutput?.trim()) {
+        supportSearchOutput = retrySearchResult.supportSearchOutput.trim();
+      }
+
+      searchExtract = mathContext;
+      webOutput = mathContext || retrySearchResult.text.trim();
+    }
+
+    const retryReasoningResult = await runControllerV2ReasoningHelper(
+      input.apiKey,
+      retryInput,
+      mathContext
+    );
+
+    if (retryReasoningResult.ok && retryReasoningResult.text.trim()) {
+      reasoningOutput = retryReasoningResult.text.trim();
     }
 
     if (reasoningOutput) {
-      const verifyResult = await runControllerV2Verify(
+      const retryVerifyResult = await runControllerV2Verify(
         input.apiKey,
         workingInput,
         reasoningOutput,
-        searchExtract
+        mathContext
       );
 
-      if (verifyResult.ok) {
-        verifyOutput = verifyResult.text.trim();
-      }
-    }
-
-    if (reasoningOutput && isWeakVerifierOutput(verifyOutput)) {
-      const retryInput = buildRetryInput(
-        workingInput,
-        searchExtract,
-        reasoningOutput,
-        verifyOutput
-      );
-
-      const retrySearchResult = await runControllerV2WebHelper(
-        input.apiKey,
-        retryInput,
-        "pro"
-      );
-
-      if (retrySearchResult.ok) {
-        const retryExtract = retrySearchResult.searchExtract?.trim() || "";
-        if (retryExtract) {
-          searchExtract = [searchExtract, retryExtract]
-            .filter(Boolean)
-            .join("\n")
-            .trim();
-        }
-
-        if (retrySearchResult.mainSearchOutput?.trim()) {
-          mainSearchOutput = retrySearchResult.mainSearchOutput.trim();
-        }
-        if (retrySearchResult.supportSearchOutput?.trim()) {
-          supportSearchOutput = retrySearchResult.supportSearchOutput.trim();
-        }
-        webOutput = searchExtract || retrySearchResult.text.trim();
-      }
-
-      const retryReasoningResult = await runControllerV2ReasoningHelper(
-        input.apiKey,
-        retryInput,
-        searchExtract
-      );
-
-      if (retryReasoningResult.ok && retryReasoningResult.text.trim()) {
-        reasoningOutput = retryReasoningResult.text.trim();
-      }
-
-      if (reasoningOutput) {
-        const retryVerifyResult = await runControllerV2Verify(
-          input.apiKey,
-          workingInput,
-          reasoningOutput,
-          searchExtract
-        );
-
-        if (retryVerifyResult.ok && retryVerifyResult.text.trim()) {
-          verifyOutput = retryVerifyResult.text.trim();
-        }
+      if (retryVerifyResult.ok && retryVerifyResult.text.trim()) {
+        verifyOutput = retryVerifyResult.text.trim();
       }
     }
   }
+        }
 
   // 5) Non-math hard reasoning
   if (plan.needs_reasoning && !plan.is_math) {
