@@ -113,3 +113,4 @@ const debugBlock = debugParts.length ? `\n\n${debugParts.join("\n")}` : "";
 return traceLine
   ? `${traceLine}${debugBlock}\n\n${finalText}`
   : `${debugParts.join("\n")}${debugParts.length ? "\n\n" : ""}${finalText}`;
+};
