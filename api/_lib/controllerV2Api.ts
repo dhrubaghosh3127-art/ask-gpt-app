@@ -26,7 +26,8 @@ export const callControllerV2Model = async (
   const requestBody: Record<string, any> = {
     model: input.model,
     messages: input.messages,
-    temperature: typeof input.temperature === "number" ? input.temperature : 0.2,
+    temperature:
+      typeof input.temperature === "number" ? input.temperature : 0.2,
   };
 
   if (typeof input.maxTokens === "number") {
@@ -74,7 +75,7 @@ export const callControllerV2Model = async (
         data?.error ||
         data?.message ||
         rawText.slice(0, 300) ||
-        "Controller V2 model call failed",
+        "controller_v2_model_call_failed",
     };
   }
 
