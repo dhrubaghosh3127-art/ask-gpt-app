@@ -286,23 +286,15 @@ export const buildControllerV2PlanMessages = (input: ControllerV2Input) => {
     .join("\n\n");
 
   return [
-    ...(input.systemInstruction?.trim()
-      ? [
-          {
-            role: "system",
-            content: input.systemInstruction.trim(),
-          },
-        ]
-      : []),
-    {
-      role: "system",
-      content: CONTROLLER_V2_PLAN_PROMPT,
-    },
-    {
-      role: "user",
-      content: plannerInput,
-    },
-  ];
+  {
+    role: "system",
+    content: CONTROLLER_V2_PLAN_PROMPT,
+  },
+  {
+    role: "user",
+    content: plannerInput,
+  },
+];
 };
 
 export const buildControllerV2FastWebPrompt = (
