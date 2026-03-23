@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { runControllerV2Engine } from "./__lib/controllerV2Engine.js";
 
 type ChatV2Body = {
   modelId?: string;
@@ -66,19 +67,7 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-let runControllerV2Engine: any;
 let runProSearch: any = null;
-
-try {
-  const mod = await import("./__lib/controllerV2Engine.js");
-  runControllerV2Engine = mod.runControllerV2Engine;
-} catch (error) {
-  return res.status(500).json({
-    error: `controller_v2_engine_import_failed: ${
-      error instanceof Error ? error.message : String(error)
-    }`,
-  });
-}
 
 try {
   const proSearchMod = await import("./__lib/proSearch/proSearch.js");
