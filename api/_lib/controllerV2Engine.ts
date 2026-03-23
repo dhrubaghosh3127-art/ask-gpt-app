@@ -362,8 +362,8 @@ if (plan.is_math) {
 
   // 6) Refine once if there is any helper output
   const shouldRefine = Boolean(
-    searchExtract || webOutput || reasoningOutput || fastOutput || verifyOutput
-  );
+  searchExtract || webOutput || reasoningOutput || verifyOutput
+);
 
   if (shouldRefine) {
     const refineResult = await runControllerV2Refine(
