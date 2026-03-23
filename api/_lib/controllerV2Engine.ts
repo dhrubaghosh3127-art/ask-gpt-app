@@ -10,7 +10,7 @@ import {
   runControllerV2ReasoningHelper,
   runControllerV2FastHelper,
 } from "./controllerV2Helpers.js";
-import { runProSearch } from "./proSearch/proSearch.js";
+// pro search lazy-loaded inside the engine
 import {
   runControllerV2Verify,
   runControllerV2Refine,
@@ -73,7 +73,14 @@ export const runControllerV2Engine = async (
   let fastOutput = "";
   let refinedOutput = "";
   let finalText = "";
+let runProSearch: any = null;
 
+try {
+  const proSearchMod = await import("./proSearch/proSearch.js");
+  runProSearch = proSearchMod.runProSearch;
+} catch {
+  runProSearch = null;
+}
   if (input.hasImage && input.imageBase64?.trim()) {
     const imageResult = await analyzeControllerV2Image({
       apiKey: input.apiKey,
