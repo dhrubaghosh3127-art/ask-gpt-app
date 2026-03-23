@@ -109,13 +109,12 @@ export const runControllerV2Planner = async (
   input: ControllerV2Input
 ): Promise<ControllerV2PlannerResult> => {
   const response = await callControllerV2Model({
-    apiKey,
-    model: CONTROLLER_V2_MODELS.planner,
-    messages: buildControllerV2PlanMessages(input),
-    temperature: 0.1,
-    maxCompletionTokens: 500,
-    reasoningEffort: "high",
-  });
+  apiKey,
+  model: CONTROLLER_V2_MODELS.fast,
+  messages: buildControllerV2PlanMessages(input),
+  temperature: 0,
+  maxCompletionTokens: 900,
+});
 
   if (!response.ok) {
     return {
@@ -156,7 +155,7 @@ if (
 
 const repairResponse = await callControllerV2Model({
   apiKey,
-  model: CONTROLLER_V2_MODELS.planner,
+  model: CONTROLLER_V2_MODELS.fast,
   messages: [
     {
       role: "system",
@@ -193,10 +192,8 @@ ${rawText}`,
     },
   ],
   temperature: 0,
-  maxCompletionTokens: 120,
-  reasoningEffort: "low",
+  maxCompletionTokens: 500,
 });
-
 if (repairResponse.ok) {
   const repairedRawText = extractControllerV2MessageText(repairResponse.data);
   const repairedJson = parseControllerV2Json(repairedRawText);
