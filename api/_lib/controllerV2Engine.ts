@@ -104,17 +104,36 @@ export const runControllerV2Engine = async (
   };
 
   // 1) Very simple non-web path
-  if (
-    plan.is_simple &&
-    !plan.needs_reasoning &&
-    !plan.needs_web &&
-    plan.search_mode === "none"
-  ) {
-    const fastResult = await runControllerV2FastHelper(input.apiKey, workingInput);
-    if (fastResult.ok) {
-      fastOutput = fastResult.text.trim();
-    }
+if (
+  plan.is_simple &&
+  !plan.needs_reasoning &&
+  !plan.needs_web &&
+  plan.search_mode === "none"
+) {
+  const fastResult = await runControllerV2FastHelper(input.apiKey, workingInput);
+
+  if (fastResult.ok && fastResult.text.trim()) {
+    fastOutput = fastResult.text.trim();
+    finalText = fastOutput;
+
+    return {
+      ok: true,
+      plan,
+      imageContext,
+      plannerRaw,
+      mainSearchOutput,
+      supportSearchOutput,
+      searchExtract,
+      webOutput,
+      reasoningOutput,
+      verifyOutput,
+      fastOutput,
+      refinedOutput,
+      finalText,
+      reason: "",
+    };
   }
+}
 
   // 2) Fast web path (non-math, no reasoning)
   if (
