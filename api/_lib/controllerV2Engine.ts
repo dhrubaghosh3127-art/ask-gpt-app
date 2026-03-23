@@ -124,67 +124,56 @@ try {
     }
   }
 
-// 2) Search path via pro search first
-const shouldRunProSearch = false;
+// 2) Fast web path (non-math, no reasoning)
+if (
+  plan.needs_web &&
+  plan.search_mode === "fast" &&
+  !plan.is_math &&
+  !plan.needs_reasoning
+) {
+  const webResult = await runControllerV2WebHelper(
+    input.apiKey,
+    workingInput,
+    "fast"
+  );
 
-// 3) Legacy web fallback
-if (!webOutput) {
-  if (
-    plan.needs_web &&
-    plan.search_mode === "fast" &&
+  if (webResult.ok) {
+    webOutput = webResult.text.trim();
+    mainSearchOutput = webResult.mainSearchOutput?.trim() || webOutput;
+    supportSearchOutput = webResult.supportSearchOutput?.trim() || "";
+    searchExtract = webResult.searchExtract?.trim() || webOutput;
+  }
+}
+
+// 3) Pro-search path
+const shouldRunProSearch =
+  plan.search_mode === "pro" ||
+  plan.is_math ||
+  (plan.needs_reasoning &&
     !plan.is_math &&
-    !plan.needs_reasoning
-  ) {
-    const webResult = await runControllerV2WebHelper(
-      input.apiKey,
-      workingInput,
-      "fast"
-    );
+    plan.reasoning_scope === "open");
 
-    if (webResult.ok) {
-      webOutput = webResult.text.trim();
-      mainSearchOutput = webResult.mainSearchOutput?.trim() || webOutput;
-      supportSearchOutput = webResult.supportSearchOutput?.trim() || "";
-      searchExtract = webResult.searchExtract?.trim() || webOutput;
+if (shouldRunProSearch) {
+  const proSearchResult = await runControllerV2WebHelper(
+    input.apiKey,
+    workingInput,
+    "pro"
+  );
+
+  if (proSearchResult.ok) {
+    mainSearchOutput = proSearchResult.mainSearchOutput?.trim() || "";
+    supportSearchOutput = proSearchResult.supportSearchOutput?.trim() || "";
+    searchExtract = proSearchResult.searchExtract?.trim() || "";
+    webOutput = searchExtract || proSearchResult.text.trim();
+  } else {
+    if (proSearchResult.mainSearchOutput) {
+      mainSearchOutput = proSearchResult.mainSearchOutput.trim() || "";
+    }
+    if (proSearchResult.supportSearchOutput) {
+      supportSearchOutput = proSearchResult.supportSearchOutput.trim() || "";
     }
   }
-
-  const shouldRunLegacyProSearch =
-    plan.search_mode === "pro" ||
-    plan.is_math ||
-    (plan.needs_reasoning &&
-      !plan.is_math &&
-      plan.reasoning_scope === "open");
-
-  if (shouldRunLegacyProSearch) {
-    const legacyProSearchResult = await runControllerV2WebHelper(
-      input.apiKey,
-      workingInput,
-      "pro"
-    );
-
-    if (legacyProSearchResult.ok) {
-      mainSearchOutput = legacyProSearchResult.mainSearchOutput?.trim() || "";
-      supportSearchOutput =
-        legacyProSearchResult.supportSearchOutput?.trim() || "";
-      searchExtract = legacyProSearchResult.searchExtract?.trim() || "";
-      webOutput = searchExtract || legacyProSearchResult.text.trim();
-    } else {
-      if (legacyProSearchResult.mainSearchOutput?.trim()) {
-        mainSearchOutput = legacyProSearchResult.mainSearchOutput.trim();
-      }
-
-      if (legacyProSearchResult.supportSearchOutput?.trim()) {
-        supportSearchOutput =
-          legacyProSearchResult.supportSearchOutput.trim();
-      }
-
-      if (legacyProSearchResult.text?.trim()) {
-        webOutput = legacyProSearchResult.text.trim();
-      }
-    }
-  }
-      }
+}
   }
 
   // 4) Math rule: always pro-search first -> qwen -> GPT verify -> one retry max
