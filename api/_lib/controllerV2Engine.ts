@@ -73,14 +73,7 @@ export const runControllerV2Engine = async (
   let fastOutput = "";
   let refinedOutput = "";
   let finalText = "";
-let runProSearch: any = null;
 
-try {
-  const proSearchMod = await import("./proSearch/proSearch.js");
-  runProSearch = proSearchMod.runProSearch;
-} catch {
-  runProSearch = null;
-}
   if (input.hasImage && input.imageBase64?.trim()) {
     const imageResult = await analyzeControllerV2Image({
       apiKey: input.apiKey,
