@@ -10,6 +10,7 @@ import {
   runControllerV2ReasoningHelper,
   runControllerV2FastHelper,
 } from "./controllerV2Helpers.js";
+import { runProSearch } from "./proSearch/proSearch.js";
 import {
   runControllerV2Verify,
   runControllerV2Refine,
@@ -116,7 +117,57 @@ export const runControllerV2Engine = async (
     }
   }
 
-  // 2) Fast web path (non-math, no reasoning)
+// 2) Search path via pro search first
+const shouldRunSearch =
+  plan.needs_web ||
+  plan.search_mode === "pro" ||
+  plan.is_math ||
+  (plan.needs_reasoning && plan.reasoning_scope === "open");
+
+if (shouldRunSearch) {
+  let proSearchResult: any = null;
+
+  try {
+    proSearchResult = await runProSearch({
+      apiKey: input.apiKey,
+      input: {
+        text: workingInput.prompt || "",
+        mode: plan.search_mode === "fast" ? "fast" : "pro",
+        category: plan.is_math ? "math" : undefined,
+        locale: "",
+      },
+    });
+  } catch {
+    proSearchResult = null;
+  }
+
+  if (
+    proSearchResult?.ok &&
+    typeof proSearchResult.finalText === "string" &&
+    proSearchResult.finalText.trim()
+  ) {
+    const extractedLines = Array.isArray(proSearchResult.extracts)
+      ? proSearchResult.extracts
+          .reduce(
+            (all: string[], item: any) => all.concat(item?.extracted || []),
+            []
+          )
+          .filter(Boolean)
+          .join("\n")
+          .trim()
+      : "";
+
+    mainSearchOutput = proSearchResult.finalText.trim();
+    supportSearchOutput = Array.isArray(proSearchResult.citations)
+      ? proSearchResult.citations.join("\n").trim()
+      : "";
+    searchExtract = extractedLines || proSearchResult.finalText.trim();
+    webOutput = proSearchResult.finalText.trim();
+  }
+}
+
+// 3) Legacy web fallback
+if (!webOutput) {
   if (
     plan.needs_web &&
     plan.search_mode === "fast" &&
@@ -137,34 +188,42 @@ export const runControllerV2Engine = async (
     }
   }
 
-  // 3) Pro-search path
-  const shouldRunProSearch =
+  const shouldRunLegacyProSearch =
     plan.search_mode === "pro" ||
     plan.is_math ||
     (plan.needs_reasoning &&
       !plan.is_math &&
       plan.reasoning_scope === "open");
 
-  if (shouldRunProSearch) {
-    const proSearchResult = await runControllerV2WebHelper(
+  if (shouldRunLegacyProSearch) {
+    const legacyProSearchResult = await runControllerV2WebHelper(
       input.apiKey,
       workingInput,
       "pro"
     );
 
-    if (proSearchResult.ok) {
-      mainSearchOutput = proSearchResult.mainSearchOutput?.trim() || "";
-      supportSearchOutput = proSearchResult.supportSearchOutput?.trim() || "";
-      searchExtract = proSearchResult.searchExtract?.trim() || "";
-      webOutput = searchExtract || proSearchResult.text.trim();
+    if (legacyProSearchResult.ok) {
+      mainSearchOutput = legacyProSearchResult.mainSearchOutput?.trim() || "";
+      supportSearchOutput =
+        legacyProSearchResult.supportSearchOutput?.trim() || "";
+      searchExtract = legacyProSearchResult.searchExtract?.trim() || "";
+      webOutput = searchExtract || legacyProSearchResult.text.trim();
     } else {
-      if (!mainSearchOutput) {
-        mainSearchOutput = proSearchResult.mainSearchOutput?.trim() || "";
+      if (legacyProSearchResult.mainSearchOutput?.trim()) {
+        mainSearchOutput = legacyProSearchResult.mainSearchOutput.trim();
       }
-      if (!supportSearchOutput) {
-        supportSearchOutput = proSearchResult.supportSearchOutput?.trim() || "";
+
+      if (legacyProSearchResult.supportSearchOutput?.trim()) {
+        supportSearchOutput =
+          legacyProSearchResult.supportSearchOutput.trim();
+      }
+
+      if (legacyProSearchResult.text?.trim()) {
+        webOutput = legacyProSearchResult.text.trim();
       }
     }
+  }
+      }
   }
 
   // 4) Math rule: always pro-search first -> qwen -> GPT verify -> one retry max
