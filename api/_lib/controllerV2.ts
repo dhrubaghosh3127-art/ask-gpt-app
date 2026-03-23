@@ -510,6 +510,29 @@ export const buildControllerV2FinalMessages = (
   verifyOutput: string,
   refinedOutput: string
 ) => {
+  const cleanHistory = (input.messages || []).filter((msg: any) => {
+    const text =
+      typeof msg?.content === "string"
+        ? msg.content
+        : Array.isArray(msg?.content)
+        ? msg.content
+            .map((part: any) =>
+              typeof part === "string"
+                ? part
+                : typeof part?.text === "string"
+                ? part.text
+                : typeof part?.content === "string"
+                ? part.content
+                : ""
+            )
+            .join(" ")
+        : "";
+
+    return !/\[Trace\]|\[Debug plan\]|\[Debug plannerRaw\]|\[Debug used\]/.test(
+      text
+    );
+  });
+
   return [
     ...(input.systemInstruction?.trim()
       ? [
@@ -521,9 +544,17 @@ export const buildControllerV2FinalMessages = (
       : []),
     {
       role: "system",
-      content: CONTROLLER_V2_FINAL_PROMPT,
+      content: [
+        CONTROLLER_V2_FINAL_PROMPT,
+        "For simple chat, greeting, casual talk, or everyday questions:",
+        "- answer directly and naturally",
+        "- use the user's language",
+        "- do not analyze the user's wording unless asked",
+        "- do not explain what language the user used unless asked",
+        "- do not mention internal reasoning",
+      ].join("\n"),
     },
-    ...input.messages,
+    ...cleanHistory,
     {
       role: "user",
       content: [
