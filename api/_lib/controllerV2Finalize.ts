@@ -17,7 +17,18 @@ export interface ControllerV2FinalizeResult {
   rawText?: string;
   error?: string;
 }
+const getAdaptiveFinalMaxTokens = (input: ControllerV2Input): number => {
+  const prompt = (input.prompt || "").trim();
+  const chars = prompt.length;
 
+  if (chars <= 12) return 80;
+  if (chars <= 40) return 140;
+  if (chars <= 120) return 260;
+  if (chars <= 300) return 420;
+  if (chars <= 700) return 700;
+
+  return 1100;
+};
 export const runControllerV2Verify = async (
   apiKey: string,
   input: ControllerV2Input,
@@ -135,7 +146,14 @@ export const runControllerV2Final = async (
       refinedOutput
     ),
     temperature: 0.2,
-    maxCompletionTokens: 2200,
+    maxCompletionTokens:
+  !searchExtract.trim() &&
+  !webOutput.trim() &&
+  !reasoningOutput.trim() &&
+  !verifyOutput.trim() &&
+  !refinedOutput.trim()
+    ? getAdaptiveFinalMaxTokens(input)
+    : 2200,
     reasoningEffort: "high",
   });
 
