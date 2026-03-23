@@ -74,14 +74,6 @@ export const runControllerV2Engine = async (
   let refinedOutput = "";
   let finalText = "";
 
-  if (input.hasImage && input.imageBase64?.trim()) {
-    const imageResult = await analyzeControllerV2Image({
-      apiKey: input.apiKey,
-      imageBase64: input.imageBase64,
-      mimeType: input.mimeType || "image/jpeg",
-      userPrompt: input.prompt || "",
-    });
-
     if (imageResult.ok && imageResult.text.trim()) {
       imageContext = imageResult.text.trim();
     }
