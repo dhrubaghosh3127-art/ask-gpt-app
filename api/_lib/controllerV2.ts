@@ -501,6 +501,7 @@ export const buildControllerV2RefineMessages = (
   ];
 };
 
+
 export const buildControllerV2FinalMessages = (
   input: ControllerV2Input,
   searchExtract: string,
@@ -532,6 +533,51 @@ export const buildControllerV2FinalMessages = (
       text
     );
   });
+
+  const isSimpleDirect =
+    !searchExtract.trim() &&
+    !webOutput.trim() &&
+    !reasoningOutput.trim() &&
+    !verifyOutput.trim() &&
+    !refinedOutput.trim();
+
+  if (isSimpleDirect) {
+    return [
+      ...(input.systemInstruction?.trim()
+        ? [
+            {
+              role: "system",
+              content: input.systemInstruction.trim(),
+            },
+          ]
+        : []),
+      {
+        role: "system",
+        content: [
+          CONTROLLER_V2_FINAL_PROMPT,
+          "For simple chat, greeting, casual talk, or everyday questions:",
+          "- reply directly and naturally",
+          "- use the user's language and tone",
+          "- do not analyze the wording",
+          "- do not explain what the user meant",
+          "- do not mention internal reasoning",
+          "- use the fast draft as the base answer and only polish lightly",
+        ].join("\n"),
+      },
+      {
+        role: "user",
+        content: [
+          `User request:\n${input.prompt || ""}`,
+          input.imageContext?.trim()
+            ? `Hidden image context:\n${input.imageContext.trim()}`
+            : "",
+          fastOutput.trim() ? `Fast draft:\n${fastOutput.trim()}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
+      },
+    ];
+  }
 
   return [
     ...(input.systemInstruction?.trim()
