@@ -20,11 +20,18 @@ export interface ProSearchUserQuery {
   locale?: string;
 }
 
+export interface ProSearchTierQuery {
+  tier: ProSearchTier;
+  query: string;
+  domains: string[];
+}
+
 export interface ProSearchPlan {
   normalizedQuery: string;
   category: ProSearchCategory;
   mode: ProSearchMode;
   tiersToTry: ProSearchTier[];
+  tierQueries: ProSearchTierQuery[];
   pureModelFallback: string[];
 }
 
