@@ -10,7 +10,6 @@ import {
   runControllerV2ReasoningHelper,
   runControllerV2FastHelper,
 } from "./controllerV2Helpers.js";
-
 import {
   runControllerV2Verify,
   runControllerV2Refine,
@@ -74,6 +73,14 @@ export const runControllerV2Engine = async (
   let refinedOutput = "";
   let finalText = "";
 
+  if (input.hasImage && input.imageBase64?.trim()) {
+    const imageResult = await analyzeControllerV2Image({
+      apiKey: input.apiKey,
+      imageBase64: input.imageBase64,
+      mimeType: input.mimeType || "image/jpeg",
+      userPrompt: input.prompt || "",
+    });
+
     if (imageResult.ok && imageResult.text.trim()) {
       imageContext = imageResult.text.trim();
     }
@@ -109,56 +116,55 @@ export const runControllerV2Engine = async (
     }
   }
 
-// 2) Fast web path (non-math, no reasoning)
-if (
-  plan.needs_web &&
-  plan.search_mode === "fast" &&
-  !plan.is_math &&
-  !plan.needs_reasoning
-) {
-  const webResult = await runControllerV2WebHelper(
-    input.apiKey,
-    workingInput,
-    "fast"
-  );
-
-  if (webResult.ok) {
-    webOutput = webResult.text.trim();
-    mainSearchOutput = webResult.mainSearchOutput?.trim() || webOutput;
-    supportSearchOutput = webResult.supportSearchOutput?.trim() || "";
-    searchExtract = webResult.searchExtract?.trim() || webOutput;
-  }
-}
-
-// 3) Pro-search path
-const shouldRunProSearch =
-  plan.search_mode === "pro" ||
-  plan.is_math ||
-  (plan.needs_reasoning &&
+  // 2) Fast web path (non-math, no reasoning)
+  if (
+    plan.needs_web &&
+    plan.search_mode === "fast" &&
     !plan.is_math &&
-    plan.reasoning_scope === "open");
+    !plan.needs_reasoning
+  ) {
+    const webResult = await runControllerV2WebHelper(
+      input.apiKey,
+      workingInput,
+      "fast"
+    );
 
-if (shouldRunProSearch) {
-  const proSearchResult = await runControllerV2WebHelper(
-    input.apiKey,
-    workingInput,
-    "pro"
-  );
-
-  if (proSearchResult.ok) {
-    mainSearchOutput = proSearchResult.mainSearchOutput?.trim() || "";
-    supportSearchOutput = proSearchResult.supportSearchOutput?.trim() || "";
-    searchExtract = proSearchResult.searchExtract?.trim() || "";
-    webOutput = searchExtract || proSearchResult.text.trim();
-  } else {
-    if (proSearchResult.mainSearchOutput) {
-      mainSearchOutput = proSearchResult.mainSearchOutput.trim() || "";
-    }
-    if (proSearchResult.supportSearchOutput) {
-      supportSearchOutput = proSearchResult.supportSearchOutput.trim() || "";
+    if (webResult.ok) {
+      webOutput = webResult.text.trim();
+      mainSearchOutput = webResult.mainSearchOutput?.trim() || webOutput;
+      supportSearchOutput = webResult.supportSearchOutput?.trim() || "";
+      searchExtract = webResult.searchExtract?.trim() || webOutput;
     }
   }
-}
+
+  // 3) Pro-search path
+  const shouldRunProSearch =
+    plan.search_mode === "pro" ||
+    plan.is_math ||
+    (plan.needs_reasoning &&
+      !plan.is_math &&
+      plan.reasoning_scope === "open");
+
+  if (shouldRunProSearch) {
+    const proSearchResult = await runControllerV2WebHelper(
+      input.apiKey,
+      workingInput,
+      "pro"
+    );
+
+    if (proSearchResult.ok) {
+      mainSearchOutput = proSearchResult.mainSearchOutput?.trim() || "";
+      supportSearchOutput = proSearchResult.supportSearchOutput?.trim() || "";
+      searchExtract = proSearchResult.searchExtract?.trim() || "";
+      webOutput = searchExtract || proSearchResult.text.trim();
+    } else {
+      if (!mainSearchOutput) {
+        mainSearchOutput = proSearchResult.mainSearchOutput?.trim() || "";
+      }
+      if (!supportSearchOutput) {
+        supportSearchOutput = proSearchResult.supportSearchOutput?.trim() || "";
+      }
+    }
   }
 
   // 4) Math rule: always pro-search first -> qwen -> GPT verify -> one retry max
@@ -406,4 +412,4 @@ if (plan.is_math) {
     finalText,
     reason: finalText ? "" : finalResult.error || "controller_v2_final_failed",
   };
-};
+};  
