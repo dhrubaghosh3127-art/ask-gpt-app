@@ -200,22 +200,14 @@ export default async function handler(
   modelId: "controller-v2",
   trace,
   debug: {
-    plan: controllerResult?.plan || null,
-    plannerRawPreview:
-      typeof controllerResult?.plannerRaw === "string"
-        ? controllerResult.plannerRaw.slice(0, 500)
-        : "",
-    imageContextPreview:
-      typeof controllerResult?.imageContext === "string"
-        ? controllerResult.imageContext.slice(0, 300)
-        : "",
-    usedMainSearch: Boolean(controllerResult?.mainSearchOutput),
-    usedSupportSearch: Boolean(controllerResult?.supportSearchOutput),
-    usedReasoning: Boolean(controllerResult?.reasoningOutput),
-    usedVerify: Boolean(controllerResult?.verifyOutput),
-    usedFast: Boolean(controllerResult?.fastOutput),
-    usedRefine: Boolean(controllerResult?.refinedOutput),
-  },
+  plan: controllerResult?.plan || null,
+  usedMainSearch: Boolean(controllerResult?.mainSearchOutput),
+  usedSupportSearch: Boolean(controllerResult?.supportSearchOutput),
+  usedReasoning: Boolean(controllerResult?.reasoningOutput),
+  usedVerify: Boolean(controllerResult?.verifyOutput),
+  usedFast: Boolean(controllerResult?.fastOutput),
+  usedRefine: Boolean(controllerResult?.refinedOutput),
+},
 });
     }
 
