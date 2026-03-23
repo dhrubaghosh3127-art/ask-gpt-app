@@ -10,7 +10,7 @@ import {
   runControllerV2ReasoningHelper,
   runControllerV2FastHelper,
 } from "./controllerV2Helpers.js";
-// pro search lazy-loaded inside the engine
+
 import {
   runControllerV2Verify,
   runControllerV2Refine,
@@ -125,53 +125,7 @@ try {
   }
 
 // 2) Search path via pro search first
-const shouldRunSearch =
-  plan.needs_web ||
-  plan.search_mode === "pro" ||
-  plan.is_math ||
-  (plan.needs_reasoning && plan.reasoning_scope === "open");
-
-if (shouldRunSearch) {
-  let proSearchResult: any = null;
-
-  try {
-    proSearchResult = await runProSearch({
-      apiKey: input.apiKey,
-      input: {
-        text: workingInput.prompt || "",
-        mode: plan.search_mode === "fast" ? "fast" : "pro",
-        category: plan.is_math ? "math" : undefined,
-        locale: "",
-      },
-    });
-  } catch {
-    proSearchResult = null;
-  }
-
-  if (
-    proSearchResult?.ok &&
-    typeof proSearchResult.finalText === "string" &&
-    proSearchResult.finalText.trim()
-  ) {
-    const extractedLines = Array.isArray(proSearchResult.extracts)
-      ? proSearchResult.extracts
-          .reduce(
-            (all: string[], item: any) => all.concat(item?.extracted || []),
-            []
-          )
-          .filter(Boolean)
-          .join("\n")
-          .trim()
-      : "";
-
-    mainSearchOutput = proSearchResult.finalText.trim();
-    supportSearchOutput = Array.isArray(proSearchResult.citations)
-      ? proSearchResult.citations.join("\n").trim()
-      : "";
-    searchExtract = extractedLines || proSearchResult.finalText.trim();
-    webOutput = proSearchResult.finalText.trim();
-  }
-}
+const shouldRunProSearch = false;
 
 // 3) Legacy web fallback
 if (!webOutput) {
