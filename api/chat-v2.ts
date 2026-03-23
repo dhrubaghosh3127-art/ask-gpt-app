@@ -67,13 +67,17 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-let runProSearch: any = null;
+let runControllerV2Engine: any;
 
 try {
-  const proSearchMod = await import("./__lib/proSearch/proSearch.js");
-  runProSearch = proSearchMod.runProSearch;
-} catch {
-  runProSearch = null;
+  const mod = await import("./__lib/controllerV2Engine.js");
+  runControllerV2Engine = mod.runControllerV2Engine;
+} catch (error) {
+  return res.status(500).json({
+    error: `controller_v2_engine_import_failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  });
 }
 
   try {
