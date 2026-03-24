@@ -645,18 +645,17 @@ Your response should feel like:
 
 NOT like a machine.`,
 },
-      {
-        role: "user",
-        content: [
-          `User request:\n${input.prompt || ""}`,
-          input.imageContext?.trim()
-            ? `Hidden image context:\n${input.imageContext.trim()}`
-            : "",
-          fastOutput.trim() ? `Fast draft:\n${fastOutput.trim()}` : "",
-        ]
-          .filter(Boolean)
-          .join("\n\n"),
-      },
+    {
+  role: "user",
+  content: [
+    input.imageContext?.trim()
+      ? `Hidden image context:\n${input.imageContext.trim()}`
+      : "",
+    fastOutput.trim() || (input.prompt || "").trim(),
+  ]
+    .filter(Boolean)
+    .join("\n\n"),
+},
     ];
   }
 
