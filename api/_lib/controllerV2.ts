@@ -658,7 +658,7 @@ NOT like a machine.`,
 },
     ];
   }
-
+if (isSimpleDirect) {
   return [
     ...(input.systemInstruction?.trim()
       ? [
@@ -674,39 +674,28 @@ NOT like a machine.`,
         CONTROLLER_V2_FINAL_PROMPT,
         "For simple chat, greeting, casual talk, or everyday questions:",
         "- answer directly and naturally",
-        "- use the user's language",
-        "- do not analyze the user's wording unless asked",
-        "- do not explain what language the user used unless asked",
+        "- use the user's language and tone",
+        "- do not analyze the wording",
+        "- do not explain what language the user used",
         "- do not mention internal reasoning",
+        "- output only the final user-facing reply",
+        "- use the fast draft as the base answer and only polish lightly",
       ].join("\n"),
     },
-    ...cleanHistory,
     {
       role: "user",
       content: [
-        `User request:\n${input.prompt || ""}`,
         input.imageContext?.trim()
           ? `Hidden image context:\n${input.imageContext.trim()}`
           : "",
-        searchExtract.trim()
-          ? `Useful extracted support:\n${searchExtract.trim()}`
-          : "",
-        webOutput.trim() ? `Web result:\n${webOutput.trim()}` : "",
-        reasoningOutput.trim()
-          ? `Reasoning result:\n${reasoningOutput.trim()}`
-          : "",
-        fastOutput.trim() ? `Fast draft:\n${fastOutput.trim()}` : "",
-        verifyOutput.trim() ? `Verifier result:\n${verifyOutput.trim()}` : "",
-        refinedOutput.trim()
-          ? `Refined internal draft:\n${refinedOutput.trim()}`
-          : "",
+        (fastOutput || "").trim() || (input.prompt || "").trim(),
       ]
         .filter(Boolean)
         .join("\n\n"),
     },
   ];
-};
-
+}
+  
 export const runControllerV2 = async (
   input: ControllerV2Input
 ): Promise<ControllerV2Result> => {
