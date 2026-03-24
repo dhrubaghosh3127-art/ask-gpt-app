@@ -536,35 +536,27 @@ if (isSimpleNormalChat) {
       content: [
         CONTROLLER_V2_FINAL_PROMPT,
         "For simple normal chat:",
-        "- answer the user's actual message directly",
-        "- use the assistant draft only as the base answer",
-        "- lightly improve naturalness only if needed",
-        "- do not analyze the conversation",
-        "- do not explain what the user meant",
-        "- do not mention language, draft, request, or internal process",
-        "- return ONLY the final user-facing reply",
+        "- your only job is to lightly polish an already-good draft reply",
+        "- keep the same meaning, language, tone, and intent",
+        "- make it slightly more natural, smooth, and human if needed",
+        "- do not analyze the user",
+        "- do not explain the message",
+        "- do not mention draft, request, language, or internal process",
+        "- return ONLY the final reply text",
       ].join("\n"),
     },
-    ...(input.imageContext?.trim()
-      ? [
-          {
-            role: "system",
-            content: `Hidden image context:\n${input.imageContext.trim()}`,
-          },
-        ]
-      : []),
     {
       role: "user",
-      content: input.prompt || "",
-    },
-    {
-      role: "assistant",
-      content: fastOutput.trim(),
-    },
-    {
-      role: "user",
-      content:
-        "Improve the previous assistant reply only slightly and return the final reply to my message. Do not analyze. Do not explain. Do not mention the draft. Return only the final answer.",
+      content: [
+        input.imageContext?.trim()
+          ? `Hidden image context:\n${input.imageContext.trim()}`
+          : "",
+        `User message:\n${input.prompt || ""}`,
+        `Draft reply:\n${fastOutput.trim()}`,
+        "Task:\nReturn a slightly more natural final reply to the user. Keep the same meaning and language. Output only the final reply text.",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
     },
   ];
 }
