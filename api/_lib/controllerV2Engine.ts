@@ -361,17 +361,9 @@ if (plan.is_math) {
   }
 
   // 6) Refine once if there is any helper output
-  const isSimpleNormalChat =
-  plan.is_simple &&
-  !plan.needs_reasoning &&
-  !plan.needs_web &&
-  plan.search_mode === "none";
-
-const shouldRefine =
-  !isSimpleNormalChat &&
-  Boolean(
-    searchExtract || webOutput || reasoningOutput || fastOutput || verifyOutput
-  );
+  const shouldRefine = Boolean(
+  searchExtract || webOutput || reasoningOutput || fastOutput || verifyOutput
+);
 
   if (shouldRefine) {
     const refineResult = await runControllerV2Refine(
