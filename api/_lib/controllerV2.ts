@@ -533,19 +533,32 @@ if (isSimpleNormalChat) {
       : []),
     {
       role: "system",
-      content: CONTROLLER_V2_FINAL_PROMPT,
+      content: [
+        CONTROLLER_V2_FINAL_PROMPT,
+        "For simple normal chat:",
+        "- do not analyze the user's message",
+        "- do not explain what the user meant",
+        "- do not mention draft, request, language, or internal process",
+        "- use the assistant draft as the base answer",
+        "- lightly improve it only if needed",
+        "- return ONLY the final user-facing reply",
+      ].join("\n"),
     },
+    ...(input.imageContext?.trim()
+      ? [
+          {
+            role: "system",
+            content: `Hidden image context:\n${input.imageContext.trim()}`,
+          },
+        ]
+      : []),
     {
       role: "user",
-      content: [
-        input.imageContext?.trim()
-          ? `Hidden image context:\n${input.imageContext.trim()}`
-          : "",
-        `User request:\n${input.prompt || ""}`,
-        `Fast draft:\n${fastOutput.trim()}`,
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
+      content: input.prompt || "",
+    },
+    {
+      role: "assistant",
+      content: fastOutput.trim(),
     },
   ];
 }
