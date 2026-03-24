@@ -1,4 +1,4 @@
-export interface ControllerV2Input {
+    export interface ControllerV2Input {
   prompt: string;
   messages: any[];
   systemInstruction?: string;
@@ -406,21 +406,12 @@ export const buildControllerV2FastPrompt = (
     input.imageContext?.trim()
       ? `Hidden image context:\n${input.imageContext.trim()}`
       : "",
-    "Reply directly to the user.",
-    "Understand the actual meaning first, then answer naturally.",
-    "Use the user's language and tone.",
-    "For Banglish or Bangla written in English letters, understand it properly and reply naturally in Bangla unless the user clearly wants English.",
-    "For greeting, adda, casual chat, daily talk, or simple requests, reply like a smart friendly person.",
-    "Do not analyze the wording.",
-    "Do not explain what language the user used.",
-    "Do not mention tools, routing, prompts, or internal details.",
-    "Do not write notes about the user request.",
-    "Do not write things like 'the user is asking' or 'this means'.",
-    "Output only the final user-facing reply.",
-    "Make the reply already polished and natural, not a rough draft.",
-    "Keep it short only when the user's message is short. Otherwise answer normally.",
-    "",
-    `${input.prompt || ""}`,
+    `Create a fast useful draft answer.
+Keep it short and direct.
+Do not mention tools, routing, or internal system details.
+
+User request:
+${input.prompt}`,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -519,49 +510,7 @@ export const buildControllerV2FinalMessages = (
   verifyOutput: string,
   refinedOutput: string
 ) => {
-  const isSimpleNormalChat =
-  !searchExtract.trim() &&
-  !webOutput.trim() &&
-  !reasoningOutput.trim() &&
-  !verifyOutput.trim() &&
-  !!fastOutput.trim();
-
-if (isSimpleNormalChat) {
-  return [
-    ...(input.systemInstruction?.trim()
-      ? [{ role: "system", content: input.systemInstruction.trim() }]
-      : []),
-    {
-      role: "system",
-      content: [
-        CONTROLLER_V2_FINAL_PROMPT,
-        "For simple normal chat:",
-        "- your only job is to lightly polish an already-good draft reply",
-        "- keep the same meaning, language, tone, and intent",
-        "- make it slightly more natural, smooth, and human if needed",
-        "- do not analyze the user",
-        "- do not explain the message",
-        "- do not mention draft, request, language, or internal process",
-        "- return ONLY the final reply text",
-      ].join("\n"),
-    },
-    {
-      role: "user",
-      content: [
-        input.imageContext?.trim()
-          ? `Hidden image context:\n${input.imageContext.trim()}`
-          : "",
-        `User message:\n${input.prompt || ""}`,
-        `Draft reply:\n${fastOutput.trim()}`,
-        "Task:\nReturn a slightly more natural final reply to the user. Keep the same meaning and language. Output only the final reply text.",
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
-    },
-  ];
-}
-
-const cleanHistory = (input.messages || []).filter((msg: any) => {
+  const cleanHistory = (input.messages || []).filter((msg: any) => {
     const text =
       typeof msg?.content === "string"
         ? msg.content
@@ -622,7 +571,9 @@ const cleanHistory = (input.messages || []).filter((msg: any) => {
           : "",
         fastOutput.trim() ? `Fast draft:\n${fastOutput.trim()}` : "",
         verifyOutput.trim() ? `Verifier result:\n${verifyOutput.trim()}` : "",
-        "",
+        refinedOutput.trim()
+          ? `Refined internal draft:\n${refinedOutput.trim()}`
+          : "",
       ]
         .filter(Boolean)
         .join("\n\n"),
