@@ -362,7 +362,7 @@ if (plan.is_math) {
 
   // 6) Refine once if there is any helper output
   const shouldRefine = Boolean(
-  searchExtract || webOutput || reasoningOutput || verifyOutput
+  searchExtract || webOutput || reasoningOutput || fastOutput || verifyOutput
 );
 
   if (shouldRefine) {
