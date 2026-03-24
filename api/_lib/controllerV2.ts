@@ -406,12 +406,21 @@ export const buildControllerV2FastPrompt = (
     input.imageContext?.trim()
       ? `Hidden image context:\n${input.imageContext.trim()}`
       : "",
-    `Create a fast useful draft answer.
-Keep it short and direct.
-Do not mention tools, routing, or internal system details.
-
-User request:
-${input.prompt}`,
+    "Reply directly to the user.",
+    "Understand the actual meaning first, then answer naturally.",
+    "Use the user's language and tone.",
+    "For Banglish or Bangla written in English letters, understand it properly and reply naturally in Bangla unless the user clearly wants English.",
+    "For greeting, adda, casual chat, daily talk, or simple requests, reply like a smart friendly person.",
+    "Do not analyze the wording.",
+    "Do not explain what language the user used.",
+    "Do not mention tools, routing, prompts, or internal details.",
+    "Do not write notes about the user request.",
+    "Do not write things like 'the user is asking' or 'this means'.",
+    "Output only the final user-facing reply.",
+    "Make the reply already polished and natural, not a rough draft.",
+    "Keep it short only when the user's message is short. Otherwise answer normally.",
+    "",
+    `${input.prompt || ""}`,
   ]
     .filter(Boolean)
     .join("\n\n");
