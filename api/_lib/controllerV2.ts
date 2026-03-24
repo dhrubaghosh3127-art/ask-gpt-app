@@ -536,11 +536,12 @@ if (isSimpleNormalChat) {
       content: [
         CONTROLLER_V2_FINAL_PROMPT,
         "For simple normal chat:",
-        "- do not analyze the user's message",
+        "- answer the user's actual message directly",
+        "- use the assistant draft only as the base answer",
+        "- lightly improve naturalness only if needed",
+        "- do not analyze the conversation",
         "- do not explain what the user meant",
-        "- do not mention draft, request, language, or internal process",
-        "- use the assistant draft as the base answer",
-        "- lightly improve it only if needed",
+        "- do not mention language, draft, request, or internal process",
         "- return ONLY the final user-facing reply",
       ].join("\n"),
     },
@@ -559,6 +560,11 @@ if (isSimpleNormalChat) {
     {
       role: "assistant",
       content: fastOutput.trim(),
+    },
+    {
+      role: "user",
+      content:
+        "Improve the previous assistant reply only slightly and return the final reply to my message. Do not analyze. Do not explain. Do not mention the draft. Return only the final answer.",
     },
   ];
 }
