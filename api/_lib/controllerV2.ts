@@ -519,7 +519,38 @@ export const buildControllerV2FinalMessages = (
   verifyOutput: string,
   refinedOutput: string
 ) => {
-  const cleanHistory = (input.messages || []).filter((msg: any) => {
+  const isSimpleNormalChat =
+  !searchExtract.trim() &&
+  !webOutput.trim() &&
+  !reasoningOutput.trim() &&
+  !verifyOutput.trim() &&
+  !!fastOutput.trim();
+
+if (isSimpleNormalChat) {
+  return [
+    ...(input.systemInstruction?.trim()
+      ? [{ role: "system", content: input.systemInstruction.trim() }]
+      : []),
+    {
+      role: "system",
+      content: CONTROLLER_V2_FINAL_PROMPT,
+    },
+    {
+      role: "user",
+      content: [
+        input.imageContext?.trim()
+          ? `Hidden image context:\n${input.imageContext.trim()}`
+          : "",
+        `User request:\n${input.prompt || ""}`,
+        `Fast draft:\n${fastOutput.trim()}`,
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    },
+  ];
+}
+
+const cleanHistory = (input.messages || []).filter((msg: any) => {
     const text =
       typeof msg?.content === "string"
         ? msg.content
@@ -580,9 +611,7 @@ export const buildControllerV2FinalMessages = (
           : "",
         fastOutput.trim() ? `Fast draft:\n${fastOutput.trim()}` : "",
         verifyOutput.trim() ? `Verifier result:\n${verifyOutput.trim()}` : "",
-        refinedOutput.trim()
-          ? `Refined internal draft:\n${refinedOutput.trim()}`
-          : "",
+        "",
       ]
         .filter(Boolean)
         .join("\n\n"),
