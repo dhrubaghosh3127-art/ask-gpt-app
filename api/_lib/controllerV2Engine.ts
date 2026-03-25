@@ -114,8 +114,26 @@ if (
 
   if (fastResult.ok && fastResult.text.trim()) {
     fastOutput = fastResult.text.trim();
+    finalText = fastOutput;
+
+    return {
+      ok: true,
+      plan,
+      imageContext,
+      plannerRaw,
+      mainSearchOutput,
+      supportSearchOutput,
+      searchExtract,
+      webOutput,
+      reasoningOutput,
+      verifyOutput,
+      fastOutput,
+      refinedOutput,
+      finalText,
+      reason: "",
+    };
   }
-}
+  }
 
   // 2) Fast web path (non-math, no reasoning)
   if (
