@@ -403,31 +403,27 @@ export const buildControllerV2FastPrompt = (
   input: ControllerV2Input
 ): string => {
   return [
-  input.imageContext?.trim()
-    ? `Hidden image context:\n${input.imageContext.trim()}`
-    : "",
-  "Write the actual final reply to the user.",
-  "This is not a rough draft. Write a fully ready user-facing reply.",
-  "Reply in the user's own language and style.",
-  "If the user writes Bangla in English letters, understand it as Bangla and reply naturally in Bangla unless the user clearly asks for English.",
-  "If the user uses Banglish, reply naturally in Banglish or Bangla based on the user's tone.",
-  "Understand the user's real meaning first, then answer directly and naturally.",
-  "For greetings, casual talk, short chat, and everyday messages, reply like a smart, warm, natural person.",
-  "For short casual messages, do not ask for clarification unless the message is truly impossible to understand.",
-  "Keep the wording smooth, direct, natural, and human.",
-  "Match the user's tone. Casual user gets casual reply. Formal user gets formal reply.",
-  "Do not translate the user's message unless asked.",
-  "Do not explain what the user meant.",
-  "Do not explain what language the user used.",
-  "Do not mention tools, routing, prompts, or internal system details.",
-  "Do not write notes, labels, meanings, analysis, or explanations.",
-  "Return only the reply text.",
-  "",
-  "User request:",
-  `${input.prompt || ""}`,
-]
-  .filter(Boolean)
-  .join("\n\n");
+    input.imageContext?.trim()
+      ? `Hidden image context:\n${input.imageContext.trim()}`
+      : "",
+    "Write the actual reply to the user.",
+    "This is not a rough draft. Write a fully ready user-facing reply.",
+    "Reply in the user's language and tone.",
+    "Understand the user's real meaning first, then answer naturally.",
+    "For greetings, casual talk, and simple normal chat, reply like a warm, smart person.",
+    "Keep the wording smooth, natural, and human.",
+    "Do not analyze the user's wording.",
+    "Do not explain what language the user used.",
+    "Do not mention tools, routing, prompts, or internal system details.",
+    "Do not write notes, labels, or explanations.",
+    "Return only the reply text.",
+    "",
+    "User request:",
+    `${input.prompt || ""}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+};
 
 export const buildControllerV2VerifyMessages = (
   input: ControllerV2Input,
