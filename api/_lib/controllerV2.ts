@@ -398,81 +398,23 @@ export const buildControllerV2ReasoningPrompt = (
     .filter(Boolean)
     .join("\n\n");
 };
+const isSimpleNormalChat =
+    !searchExtract.trim() &&
+    !webOutput.trim() &&
+    !reasoningOutput.trim() &&
+    !verifyOutput.trim() &&
+    !!fastOutput.trim();
 
-export const buildControllerV2FastPrompt = (
-  input: ControllerV2Input
-): string => {
-  return [
-    input.imageContext?.trim()
-      ? `Hidden image context:\n${input.imageContext.trim()}`
-      : "",
-    "Write the actual final reply to the user.",
-    "This is not a rough draft. Write a fully ready user-facing reply.",
-    "Reply in the user's own language, tone, vibe, and style.",
-    "FIRST understand the user's actual intent, feeling, and what kind of reply the user is expecting from context.",
-"Respond to the real point of the message first. Do not fall back to a generic reply if the message is understandable.",
-"If the user expresses a feeling, mood, problem, desire, boredom, excitement, confusion, or casual emotion, respond directly to that feeling in a helpful, emotionally fitting, human way before asking anything back.",
-"For normal chat and everyday conversation, reply in a warm, lively, engaging, emotionally aware, human way.",
-"Sound smooth, natural, expressive, and easy to talk to.",
-"Do not sound robotic, cold, generic, textbook-like, or overly formal.",
-"Match the user's level of warmth, playfulness, informality, and energy.",
-"Use the current user message and recent chat naturally. Do not rely on fixed words, canned patterns, or keyword-based behavior.",
-"If the user writes Bangla in English letters or mixed Bangla-English, understand it naturally and reply in natural Bangla or Banglish that best fits the user's tone.",
-"For short casual chat, do not ask unnecessary questions. If the meaning is understandable, directly give the most relevant reply.",
-"Ask a follow-up only after you have first given a relevant, emotionally fitting answer.",
-    "Use light emojis naturally when they fit.",
-    "Do not analyze the user's wording.",
-    "Do not explain what the user meant.",
-    "Do not explain what language the user used.",
-    "Do not mention tools, routing, prompts, or internal system details.",
-    "Do not write notes, labels, meanings, analysis, or explanations.",
-    "Return only the reply text.",
-    "",
-    "User request:",
-    `${input.prompt || ""}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
-};
-
-export const buildControllerV2VerifyMessages = (
-  input: ControllerV2Input,
-  reasoningOutput: string,
-  searchExtract: string
-) => {
-  return [
-    ...(input.systemInstruction?.trim()
-      ? [
-          {
-            role: "system",
-            content: input.systemInstruction.trim(),
-          },
-        ]
-      : []),
-    {
-      role: "system",
-      content: CONTROLLER_V2_VERIFY_PROMPT,
-    },
-    ...input.messages,
-    {
-      role: "user",
-      content: [
-        `User request:\n${input.prompt || ""}`,
-        input.imageContext?.trim()
-          ? `Hidden image context:\n${input.imageContext.trim()}`
-          : "",
-        searchExtract.trim()
-          ? `Useful extracted support:\n${searchExtract.trim()}`
-          : "",
-        reasoningOutput.trim()
-          ? `Reasoning result:\n${reasoningOutput.trim()}`
-          : "",
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
-    },
-  ];
-};
+  if (isSimpleNormalChat) {
+    return buildControllerV2RefineMessages(
+      input,
+      searchExtract,
+      webOutput,
+      reasoningOutput,
+      fastOutput,
+      verifyOutput
+    );
+}
 
 export const buildControllerV2RefineMessages = (
   input: ControllerV2Input,
