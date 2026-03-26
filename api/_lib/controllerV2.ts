@@ -528,23 +528,70 @@ export const buildControllerV2FinalMessages = (
   verifyOutput: string,
   refinedOutput: string
 ) => {
+  const isSimpleNormalChat =
+    !searchExtract.trim() &&
+    !webOutput.trim() &&
+    !reasoningOutput.trim() &&
+    !verifyOutput.trim() &&
+    !!fastOutput.trim();
+
+  if (isSimpleNormalChat) {
+    return [
+      ...(input.systemInstruction?.trim()
+        ? [
+            {
+              role: "system",
+              content: input.systemInstruction.trim(),
+            },
+          ]
+        : []),
+      {
+        role: "system",
+        content: CONTROLLER_V2_REFINE_PROMPT,
+      },
+      ...input.messages,
+      {
+        role: "user",
+        content: [
+          `User request:\n${input.prompt || ""}`,
+          input.imageContext?.trim()
+            ? `Hidden image context:\n${input.imageContext.trim()}`
+            : "",
+          searchExtract.trim()
+            ? `Useful extracted support:\n${searchExtract.trim()}`
+            : "",
+          webOutput.trim() ? `Web result:\n${webOutput.trim()}` : "",
+          reasoningOutput.trim()
+            ? `Reasoning result:\n${reasoningOutput.trim()}`
+            : "",
+          fastOutput.trim() ? `Fast draft:\n${fastOutput.trim()}` : "",
+          verifyOutput.trim()
+            ? `Verifier result:\n${verifyOutput.trim()}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
+      },
+    ];
+  }
+
   const cleanHistory = (input.messages || []).filter((msg: any) => {
     const text =
       typeof msg?.content === "string"
         ? msg.content
         : Array.isArray(msg?.content)
-        ? msg.content
-            .map((part: any) =>
-              typeof part === "string"
-                ? part
-                : typeof part?.text === "string"
-                ? part.text
-                : typeof part?.content === "string"
-                ? part.content
-                : ""
-            )
-            .join(" ")
-        : "";
+          ? msg.content
+              .map((part: any) =>
+                typeof part === "string"
+                  ? part
+                  : typeof part?.text === "string"
+                    ? part.text
+                    : typeof part?.content === "string"
+                      ? part.content
+                      : ""
+              )
+              .join(" ")
+          : "";
 
     return !/\[Trace\]|\[Debug plan\]|\[Debug plannerRaw\]|\[Debug used\]/.test(
       text
