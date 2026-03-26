@@ -102,8 +102,7 @@ export const runControllerV2Engine = async (
     ...input,
     imageContext,
   };
-
-  // 1) Very simple non-web path
+// 1) Very simple non-web path
 if (
   plan.is_simple &&
   !plan.needs_reasoning &&
@@ -114,25 +113,8 @@ if (
 
   if (fastResult.ok && fastResult.text.trim()) {
     fastOutput = fastResult.text.trim();
-    finalText = fastOutput;
-
-    return {
-      ok: true,
-      plan,
-      imageContext,
-      plannerRaw,
-      mainSearchOutput,
-      supportSearchOutput,
-      searchExtract,
-      webOutput,
-      reasoningOutput,
-      verifyOutput,
-      fastOutput,
-      refinedOutput,
-      finalText,
-      reason: "",
-    };
   }
+}
   }
 
   // 2) Fast web path (non-math, no reasoning)
