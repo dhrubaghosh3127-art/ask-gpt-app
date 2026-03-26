@@ -398,36 +398,7 @@ export const buildControllerV2ReasoningPrompt = (
     .filter(Boolean)
     .join("\n\n");
 };
-const isSimpleNormalChat =
-    !searchExtract.trim() &&
-    !webOutput.trim() &&
-    !reasoningOutput.trim() &&
-    !verifyOutput.trim() &&
-    !!fastOutput.trim();
 
-  if (isSimpleNormalChat) {
-  const refineMessages = buildControllerV2RefineMessages(
-    input,
-    searchExtract,
-    webOutput,
-    reasoningOutput,
-    fastOutput,
-    verifyOutput
-  );
-
-  return [
-    ...refineMessages,
-    {
-      role: "system",
-      content: CONTROLLER_V2_FINAL_PROMPT,
-    },
-    {
-      role: "user",
-      content:
-        "Now return the final user-facing reply only. Keep the same meaning, language, tone, and intent. Do not mention drafts, hidden steps, tools, or analysis.",
-    },
-  ];
-  }
 
 export const buildControllerV2RefineMessages = (
   input: ControllerV2Input,
