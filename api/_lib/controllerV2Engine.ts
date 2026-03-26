@@ -115,7 +115,7 @@ if (
     fastOutput = fastResult.text.trim();
   }
 }
-  }
+  
 
   // 2) Fast web path (non-math, no reasoning)
   if (
