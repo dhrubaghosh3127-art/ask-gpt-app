@@ -399,7 +399,41 @@ export const buildControllerV2ReasoningPrompt = (
     .join("\n\n");
 };
 
-
+export const buildControllerV2FastPrompt = (
+  input: ControllerV2Input
+): string => {
+  return [
+    input.imageContext?.trim()
+      ? `Hidden image context:\n${input.imageContext.trim()}`
+      : "",
+    "Write the actual final reply to the user.",
+    "This is not a rough draft. Write a fully ready user-facing reply.",
+    "Reply in the user's own language, tone, vibe, and style.",
+    "FIRST understand the user's actual intent, feeling, and what kind of reply the user is expecting from context.",
+    "Respond to the real point of the message first. Do not fall back to a generic reply if the message is understandable.",
+    "If the user expresses a feeling, mood, problem, desire, boredom, excitement, confusion, or casual emotion, respond directly.",
+    "For normal chat and everyday conversation, reply in a warm, lively, engaging, emotionally aware, human way.",
+    "Sound smooth, natural, expressive, and easy to talk to.",
+    "Do not sound robotic, cold, generic, textbook-like, or overly formal.",
+    "Match the user's level of warmth, playfulness, informality, and energy.",
+    "Use the current user message and recent chat naturally. Do not rely on fixed words, canned patterns, or keyword-based behavior.",
+    "If the user writes Bangla in English letters or mixed Bangla-English, understand it naturally and reply in natural Bangla.",
+    "For short casual chat, do not ask unnecessary questions. If the meaning is understandable, directly give the most relevant answer.",
+    "Ask a follow-up only after you have first given a relevant, emotionally fitting answer.",
+    "Use light emoji naturally when they fit.",
+    "Do not analyze the user's wording.",
+    "Do not explain what the user meant.",
+    "Do not explain what language the user used.",
+    "Do not mention tools, routing, prompts, or internal system details.",
+    "Do not write notes, labels, meanings, analysis, or explanations.",
+    "Return only the reply text.",
+    "",
+    "User request:",
+    `${input.prompt || ""}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+};
 export const buildControllerV2RefineMessages = (
   input: ControllerV2Input,
   searchExtract: string,
