@@ -434,6 +434,44 @@ export const buildControllerV2FastPrompt = (
     .filter(Boolean)
     .join("\n\n");
 };
+export const buildControllerV2VerifyMessages = (
+  input: ControllerV2Input,
+  reasoningOutput: string,
+  searchExtract: string
+) => {
+  return [
+    ...(input.systemInstruction?.trim()
+      ? [
+          {
+            role: "system",
+            content: input.systemInstruction.trim(),
+          },
+        ]
+      : []),
+    {
+      role: "system",
+      content: CONTROLLER_V2_VERIFY_PROMPT,
+    },
+    ...input.messages,
+    {
+      role: "user",
+      content: [
+        `User request:\n${input.prompt || ""}`,
+        input.imageContext?.trim()
+          ? `Hidden image context:\n${input.imageContext.trim()}`
+          : "",
+        searchExtract.trim()
+          ? `Useful extracted support:\n${searchExtract.trim()}`
+          : "",
+        reasoningOutput.trim()
+          ? `Reasoning result:\n${reasoningOutput.trim()}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    },
+  ];
+};
 export const buildControllerV2RefineMessages = (
   input: ControllerV2Input,
   searchExtract: string,
