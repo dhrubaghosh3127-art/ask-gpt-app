@@ -82,6 +82,7 @@ const {
   language,
   voiceIntelligence,
   advancedTranscribe,
+  stream,
 } = body as {
   modelId?: string;
   messages?: any[];
@@ -96,6 +97,7 @@ const {
   language?: string;
   voiceIntelligence?: "standard" | "advanced";
   advancedTranscribe?: boolean;
+  stream?: boolean;
 };
 
 if (mode === "chat" && !Array.isArray(messages)) {
