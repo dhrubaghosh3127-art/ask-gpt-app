@@ -41,174 +41,17 @@ const getLastUserText = (messages: any[]): string => {
   return "";
 };
 
-type RoutePlan = {
-  route: "normal" | "web";
-  capabilityMode: boolean;
-};
+const isCapabilityQuestion = (text: string): boolean => {
+  const q = text.trim();
+  if (!q) return false;
 
-const DEFAULT_ROUTE_PLAN: RoutePlan = {
-  route: "normal",
-  capabilityMode: false,
-};
+  const capabilityPattern =
+    /(can you|do you|are you able to|are you capable of|support|possible|পারো|পারবা|করতে পারো|করতে পারবা|korte paro|parbe)/i;
 
-const ROUTE_PLANNER_PROMPT = `You are a routing planner.
+  const directActionPattern =
+    /^(create|generate|make|draw|solve|analyze|analyse|search|find|write|code|build|show|tell|summarize|translate|বানাও|তৈরি করো|solve করো|analysis করো|search করো|লিখে দাও|দেখাও|একটা|একটি)/i;
 
-Read the user's real intent from the latest message and short recent context.
-Do NOT use keyword-only matching.
-Infer from actual meaning.
-
-Return ONLY minified JSON in this exact format:
-{"route":"normal","capabilityMode":false}
-
-Rules:
-- route="web" only when the user clearly needs current/external web information.
-- route="normal" for normal chat, casual talk, help, feelings, explanations, rewrites, translations, stories, brainstorming, and general conversation.
-- capabilityMode=true only when the user is actually asking what the assistant/app can do, whether a feature is supported, or whether something is available.
-- capabilityMode=false otherwise.`;
-
-const parseRoutePlan = (raw: string): RoutePlan => {
-  const source = (raw || "").trim();
-
-  const normalize = (parsed: any): RoutePlan => ({
-    route: parsed?.route === "web" ? "web" : "normal",
-    capabilityMode: Boolean(parsed?.capabilityMode),
-  });
-
-  const tryParse = (value: string): RoutePlan | null => {
-    try {
-      return normalize(JSON.parse(value || "{}"));
-    } catch {
-      return null;
-    }
-  };
-
-  const directParsed = tryParse(source);
-  if (directParsed) return directParsed;
-
-  const fencedMatch = source.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fencedMatch?.[1]) {
-    const fencedParsed = tryParse(fencedMatch[1]);
-    if (fencedParsed) return fencedParsed;
-  }
-
-  const jsonMatch = source.match(/\{[\s\S]*\}/);
-  if (jsonMatch?.[0]) {
-    const looseParsed = tryParse(jsonMatch[0]);
-    if (looseParsed) return looseParsed;
-  }
-
-  return DEFAULT_ROUTE_PLAN;
-};
-
-const buildRoutePlannerMessages = (
-  messages: any[],
-  systemInstruction?: string
-) => {
-  const lastUserText = getLastUserText(messages);
-
-  const recentHistory = (messages || [])
-    .slice(-8)
-    .map((m: any, i: number) => {
-      const role =
-        m?.role === "assistant" || m?.role === "model"
-          ? "assistant"
-          : m?.role === "system"
-          ? "system"
-          : "user";
-
-      return `${i + 1}. ${role}: ${extractTextFromContent(m?.content || "")}`;
-    })
-    .filter(Boolean)
-    .join("\n");
-
-  return [
-    ...(systemInstruction?.trim()
-      ? [
-          {
-            role: "system",
-            content: systemInstruction.trim(),
-          },
-        ]
-      : []),
-    {
-      role: "system",
-      content: ROUTE_PLANNER_PROMPT,
-    },
-    {
-      role: "user",
-      content: [
-        `Latest user message:\n${lastUserText}`,
-        recentHistory ? `Recent chat history:\n${recentHistory}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
-    },
-  ];
-};
-
-const runRoutePlanner = async (
-  apiKey: string,
-  messages: any[],
-  systemInstruction?: string
-): Promise<RoutePlan> => {
-  try {
-    const plannerRes = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
-        messages: buildRoutePlannerMessages(messages, systemInstruction),
-        temperature: 0,
-        max_completion_tokens: 120,
-        reasoning_effort: "high",
-      }),
-    });
-
-    const plannerRaw = await plannerRes.text();
-
-    if (!plannerRes.ok) {
-      return DEFAULT_ROUTE_PLAN;
-    }
-
-    let plannerData: any = null;
-    try {
-      plannerData = plannerRaw ? JSON.parse(plannerRaw) : null;
-    } catch {
-      plannerData = null;
-    }
-
-    const plannerMsg = plannerData?.choices?.[0]?.message;
-    const plannerContent = plannerMsg?.content;
-
-    let raw = "";
-
-    if (typeof plannerContent === "string") {
-      raw = plannerContent;
-    } else if (Array.isArray(plannerContent)) {
-      raw = plannerContent
-        .map((p: any) =>
-          typeof p === "string"
-            ? p
-            : typeof p?.text === "string"
-            ? p.text
-            : typeof p?.content === "string"
-            ? p.content
-            : ""
-        )
-        .join("");
-    } else if (typeof plannerData?.choices?.[0]?.text === "string") {
-      raw = plannerData.choices[0].text;
-    } else if (typeof plannerData?.output_text === "string") {
-      raw = plannerData.output_text;
-    }
-
-    return parseRoutePlan(raw);
-  } catch {
-    return DEFAULT_ROUTE_PLAN;
-  }
+  return capabilityPattern.test(q) && !directActionPattern.test(q);
 };
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
@@ -547,22 +390,15 @@ const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
       return res.status(400).json({ error: "modelId is required" });
     }
 
-    const routePlan = await runRoutePlanner(apiKey, messages, systemInstruction);
-
-const finalModelId =
-  routePlan.route === "web"
-    ? "groq/compound"
-    : routePlan.route === "hard"
-      ? "openai/gpt-oss-120b"
-      : modelId || "llama-3.3-70b-versatile";
-
-const ossSystem = {
+    const finalModelId = modelId || "llama-3.3-70b-versatile";
+  const ossSystem = {
   role: "system",
   content:
-    "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and keep reasoning concise but correct.",
+    "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and always give a clear final answer in normal text. For math answers, use simple normal language and write math in ordinary school-style notation such as x^2, 1/x, (a+b), sqrt(x), >=, <=. Do not use raw LaTeX commands like \\frac, \\sqrt, \\ge, \\[, or unusual symbolic notation.",
 };
 
-const capabilityMode = routePlan.capabilityMode;
+const lastUserText = getLastUserText(messages);
+const capabilityMode = isCapabilityQuestion(lastUserText);
 const capabilitySystem = {
   role: "system",
   content: CAPABILITY_SYSTEM_PROMPT,
@@ -689,4 +525,4 @@ const cleaned =
 
 return res.status(200).json({
   text: `${debugPrefix}\n${cleaned}`,
-});         
+});            
