@@ -430,10 +430,11 @@ const finalMessages = capabilityMode
       ...(useThinkingSystem ? [ossSystem] : []),
       ...messages,
     ];
-    const requestBody: Record<string, any> = {
+const requestBody: Record<string, any> = {
   model: finalModelId,
   messages: finalMessages,
   temperature: 0.7,
+  stream: Boolean(stream),
 };
 
 if (finalModelId === "openai/gpt-oss-120b") {
@@ -457,6 +458,52 @@ const upstream = await fetch(apiUrl, {
   },
   body: JSON.stringify(requestBody),
 });
+
+if (mode === "chat" && stream) {
+  if (!upstream.ok || !upstream.body) {
+    const streamErrText = await upstream.text();
+
+    let streamErrData: any = null;
+    try {
+      streamErrData = streamErrText ? JSON.parse(streamErrText) : null;
+    } catch {
+      streamErrData = null;
+    }
+
+    const streamMsg =
+      streamErrData?.error?.message ||
+      streamErrData?.error ||
+      streamErrData?.message ||
+      streamErrText.slice(0, 250) ||
+      "API Error";
+
+    return res.status(upstream.status).json({
+      error: streamMsg,
+      data: streamErrData,
+    });
+  }
+
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(decoder.decode(value, { stream: true }));
+    }
+
+    res.end();
+    return;
+  } catch {
+    res.end();
+    return;
+  }
+}
 
     const rawBody = await upstream.text();
 
