@@ -547,15 +547,22 @@ const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
       return res.status(400).json({ error: "modelId is required" });
     }
 
-    const finalModelId = modelId || "llama-3.3-70b-versatile";
-  const ossSystem = {
+    const routePlan = await runRoutePlanner(apiKey, messages, systemInstruction);
+
+const finalModelId =
+  routePlan.route === "web"
+    ? "groq/compound"
+    : routePlan.route === "hard"
+      ? "openai/gpt-oss-120b"
+      : modelId || "llama-3.3-70b-versatile";
+
+const ossSystem = {
   role: "system",
   content:
-    "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and always give a clear final answer in normal text. For math answers, use simple normal language and write math in ordinary school-style notation such as x^2, 1/x, (a+b), sqrt(x), >=, <=. Do not use raw LaTeX commands like \\frac, \\sqrt, \\ge, \\[, or unusual symbolic notation.",
+    "You are a meticulous problem solver. For math, science, coding, and logic tasks: restate briefly, plan steps, solve carefully, and keep reasoning concise but correct.",
 };
 
-const lastUserText = getLastUserText(messages);
-const capabilityMode = isCapabilityQuestion(lastUserText);
+const capabilityMode = routePlan.capabilityMode;
 const capabilitySystem = {
   role: "system",
   content: CAPABILITY_SYSTEM_PROMPT,
