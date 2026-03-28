@@ -635,6 +635,17 @@ if (isThinkingModel) {
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
 const systemPrompt = tool ? tool.prompt : "";
 
+const regenBotMessageId = Date.now().toString();
+
+const streamingRegenBotMessage: Message = {
+  id: regenBotMessageId,
+  role: Role.MODEL,
+  content: "",
+  timestamp: Date.now()
+};
+
+updateConversation([...previousMessages, streamingRegenBotMessage]);
+
 const response = await getGeminiResponse({
   prompt: lastUserPrompt,
   history: previousMessages.slice(-12),
@@ -645,23 +656,33 @@ const response = await getGeminiResponse({
     return typeof firstImage === "string"
       ? firstImage
       : firstImage?.base64 ||
-          firstImage?.imageBase64 ||
-          firstImage?.dataUrl ||
-          firstImage?.url ||
-          "";
+        firstImage?.imageBase64 ||
+        firstImage?.dataUrl ||
+        firstImage?.url ||
+        "";
   })(),
   mimeType: (() => {
     const firstImage: any = images?.[0];
     return firstImage?.mimeType || firstImage?.type || "image/jpeg";
   })(),
+  onChunk: (text) => {
+    updateConversation([
+      ...previousMessages,
+      {
+        ...streamingRegenBotMessage,
+        content: text,
+      },
+    ]);
+  },
 });
-      const botMessage: Message = {
-        id: Date.now().toString(),
-        role: Role.MODEL,
-        content: response,
-        timestamp: Date.now()
-      };
-      updateConversation([...previousMessages, botMessage]);
+
+updateConversation([
+  ...previousMessages,
+  {
+    ...streamingRegenBotMessage,
+    content: response,
+  },
+]);
     } catch (error) {
       console.error(error);
     } finally {
