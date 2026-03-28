@@ -38,16 +38,17 @@ const userKey = getUserApiKey();
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    mode: "chat",
-    modelId,
-    prompt,
-    messages,
-    systemInstruction,
-    imageBase64,
-    mimeType,
-    userApiKey: userKey,
-    userKey,
-  }),
+  mode: "chat",
+  stream: true,
+  modelId,
+  prompt,
+  messages,
+  systemInstruction,
+  imageBase64,
+  mimeType,
+  userApiKey: userKey,
+  userKey,
+}),
 });
 
 const rawText = await res.text();
