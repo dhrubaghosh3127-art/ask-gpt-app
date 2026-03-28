@@ -519,7 +519,18 @@ if (isThinkingModel) {
   stopThinking();
 }
 
-      const response = await getGeminiResponse({
+      const botMessageId = (Date.now() + 1).toString();
+
+const streamingBotMessage: Message = {
+  id: botMessageId,
+  role: Role.MODEL,
+  content: "",
+  timestamp: Date.now()
+};
+
+updateConversation([...updatedMessages, streamingBotMessage]);
+
+const response = await getGeminiResponse({
   prompt: images.length > 0 ? routeContent : content,
   history: apiHistory,
   modelId: routeModelId,
@@ -529,24 +540,33 @@ if (isThinkingModel) {
     return typeof firstImage === "string"
       ? firstImage
       : firstImage?.base64 ||
-          firstImage?.imageBase64 ||
-          firstImage?.dataUrl ||
-          firstImage?.url ||
-          "";
+        firstImage?.imageBase64 ||
+        firstImage?.dataUrl ||
+        firstImage?.url ||
+        "";
   })(),
   mimeType: (() => {
     const firstImage: any = images?.[0];
     return firstImage?.mimeType || firstImage?.type || "image/jpeg";
   })(),
+  onChunk: (text) => {
+    updateConversation([
+      ...updatedMessages,
+      {
+        ...streamingBotMessage,
+        content: text,
+      },
+    ]);
+  },
 });
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: Role.MODEL,
-        content: response,
-        timestamp: Date.now()
-      };
 
-      updateConversation([...updatedMessages, botMessage]);
+updateConversation([
+  ...updatedMessages,
+  {
+    ...streamingBotMessage,
+    content: response,
+  },
+]);
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
