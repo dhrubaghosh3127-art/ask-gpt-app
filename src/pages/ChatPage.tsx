@@ -519,18 +519,7 @@ if (isThinkingModel) {
   stopThinking();
 }
 
-      const botMessageId = (Date.now() + 1).toString();
-
-const streamingBotMessage: Message = {
-  id: botMessageId,
-  role: Role.MODEL,
-  content: "",
-  timestamp: Date.now()
-};
-
-updateConversation([...updatedMessages, streamingBotMessage]);
-
-const response = await getGeminiResponse({
+      const response = await getGeminiResponse({
   prompt: images.length > 0 ? routeContent : content,
   history: apiHistory,
   modelId: routeModelId,
@@ -549,24 +538,16 @@ const response = await getGeminiResponse({
     const firstImage: any = images?.[0];
     return firstImage?.mimeType || firstImage?.type || "image/jpeg";
   })(),
-  onChunk: (text) => {
-    updateConversation([
-      ...updatedMessages,
-      {
-        ...streamingBotMessage,
-        content: text,
-      },
-    ]);
-  },
 });
 
-updateConversation([
-  ...updatedMessages,
-  {
-    ...streamingBotMessage,
-    content: response,
-  },
-]);
+const botMessage: Message = {
+  id: (Date.now() + 1).toString(),
+  role: Role.MODEL,
+  content: response,
+  timestamp: Date.now()
+};
+
+updateConversation([...updatedMessages, botMessage]);
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -635,17 +616,6 @@ if (isThinkingModel) {
       const tool = TOOL_CATEGORIES.find(t => t.id === conversation?.category);
 const systemPrompt = tool ? tool.prompt : "";
 
-const regenBotMessageId = Date.now().toString();
-
-const streamingRegenBotMessage: Message = {
-  id: regenBotMessageId,
-  role: Role.MODEL,
-  content: "",
-  timestamp: Date.now()
-};
-
-updateConversation([...previousMessages, streamingRegenBotMessage]);
-
 const response = await getGeminiResponse({
   prompt: lastUserPrompt,
   history: previousMessages.slice(-12),
@@ -665,24 +635,16 @@ const response = await getGeminiResponse({
     const firstImage: any = images?.[0];
     return firstImage?.mimeType || firstImage?.type || "image/jpeg";
   })(),
-  onChunk: (text) => {
-    updateConversation([
-      ...previousMessages,
-      {
-        ...streamingRegenBotMessage,
-        content: text,
-      },
-    ]);
-  },
 });
 
-updateConversation([
-  ...previousMessages,
-  {
-    ...streamingRegenBotMessage,
-    content: response,
-  },
-]);
+const botMessage: Message = {
+  id: Date.now().toString(),
+  role: Role.MODEL,
+  content: response,
+  timestamp: Date.now()
+};
+
+updateConversation([...previousMessages, botMessage]);
     } catch (error) {
       console.error(error);
     } finally {
