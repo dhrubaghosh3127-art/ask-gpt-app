@@ -34,12 +34,11 @@ content: m.content,
     { role: "user", content: prompt.slice(0, 1200) },
   ];
 const userKey = getUserApiKey();
-const res = await fetch(API_URL, {
+  const res = await fetch(API_URL, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     mode: "chat",
-    stream: true,
     modelId,
     prompt,
     messages,
@@ -50,99 +49,6 @@ const res = await fetch(API_URL, {
     userKey,
   }),
 });
-
-const contentType = res.headers.get("content-type") || "";
-
-if (contentType.includes("text/event-stream")) {
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(errText.slice(0, 500) || "API Error");
-  }
-
-  if (!res.body) {
-    throw new Error("Empty stream response");
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-
-  let buffer = "";
-  let streamedText = "";
-
-  const extractStreamChunk = (parsed: any): string => {
-    const delta = parsed?.choices?.[0]?.delta;
-
-    if (typeof delta?.content === "string") {
-      return delta.content;
-    }
-
-    if (Array.isArray(delta?.content)) {
-      return delta.content
-        .map((part: any) =>
-          typeof part === "string"
-            ? part
-            : typeof part?.text === "string"
-              ? part.text
-              : typeof part?.content === "string"
-                ? part.content
-                : ""
-        )
-        .join("");
-    }
-
-    if (typeof parsed?.choices?.[0]?.text === "string") {
-      return parsed.choices[0].text;
-    }
-
-    if (typeof parsed?.output_text === "string") {
-      return parsed.output_text;
-    }
-
-    return "";
-  };
-
-  const handleStreamLine = (line: string) => {
-    if (!line.startsWith("data:")) return;
-
-    const payload = line.slice(5).trim();
-    if (!payload || payload === "[DONE]") return;
-
-    let parsed: any = null;
-    try {
-      parsed = JSON.parse(payload);
-    } catch {
-      return;
-    }
-
-    const chunk = extractStreamChunk(parsed);
-    if (!chunk) return;
-
-    streamedText += chunk;
-    onChunk?.(streamedText);
-  };
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-
-    const parts = buffer.split("\n");
-    buffer = parts.pop() || "";
-
-    for (const part of parts) {
-      const line = part.trim();
-      if (line) handleStreamLine(line);
-    }
-  }
-
-  const tail = buffer.trim();
-  if (tail) {
-    handleStreamLine(tail);
-  }
-
-  return streamedText.trim() || "⚠️ Empty response from model";
-}
 
 const rawText = await res.text();
 
@@ -158,12 +64,12 @@ if (!res.ok) {
     data?.error ||
       data?.details ||
       rawText.slice(0, 500) ||
-      "API Error"
+      'API Error'
   );
 }
 
-if (!data) {
-  throw new Error(rawText.slice(0, 500) || "Invalid JSON response");
+  if (!data) {
+  throw new Error(rawText.slice(0, 500) || 'Invalid JSON response');
 }
 
 const trace = data?.trace || {};
@@ -198,9 +104,7 @@ const debugParts = [
         debug?.usedSupportSearch
       )} reasoning=${Boolean(debug?.usedReasoning)} verify=${Boolean(
         debug?.usedVerify
-      )} fast=${Boolean(debug?.usedFast)} refine=${Boolean(
-        debug?.usedRefine
-      )}`
+      )} fast=${Boolean(debug?.usedFast)} refine=${Boolean(debug?.usedRefine)}`
     : "",
 ].filter(Boolean);
 
