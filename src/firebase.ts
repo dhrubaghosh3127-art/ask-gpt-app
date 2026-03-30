@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyDDZc9JVd-yKys2BR55IHTdEjAkh-cEbXs',
-  authDomain: 'ask-gpt-app.vercel.app',
+  authDomain: 'ask-gpt-2f61d.firebaseapp.com',
   projectId: 'ask-gpt-2f61d',
   storageBucket: 'ask-gpt-2f61d.firebasestorage.app',
   messagingSenderId: '280092322654',
