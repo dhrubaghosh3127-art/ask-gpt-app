@@ -59,48 +59,62 @@ const AuthPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const handledRef = useRef(false);
 
-  useEffect(() => {
-    const savedAuth = getAuthState();
+useEffect(() => {
+  const savedAuth = getAuthState();
 
-    if (savedAuth.isLoggedIn && savedAuth.user) {
-      navigate('/chat', { replace: true });
-      return;
-    }
-getRedirectResult(auth).then((result) => {
-  const redirectUser = result?.user;
-
-  if (!redirectUser || !redirectUser.email) return;
-  if (handledRef.current) return;
-
-  handledRef.current = true;
-
-  const existingUser = getUserProfile(redirectUser.uid);
-
-  if (existingUser) {
-    saveAuthState({
-      isGuest: false,
-      isLoggedIn: true,
-      hasSeenAuthScreen: true,
-      user: existingUser,
-    });
-
-    clearGuestMode();
-    clearGuestConversations();
+  if (savedAuth.isLoggedIn && savedAuth.user) {
     navigate('/chat', { replace: true });
     return;
   }
 
-  navigate('/complete-profile', {
-    replace: true,
-    state: {
-      uid: redirectUser.uid,
-      email: redirectUser.email,
-      provider: 'google',
-    },
-  });
-});
+  const handleGoogleUser = (
+    firebaseUser: { uid: string; email: string | null } | null
+  ) => {
+    if (!firebaseUser || !firebaseUser.email) return;
+    if (handledRef.current) return;
 
-    }, [navigate]);
+    handledRef.current = true;
+
+    const existingUser = getUserProfile(firebaseUser.uid);
+
+    if (existingUser) {
+      saveAuthState({
+        isGuest: false,
+        isLoggedIn: true,
+        hasSeenAuthScreen: true,
+        user: existingUser,
+      });
+
+      clearGuestMode();
+      clearGuestConversations();
+      navigate('/chat', { replace: true });
+      return;
+    }
+
+    navigate('/complete-profile', {
+      replace: true,
+      state: {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        provider: 'google',
+      },
+    });
+  };
+
+  const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    handleGoogleUser(firebaseUser);
+  });
+
+  getRedirectResult(auth)
+    .then((result) => {
+      handleGoogleUser(result?.user ?? null);
+    })
+    .catch((error) => {
+      console.error('Redirect result failed:', error);
+    });
+
+  return () => unsubscribe();
+}, [navigate]);
 
   const handleSkip = () => {
     clearGuestConversations();
@@ -115,6 +129,7 @@ getRedirectResult(auth).then((result) => {
 
   const handleGoogleSignIn = async () => {
   try {
+    handledRef.current = false;
     setLoading(true);
     await setPersistence(auth, browserLocalPersistence);
     await signInWithRedirect(auth, googleProvider);
