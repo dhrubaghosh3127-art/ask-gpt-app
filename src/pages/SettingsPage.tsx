@@ -425,6 +425,7 @@ const [accentColor, setAccentColor] = useState<'default' | 'blue' | 'green' | 'y
   if (item.key === 'voice') navigate('/voice');
   if (item.key === 'data_controls') navigate('/data-controls');
   if (item.key === 'security') navigate('/security');
+    if (item.key === 'report_bug') navigate('/report-bug');
 }}
   className={`${rowBase} ${
     index === 0 ? 'rounded-t-[24px] rounded-b-[8px]' : ''
