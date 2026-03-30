@@ -132,7 +132,7 @@ const ReportBugPage: React.FC = () => {
               type="email"
               value={userEmail}
               onChange={(e) => setUserEmail(e.target.value)}
-              placeholder="example@mail.com"
+              placeholder="example@Gmail.com"
               className="w-full bg-transparent text-[16px] text-[#111111] outline-none placeholder:text-[#8c8c91] dark:text-white dark:placeholder:text-[#8c8c91]"
               style={{
                 fontFamily:
