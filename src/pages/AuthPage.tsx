@@ -57,10 +57,13 @@ const EmailIcon = () => (
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const handledRef = useRef(false);
+const handledRef = useRef(false);
+const [authError, setAuthError] = useState('');
 
 useEffect(() => {
   const savedAuth = getAuthState();
+const pendingGoogleLogin =
+  sessionStorage.getItem('ASKGPT_GOOGLE_LOGIN_PENDING') === 'true';
 
   if (savedAuth.isLoggedIn && savedAuth.user) {
     navigate('/chat', { replace: true });
@@ -105,13 +108,14 @@ useEffect(() => {
     handleGoogleUser(firebaseUser);
   });
 
-  getRedirectResult(auth)
-    .then((result) => {
-      handleGoogleUser(result?.user ?? null);
-    })
-    .catch((error) => {
-      console.error('Redirect result failed:', error);
-    });
+  const handleGoogleSignIn = async () => {
+  try {
+    handledRef.current = false;
+    setAuthError('');
+    sessionStorage.setItem('ASKGPT_GOOGLE_LOGIN_PENDING', 'true');
+    setLoading(true);
+    await setPersistence(auth, browserLocalPersistence);
+    await signInWithRedirect(auth, googleProvider);
 
   return () => unsubscribe();
 }, [navigate]);
@@ -130,6 +134,8 @@ useEffect(() => {
   const handleGoogleSignIn = async () => {
   try {
     handledRef.current = false;
+    setAuthError('');
+    sessionStorage.setItem('ASKGPT_GOOGLE_LOGIN_PENDING', 'true');
     setLoading(true);
     await setPersistence(auth, browserLocalPersistence);
     await signInWithRedirect(auth, googleProvider);
