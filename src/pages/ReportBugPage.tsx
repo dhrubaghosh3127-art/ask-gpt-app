@@ -106,7 +106,7 @@ const ReportBugPage: React.FC = () => {
             value={bugText}
             onChange={(e) => setBugText(e.target.value.slice(0, 2000))}
             placeholder="Tell us about the issue you encountered"
-            className="min-h-[220px] w-full resize-none bg-transparent text-[16px] leading-7 text-[#111111] outline-none placeholder:text-[#8c8c91] dark:text-white dark:placeholder:text-[#8c8c91]"
+            className="min-h-[170px] w-full resize-none bg-transparent text-[16px] leading-7 text-[#111111] outline-none placeholder:text-[#8c8c91] dark:text-white dark:placeholder:text-[#8c8c91]"
             style={{
               fontFamily:
                 '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
