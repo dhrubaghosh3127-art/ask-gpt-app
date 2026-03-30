@@ -13,6 +13,7 @@ import VoicePage from './pages/VoicePage';
 import DataControlsPage from './pages/DataControlsPage';
 import SecurityPage from './pages/SecurityPage';
 import ReportBugPage from './pages/ReportBugPage';
+import PersonalizationPage from './pages/PersonalizationPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import AuthPage from './pages/AuthPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
@@ -129,6 +130,7 @@ const startPath = useMemo(() => {
         <Route path="/data-controls" element={<DataControlsPage />} />
         <Route path="/security" element={<SecurityPage />} />
         <Route path="/report-bug" element={<ReportBugPage />} />
+        <Route path="/personalization" element={<PersonalizationPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/key" element={<KeySetup />} />
       </Routes>
