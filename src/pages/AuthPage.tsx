@@ -4,8 +4,7 @@ import {
   browserLocalPersistence,
   onAuthStateChanged,
   setPersistence,
-  signInWithRedirect,
-  getRedirectResult
+  signInWithPopup
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import {
@@ -67,13 +66,50 @@ useEffect(() => {
     return;
   }
 
-  const handleGoogleUser = (
-    firebaseUser: { uid: string; email: string | null } | null
-  ) => {
+  const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
     if (!firebaseUser || !firebaseUser.email) return;
-    if (handledRef.current) return;
 
-    handledRef.current = true;
+    const existingUser = getUserProfile(firebaseUser.uid);
+    if (!existingUser) return;
+
+    saveAuthState({
+      isGuest: false,
+      isLoggedIn: true,
+      hasSeenAuthScreen: true,
+      user: existingUser,
+    });
+
+    clearGuestMode();
+    clearGuestConversations();
+    navigate('/chat', { replace: true });
+  });
+
+  return () => unsubscribe();
+}, [navigate]);
+  const handleSkip = () => {
+    clearGuestConversations();
+    saveAuthState({
+      ...getDefaultAuthState(),
+      isGuest: true,
+      hasSeenAuthScreen: true,
+    });
+    setSeenGuestMode();
+    navigate('/chat');
+  };
+
+  const handleGoogleSignIn = async () => {
+  try {
+    setLoading(true);
+    await setPersistence(auth, browserLocalPersistence);
+
+    const result = await signInWithPopup(auth, googleProvider);
+    const firebaseUser = result.user;
+
+    if (!firebaseUser.email) {
+      setLoading(false);
+      alert('Google account email was not found.');
+      return;
+    }
 
     const existingUser = getUserProfile(firebaseUser.uid);
 
@@ -99,40 +135,6 @@ useEffect(() => {
         provider: 'google',
       },
     });
-  };
-
-  const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-    handleGoogleUser(firebaseUser);
-  });
-
-  getRedirectResult(auth)
-    .then((result) => {
-      handleGoogleUser(result?.user ?? null);
-    })
-    .catch((error) => {
-      console.error('Redirect result failed:', error);
-    });
-
-  return () => unsubscribe();
-}, [navigate]);
-
-  const handleSkip = () => {
-    clearGuestConversations();
-    saveAuthState({
-      ...getDefaultAuthState(),
-      isGuest: true,
-      hasSeenAuthScreen: true,
-    });
-    setSeenGuestMode();
-    navigate('/chat');
-  };
-
-  const handleGoogleSignIn = async () => {
-  try {
-    handledRef.current = false;
-    setLoading(true);
-    await setPersistence(auth, browserLocalPersistence);
-    await signInWithRedirect(auth, googleProvider);
   } catch (error) {
     setLoading(false);
     console.error('Google sign-in failed:', error);
