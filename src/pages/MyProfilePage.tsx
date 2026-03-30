@@ -8,12 +8,18 @@ const RowCard = ({
   icon,
   title,
   subtitle,
+  onClick,
 }: {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
+  onClick?: () => void;
 }) => (
-  <div className="rounded-[20px] bg-[#f7f7f8] px-4 py-3.5">
+  <button
+    type="button"
+    onClick={onClick}
+    className="w-full rounded-[20px] bg-[#f7f7f8] px-4 py-3.5 text-left"
+  >
     <div className="flex items-center gap-3">
       <div className="flex h-[24px] w-[24px] items-center justify-center text-[#111111]">
         {icon}
@@ -43,7 +49,7 @@ const RowCard = ({
         ) : null}
       </div>
     </div>
-  </div>
+  </button>
 );
 
 const MyProfilePage: React.FC = () => {
@@ -164,14 +170,15 @@ const MyProfilePage: React.FC = () => {
 
         <div className="space-y-2">
           <RowCard
-            icon={
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M8.5 14c.8 1 2 1.5 3.5 1.5s2.7-.5 3.5-1.5" />
-              </svg>
-            }
-            title="Personalization"
-          />
+  icon={
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8.5 14c.8 1.2 1.5 3.5 1.5s2.7.7 5.3 5-1.5" />
+    </svg>
+  }
+  title="Personalization"
+  onClick={() => navigate('/personalization')}
+/>
 
           <RowCard
             icon={
