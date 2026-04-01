@@ -62,8 +62,8 @@ const [authError, setAuthError] = useState('');
 
 useEffect(() => {
   const savedAuth = getAuthState();
-const pendingGoogleLogin =
-  sessionStorage.getItem('ASKGPT_GOOGLE_LOGIN_PENDING') === 'true';
+  const pendingGoogleLogin =
+    localStorage.getItem('ASKGPT_GOOGLE_LOGIN_PENDING') === 'true';
 
   if (savedAuth.isLoggedIn && savedAuth.user) {
     navigate('/chat', { replace: true });
@@ -77,6 +77,9 @@ const pendingGoogleLogin =
     if (handledRef.current) return;
 
     handledRef.current = true;
+    localStorage.removeItem('ASKGPT_GOOGLE_LOGIN_PENDING');
+    setLoading(false);
+    setAuthError('');
 
     const existingUser = getUserProfile(firebaseUser.uid);
 
@@ -105,49 +108,62 @@ const pendingGoogleLogin =
   };
 
   const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-    handleGoogleUser(firebaseUser);
+    if (firebaseUser?.email) {
+      handleGoogleUser(firebaseUser);
+    }
   });
 
-  const handleGoogleSignIn = async () => {
-  try {
-    handledRef.current = false;
-    setAuthError('');
-    sessionStorage.setItem('ASKGPT_GOOGLE_LOGIN_PENDING', 'true');
-    setLoading(true);
-    await setPersistence(auth, browserLocalPersistence);
-    await signInWithRedirect(auth, googleProvider);
+  getRedirectResult(auth)
+    .then((result) => {
+      if (result?.user?.email) {
+        handleGoogleUser(result.user);
+        return;
+      }
+
+      if (pendingGoogleLogin) {
+        localStorage.removeItem('ASKGPT_GOOGLE_LOGIN_PENDING');
+        setLoading(false);
+        setAuthError(
+          'Google login could not be completed. Possible causes: unauthorized domain, browser blocked the redirect, or the Google sign-in was cancelled.'
+        );
+      }
+    })
+    .catch((error) => {
+      localStorage.removeItem('ASKGPT_GOOGLE_LOGIN_PENDING');
+      setLoading(false);
+
+      const err = error as { code?: string; message?: string };
+
+      setAuthError(
+        `Google login failed. Code: ${err.code || 'unknown'} | Message: ${err.message || 'no message'}`
+      );
+
+      console.error('Redirect result failed:', error);
+    });
 
   return () => unsubscribe();
 }, [navigate]);
-
-  const handleSkip = () => {
-    clearGuestConversations();
-    saveAuthState({
-      ...getDefaultAuthState(),
-      isGuest: true,
-      hasSeenAuthScreen: true,
-    });
-    setSeenGuestMode();
-    navigate('/chat');
   };
 
   const handleGoogleSignIn = async () => {
   try {
     handledRef.current = false;
     setAuthError('');
-    sessionStorage.setItem('ASKGPT_GOOGLE_LOGIN_PENDING', 'true');
+    localStorage.setItem('ASKGPT_GOOGLE_LOGIN_PENDING', 'true');
     setLoading(true);
     await setPersistence(auth, browserLocalPersistence);
     await signInWithRedirect(auth, googleProvider);
   } catch (error) {
+    localStorage.removeItem('ASKGPT_GOOGLE_LOGIN_PENDING');
     setLoading(false);
-    console.error('Google sign-in failed:', error);
 
     const err = error as { code?: string; message?: string };
 
-    alert(
-      `Google sign-in failed\n\nCode: ${err.code || 'unknown'}\nMessage: ${err.message || 'no message'}`
+    setAuthError(
+      `Google sign-in failed. Code: ${err.code || 'unknown'} | Message: ${err.message || 'no message'}`
     );
+
+    console.error('Google sign-in failed:', error);
   }
 };
 
