@@ -57,13 +57,10 @@ const EmailIcon = () => (
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-const handledRef = useRef(false);
-const [authError, setAuthError] = useState('');
+  const handledRef = useRef(false);
 
 useEffect(() => {
   const savedAuth = getAuthState();
-  const pendingGoogleLogin =
-    localStorage.getItem('ASKGPT_GOOGLE_LOGIN_PENDING') === 'true';
 
   if (savedAuth.isLoggedIn && savedAuth.user) {
     navigate('/chat', { replace: true });
@@ -77,9 +74,6 @@ useEffect(() => {
     if (handledRef.current) return;
 
     handledRef.current = true;
-    localStorage.removeItem('ASKGPT_GOOGLE_LOGIN_PENDING');
-    setLoading(false);
-    setAuthError('');
 
     const existingUser = getUserProfile(firebaseUser.uid);
 
@@ -108,62 +102,46 @@ useEffect(() => {
   };
 
   const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-    if (firebaseUser?.email) {
-      handleGoogleUser(firebaseUser);
-    }
+    handleGoogleUser(firebaseUser);
   });
 
   getRedirectResult(auth)
     .then((result) => {
-      if (result?.user?.email) {
-        handleGoogleUser(result.user);
-        return;
-      }
-
-      if (pendingGoogleLogin) {
-        localStorage.removeItem('ASKGPT_GOOGLE_LOGIN_PENDING');
-        setLoading(false);
-        setAuthError(
-          'Google login could not be completed. Possible causes: unauthorized domain, browser blocked the redirect, or the Google sign-in was cancelled.'
-        );
-      }
+      handleGoogleUser(result?.user ?? null);
     })
     .catch((error) => {
-      localStorage.removeItem('ASKGPT_GOOGLE_LOGIN_PENDING');
-      setLoading(false);
-
-      const err = error as { code?: string; message?: string };
-
-      setAuthError(
-        `Google login failed. Code: ${err.code || 'unknown'} | Message: ${err.message || 'no message'}`
-      );
-
       console.error('Redirect result failed:', error);
     });
 
   return () => unsubscribe();
 }, [navigate]);
+
+  const handleSkip = () => {
+    clearGuestConversations();
+    saveAuthState({
+      ...getDefaultAuthState(),
+      isGuest: true,
+      hasSeenAuthScreen: true,
+    });
+    setSeenGuestMode();
+    navigate('/chat');
   };
 
   const handleGoogleSignIn = async () => {
   try {
     handledRef.current = false;
-    setAuthError('');
-    localStorage.setItem('ASKGPT_GOOGLE_LOGIN_PENDING', 'true');
     setLoading(true);
     await setPersistence(auth, browserLocalPersistence);
     await signInWithRedirect(auth, googleProvider);
   } catch (error) {
-    localStorage.removeItem('ASKGPT_GOOGLE_LOGIN_PENDING');
     setLoading(false);
+    console.error('Google sign-in failed:', error);
 
     const err = error as { code?: string; message?: string };
 
-    setAuthError(
-      `Google sign-in failed. Code: ${err.code || 'unknown'} | Message: ${err.message || 'no message'}`
+    alert(
+      `Google sign-in failed\n\nCode: ${err.code || 'unknown'}\nMessage: ${err.message || 'no message'}`
     );
-
-    console.error('Google sign-in failed:', error);
   }
 };
 
@@ -257,4 +235,4 @@ useEffect(() => {
   );
 };
 
-export default AuthPage;                
+export default AuthPage;
