@@ -95,78 +95,106 @@ const GeneralPage: React.FC = () => {
   }, [language]);
 
   return (
-  <div className="min-h-screen overflow-hidden bg-white text-[#111111] dark:bg-[#0b0b0c] dark:text-white">
-    <div className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-4">
-      <button
-        type="button"
-        onClick={() => navigate(-1)}
-        className="mb-3 flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f7f7f8] text-[#111111] dark:bg-[#17171a] dark:text-white"
-        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-      >
-        <ArrowLeftIcon />
-      </button>
+    <div
+      className="bg-white text-[#111111] dark:bg-[#0b0b0c] dark:text-white"
+      style={{ minHeight: '100dvh' }}
+    >
+      <div className="mx-auto flex w-full max-w-[430px] flex-col px-4 pt-4 pb-4">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-3 flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f7f7f8] text-[#111111] dark:bg-[#17181a] dark:text-white"
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          <ArrowLeftIcon />
+        </button>
 
-      <div
-        className="mb-3 flex items-center justify-center gap-3"
-        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-      >
-        <IconWrap>
-          <GlobeIcon />
-        </IconWrap>
-        <div className="text-[22px] font-semibold tracking-[-0.03em]">Language</div>
-      </div>
+        <div
+          className="mb-3 flex items-center justify-center gap-3"
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          <IconWrap>
+            <GlobeIcon />
+          </IconWrap>
+          <div className="text-[22px] font-bold tracking-[-0.03em]">Language</div>
+        </div>
 
-      <div
-        className="overflow-hidden rounded-[30px] border border-[#e8e8ee] bg-white dark:border-[#232329] dark:bg-[#111214]"
-        style={{ height: 'calc(100vh - 128px)' }}
-      >
-        <div className="flex h-full flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            {languageOptions.map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                onClick={() => setLanguage(item.value)}
-                className="flex w-full items-center gap-4 border-b border-[#ececf3] px-5 py-5 text-left last:border-b-0 dark:border-[#232329]"
-                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-              >
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                    language === item.value
-                      ? 'border-[#111111] dark:border-white'
-                      : 'border-[#8f8f95] dark:border-[#9b9ba1]'
-                  }`}
+        <div
+          className="overflow-hidden rounded-[30px] border border-[#e8e8ee] bg-white dark:border-[#232329] dark:bg-[#111214]"
+          style={{
+            minHeight: '0',
+            maxHeight: 'calc(100dvh - 152px)',
+          }}
+        >
+          <div className="flex max-h-[calc(100dvh-152px)] flex-col">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {languageOptions.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setLanguage(item.value)}
+                  className="flex w-full items-center gap-4 border-b border-[#ececf3] px-5 py-5 text-left last:border-b-0 dark:border-[#2a2b31]"
+                  style={{
+                    fontFamily:
+                      '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+                  }}
                 >
-                  {language === item.value ? (
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#111111] dark:bg-white" />
-                  ) : null}
-                </span>
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 ${
+                      language === item.value
+                        ? 'border-[#111111] dark:border-white'
+                        : 'border-[#8f8f95] dark:border-[#9b9ba1]'
+                    }`}
+                  >
+                    {language === item.value ? (
+                      <span className="h-4 w-4 rounded-full bg-[#111111] dark:bg-white" />
+                    ) : null}
+                  </span>
 
-                <span className="text-[14px] font-medium tracking-[-0.01em] text-[#111111] dark:text-white">
-                  {item.label}
-                </span>
+                  <span className="text-[14px] font-medium tracking-[-0.01em] text-[#111111] dark:text-white">
+                    {item.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="shrink-0 border-t border-[#ececf3] bg-white px-5 py-4 dark:border-[#232329] dark:bg-[#111214]">
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('appLanguage', language);
+                  navigate(-1);
+                }}
+                className="ml-auto block text-[17px] font-semibold text-[#111111] dark:text-white"
+                style={{
+                  fontFamily:
+                    '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+                }}
+              >
+                OK
               </button>
-            ))}
+            </div>
           </div>
+        </div>
 
-          <div className="border-t border-[#ececf3] bg-white px-5 py-4 dark:border-[#232329] dark:bg-[#111214]">
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.setItem('appLanguage', language);
-                navigate(-1);
-              }}
-              className="ml-auto block text-[17px] font-semibold text-[#111111] dark:text-white"
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif' }}
-            >
-              OK
-            </button>
-          </div>
+        <div
+          className="mt-3 text-center text-[13px] text-[#6b7280] dark:text-[#a1a1aa]"
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          Current: {currentLabel}
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default GeneralPage;
