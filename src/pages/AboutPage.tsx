@@ -168,7 +168,7 @@ const AboutPage: React.FC = () => {
                 '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
             }}
           >
-            From
+            Created by
           </div>
 
           <div
