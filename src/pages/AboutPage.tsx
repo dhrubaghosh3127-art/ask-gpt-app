@@ -159,7 +159,11 @@ const AboutPage: React.FC = () => {
 
         <div className="space-y-[12px]">
           <RowCard icon={<IconWrap><HelpIcon /></IconWrap>} title="Help center" />
-          <RowCard icon={<IconWrap><TermsIcon /></IconWrap>} title="Terms of use" />
+          <RowCard
+            icon={<IconWrap><TermsIcon /></IconWrap>}
+            title="Terms of use"
+            onClick={() => navigate('/terms-of-use')}
+          />
           <RowCard
   icon={<IconWrap><PrivacyIcon /></IconWrap>}
   title="Privacy policy"
