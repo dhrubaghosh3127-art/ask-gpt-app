@@ -162,13 +162,23 @@ const AboutPage: React.FC = () => {
 
         <div className="mt-auto pt-8 text-center">
           <div
-            className="text-[14px] font-semibold tracking-[-0.02em] text-[#111111]"
+            className="text-[13px] font-medium tracking-[-0.02em] text-[#7c7c82]"
             style={{
               fontFamily:
                 '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
             }}
           >
-            From ANIL GHOSH PROHOR
+            From
+          </div>
+
+          <div
+            className="mt-1 text-[14px] font-semibold tracking-[-0.02em] text-[#111111]"
+            style={{
+              fontFamily:
+                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+            }}
+          >
+            ANIL GHOSH PROHOR
           </div>
         </div>
       </div>
