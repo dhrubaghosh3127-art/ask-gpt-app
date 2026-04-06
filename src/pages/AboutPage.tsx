@@ -123,8 +123,8 @@ const AboutPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white text-[#111111]">
-      <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-4 pt-4 pb-5">
+    <div className="min-h-[100dvh] bg-white text-[#111111]">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col px-4 pt-4 pb-6">
         <button
           type="button"
           onClick={() => navigate(-1)}
