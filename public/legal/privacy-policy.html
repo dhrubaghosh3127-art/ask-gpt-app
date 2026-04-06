@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASK-GPT Privacy Policy</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --muted: #6f6f73;
+      --line: #e8e8ed;
+      --chip: #f5f5f7;
+      --card: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100dvh;
+    }
+
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--text);
+    }
+
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #4b4b50;
+    }
+
+    .icon-btn {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lang-wrap {
+      margin: 24px 0 34px;
+    }
+
+    .lang-select {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 16px 48px 16px 16px;
+      font-size: 17px;
+      line-height: 1.3;
+      outline: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #666 50%),
+        linear-gradient(135deg, #666 50%, transparent 50%);
+      background-position:
+        calc(100% - 24px) calc(50% - 3px),
+        calc(100% - 18px) calc(50% - 3px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+
+    .meta {
+      text-align: center;
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.5;
+      margin-bottom: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .title {
+      text-align: center;
+      font-size: clamp(42px, 7vw, 64px);
+      line-height: 1.02;
+      font-weight: 700;
+      letter-spacing: -0.055em;
+      margin: 0 0 28px;
+      color: var(--text);
+    }
+
+    .content {
+      font-size: 17px;
+      line-height: 1.85;
+      color: #2f2f33;
+    }
+
+    .content p {
+      margin: 0 0 22px;
+    }
+
+    .content h2 {
+      margin: 34px 0 14px;
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    .content ul {
+      margin: 0 0 22px 20px;
+      padding: 0;
+    }
+
+    .content li {
+      margin-bottom: 8px;
+    }
+
+    .content strong {
+      color: var(--text);
+    }
+
+    .lang-panel {
+      display: none;
+    }
+
+    .lang-panel.active {
+      display: block;
+    }
+
+    .footer {
+      margin-top: 56px;
+      padding-top: 26px;
+      border-top: 1px solid var(--line);
+    }
+
+    .socials {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+
+    .social-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 86px;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      user-select: none;
+    }
+
+    .footer-meta {
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .footer-meta strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 20px 16px 34px;
+      }
+
+      .brand {
+        font-size: 24px;
+      }
+
+      .meta {
+        font-size: 16px;
+      }
+
+      .content {
+        font-size: 16px;
+        line-height: 1.82;
+      }
+
+      .content h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">ASK-GPT</div>
+
+      <div class="top-icons" aria-hidden="true">
+        <span class="icon-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+        </span>
+        <span class="icon-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <path d="M9 4v16"></path>
+          </svg>
+        </span>
+      </div>
+    </header>
+
+    <div class="lang-wrap">
+      <select id="languageSelect" class="lang-select" aria-label="Select language">
+        <option value="en" selected>English</option>
+        <option value="bn">বাংলা (Bangla)</option>
+        <option value="hi">हिन्दी (Hindi)</option>
+      </select>
+    </div>
+
+    <div class="meta" id="updatedLabel">Updated: 5-4-2026</div>
+    <h1 class="title" id="policyTitle">Privacy policy</h1>
+
+    <!-- English -->
+    <section class="lang-panel active" data-lang="en">
+      <div class="content">
+        <p>
+          ASK-GPT respects user privacy and is committed to handling user information responsibly and transparently.
+          This Privacy Policy explains what information ASK-GPT may process, how that information may be used,
+          how it may be stored, and how user privacy is respected when you use the app.
+        </p>
+
+        <p>
+          By accessing or using ASK-GPT, you acknowledge that you have read and understood this Privacy Policy.
+        </p>
+
+        <h2>1. About ASK-GPT</h2>
+        <p>
+          ASK-GPT is an AI-powered application that may provide chat assistance, writing assistance, reasoning support,
+          search-related features, voice-related features, and other AI-assisted tools.
+          ASK-GPT does not operate its own standalone AI model platform.
+          To provide app functionality, ASK-GPT may rely on third-party services, APIs, cloud infrastructure,
+          and storage or authentication services.
+        </p>
+
+        <h2>2. Information We May Process</h2>
+        <p>
+          If you sign in with Google, ASK-GPT may process your email address for sign-in,
+          account identification, account-related notices, and basic account support.
+        </p>
+
+        <p>
+          If you sign in and use saved chat features, your saved messages may be stored in Firebase
+          so that your chats are not lost and can remain available in your account.
+        </p>
+
+        <p>
+          If you voluntarily send a report, bug report, or support request, ASK-GPT may process
+          the contents of the report, your email address attached to the report, and any text, screenshot,
+          image, or file you choose to submit. This information may be reviewed only for support,
+          troubleshooting, and reply purposes.
+        </p>
+
+        <p>
+          ASK-GPT supports user-provided <strong>official Groq API keys only</strong>, including official Groq free keys
+          and official Groq paid keys. Unless support is officially added in the future, ASK-GPT does not state support
+          for other user-provided API providers.
+        </p>
+
+        <p>
+          According to the app’s intended design, user-provided API keys are stored locally on the user’s device
+          and are not intended to be kept as ordinary stored records on ASK-GPT servers for normal app use.
+          ASK-GPT is not designed as a service for routine manual reading or browsing of users’ locally stored personal API keys.
+        </p>
+
+        <h2>3. How We Use Information</h2>
+        <p>
+          ASK-GPT may use processed information only for the following purposes:
+        </p>
+        <ul>
+          <li>to allow user sign-in,</li>
+          <li>to keep saved chats available,</li>
+          <li>to provide app features,</li>
+          <li>to respond to support requests and reports,</li>
+          <li>to maintain app reliability and security,</li>
+          <li>to improve app stability and fix issues.</li>
+        </ul>
+
+        <h2>4. Third-Party Services</h2>
+        <p>
+          ASK-GPT may use third-party services and APIs to provide app functionality.
+          Depending on enabled features, this may include Groq, Firebase, Gemini,
+          and other third-party services that may be added in the future if necessary.
+        </p>
+
+        <p>
+          When ASK-GPT relies on a third-party provider to deliver a requested feature,
+          the content necessary for that feature may be processed through that provider.
+        </p>
+
+        <h2>5. App Limits and API Key Usage</h2>
+        <p>
+          ASK-GPT may apply its own app-level limits, access rules, message limits, fairness controls,
+          feature restrictions, and internal usage policies.
+        </p>
+
+        <p>
+          Using your own official Groq API key inside ASK-GPT does <strong>not</strong> automatically mean
+          that you will receive the full provider-side quota, full provider-side capacity,
+          or unrestricted provider-level usage inside the ASK-GPT platform.
+          The usage available inside ASK-GPT may differ from the usage available directly from Groq outside the app.
+          ASK-GPT may define and enforce separate app-level limits regardless of whether the user adds
+          an official Groq free key or an official Groq paid key.
+        </p>
+
+        <h2>6. Data We Do Not Routinely Read</h2>
+        <p>
+          ASK-GPT is not designed as a service for routine human reading of users’ private saved chats
+          or personal content.
+        </p>
+
+        <p>
+          However, if a user voluntarily submits a report, bug report, or support request,
+          the contents of that submission may be reviewed only to investigate the issue and respond.
+        </p>
+
+        <h2>7. Data Sharing</h2>
+        <p>
+          ASK-GPT does not sell user data.
+        </p>
+
+        <p>
+          ASK-GPT may share or transmit limited information only when reasonably necessary for app operation,
+          including with authentication or storage services such as Firebase,
+          with AI or API providers needed to complete requested features,
+          with service infrastructure required for app functionality,
+          or where required for legal compliance, security, abuse prevention, or service protection.
+        </p>
+
+        <h2>8. Data Storage</h2>
+        <p>
+          Depending on the feature used, some data may remain on the user’s device,
+          saved chats may be stored in Firebase if the user signs in and uses saved chat functionality,
+          and report or support submission data may be available to us when voluntarily submitted by the user.
+        </p>
+
+        <h2>9. Data Security</h2>
+        <p>
+          ASK-GPT takes reasonable measures intended to help protect stored information
+          and reduce unnecessary exposure of user data.
+        </p>
+
+        <p>
+          However, no method of storage, transmission, or online processing can be guaranteed
+          to be absolutely secure in every situation.
+        </p>
+
+        <h2>10. Account Deletion and Data Deletion</h2>
+        <p>
+          If ASK-GPT provides account-based functionality, users may request deletion of their account
+          and associated data through the in-app delete option, if available,
+          and through the official web deletion page provided by ASK-GPT.
+        </p>
+
+        <p>
+          Limited information may be retained where reasonably necessary for security,
+          fraud prevention, abuse prevention, legal compliance, or dispute handling.
+        </p>
+
+        <p><strong>Delete Account / Data Deletion URL:</strong> [Add your delete-account page URL here]</p>
+
+        <h2>11. Changes to This Privacy Policy</h2>
+        <p>
+          ASK-GPT may revise, update, or replace this Privacy Policy from time to time.
+          Updated versions may be published with a revised effective date.
+        </p>
+
+        <h2>12. Contact</h2>
+        <p>
+          For privacy-related questions, reports, or support requests, users may contact:
+        </p>
+        <p>
+          <strong>App Name:</strong> ASK-GPT<br />
+          <strong>Support Email:</strong> [Add your support email here]<br />
+          <strong>Contact Page:</strong> [Add your contact page URL here]
+        </p>
+      </div>
+    </section>
+
+    <!-- Bangla -->
+    <section class="lang-panel" data-lang="bn">
+      <div class="content">
+        <p>
+          ASK-GPT ব্যবহারকারীর গোপনীয়তাকে সম্মান করে এবং ব্যবহারকারীর তথ্য দায়িত্বশীল ও স্বচ্ছভাবে পরিচালনা করার চেষ্টা করে।
+          এই গোপনীয়তা নীতিতে ব্যাখ্যা করা হয়েছে, ASK-GPT কী ধরনের তথ্য প্রক্রিয়া করতে পারে,
+          সেই তথ্য কীভাবে ব্যবহার হতে পারে, কীভাবে সংরক্ষিত হতে পারে,
+          এবং app ব্যবহারের সময় ব্যবহারকারীর privacy কীভাবে সম্মান করা হয়।
+        </p>
+
+        <p>
+          ASK-GPT ব্যবহার করার মাধ্যমে আপনি স্বীকার করছেন যে আপনি এই গোপনীয়তা নীতিটি পড়েছেন এবং বুঝেছেন।
+        </p>
+
+        <h2>১. ASK-GPT সম্পর্কে</h2>
+        <p>
+          ASK-GPT একটি AI-powered application, যা chat assistance, writing assistance, reasoning support,
+          search-related feature, voice-related feature, এবং অন্যান্য AI-assisted tool প্রদান করতে পারে।
+          ASK-GPT নিজস্ব standalone AI model platform পরিচালনা করে না।
+          App feature provide করার জন্য ASK-GPT third-party service, API, cloud infrastructure,
+          এবং storage বা authentication service-এর উপর নির্ভর করতে পারে।
+        </p>
+
+        <h2>২. আমরা কী ধরনের তথ্য প্রক্রিয়া করতে পারি</h2>
+        <p>
+          আপনি যদি Google দিয়ে sign in করেন, তাহলে ASK-GPT আপনার email address ব্যবহার করতে পারে
+          sign-in, account identification, account-related notice, এবং basic account support-এর জন্য।
+        </p>
+
+        <p>
+          আপনি যদি sign in করে saved chat feature ব্যবহার করেন, তাহলে আপনার saved message Firebase-এ store হতে পারে,
+          যাতে আপনার chat হারিয়ে না যায় এবং account-এ available থাকে।
+        </p>
+
+        <p>
+          আপনি যদি স্বেচ্ছায় report, bug report, বা support request পাঠান, তাহলে ASK-GPT process করতে পারে
+          report-এর contents, report-এর সাথে attached email address,
+          এবং আপনি যে text, screenshot, image, বা file submit করেন।
+          এই তথ্য শুধুমাত্র support, troubleshooting, এবং reply purpose-এ review করা হতে পারে।
+        </p>
+
+        <p>
+          ASK-GPT app-এর ভিতরে user-provided <strong>official Groq API key only</strong> support করে,
+          যার মধ্যে রয়েছে official Groq free key এবং official Groq paid key।
+          ভবিষ্যতে officially add না করা পর্যন্ত অন্য user-provided API provider support করা হয়—এমন দাবি করা হচ্ছে না।
+        </p>
+
+        <p>
+          App-এর intended design অনুযায়ী user-provided API key user-এর নিজের device-এ locally store থাকে
+          এবং normal app use-এর জন্য ASK-GPT server-এ ordinary stored record হিসেবে রাখার উদ্দেশ্যে নয়।
+          ASK-GPT user-এর locally stored personal API key routine manual reading বা browsing-এর জন্য design করা হয়নি।
+        </p>
+
+        <h2>৩. আমরা তথ্য কীভাবে ব্যবহার করি</h2>
+        <p>ASK-GPT নিচের সীমিত উদ্দেশ্যে তথ্য ব্যবহার করতে পারে:</p>
+        <ul>
+          <li>user sign-in allow করা,</li>
+          <li>saved chat available রাখা,</li>
+          <li>app feature provide করা,</li>
+          <li>support request ও report-এর reply দেওয়া,</li>
+          <li>app reliability এবং security maintain করা,</li>
+          <li>app stability improve করা এবং issue fix করা।</li>
+        </ul>
+
+        <h2>৪. Third-Party Service</h2>
+        <p>
+          ASK-GPT app functionality provide করার জন্য third-party service এবং API ব্যবহার করতে পারে।
+          Enabled feature অনুযায়ী এর মধ্যে থাকতে পারে Groq, Firebase, Gemini,
+          এবং ভবিষ্যতে প্রয়োজন হলে add করা অন্যান্য third-party service।
+        </p>
+
+        <p>
+          ASK-GPT যখন কোনো requested feature complete করার জন্য third-party provider-এর উপর নির্ভর করে,
+          তখন সেই feature-এর জন্য দরকারি content সেই provider-এর মাধ্যমে process হতে পারে।
+        </p>
+
+        <h2>৫. App Limit এবং API Key Usage</h2>
+        <p>
+          ASK-GPT app-এর ভিতরে নিজস্ব app-level limit, access rule, message limit, fairness control,
+          feature restriction, এবং internal usage policy apply করতে পারে।
+        </p>
+
+        <p>
+          ASK-GPT-এর ভিতরে নিজের official Groq API key ব্যবহার করলেই আপনি ASK-GPT platform-এর ভিতরে
+          provider-side full quota, full provider-side capacity, বা unrestricted provider-level usage automatically পাবেন—এমন নয়।
+          ASK-GPT-এর ভিতরে available usage Groq-এর direct outside usage থেকে ভিন্ন হতে পারে।
+          User official Groq free key বা official Groq paid key যেটাই add করুক,
+          ASK-GPT তার নিজস্ব app-level limit define এবং enforce করতে পারে।
+        </p>
+
+        <h2>৬. যে data আমরা routine way-তে read করি না</h2>
+        <p>
+          ASK-GPT এমন service হিসেবে design করা হয়নি,
+          যেখানে users-এর private saved chat বা personal content routine way-তে manually পড়া হবে।
+        </p>
+
+        <p>
+          তবে user যদি স্বেচ্ছায় report, bug report, বা support request পাঠায়,
+          তাহলে সেই submission-এর content issue investigate করা এবং reply দেওয়ার জন্য review করা হতে পারে।
+        </p>
+
+        <h2>৭. Data Sharing</h2>
+        <p>ASK-GPT user data sell করে না।</p>
+
+        <p>
+          ASK-GPT শুধুমাত্র app operation-এর জন্য reasonably necessary হলে সীমিত তথ্য share বা transmit করতে পারে,
+          যেমন Firebase-এর মতো authentication বা storage service-এর সাথে,
+          requested feature complete করার জন্য AI/API provider-এর সাথে,
+          app functionality-এর জন্য দরকারি service infrastructure-এর সাথে,
+          অথবা legal compliance, security, abuse prevention, বা service protection-এর জন্য।
+        </p>
+
+        <h2>৮. Data Storage</h2>
+        <p>
+          Feature অনুযায়ী কিছু data user-এর device-এ locally থাকতে পারে,
+          user sign in করে saved chat ব্যবহার করলে saved chat Firebase-এ store হতে পারে,
+          এবং report বা support submission user স্বেচ্ছায় পাঠালে তা আমাদের কাছে available হতে পারে।
+        </p>
+
+        <h2>৯. Data Security</h2>
+        <p>
+          ASK-GPT stored information protect করা এবং unnecessary exposure কমানোর জন্য reasonable measure নেওয়ার চেষ্টা করে।
+        </p>
+
+        <p>
+          তবে কোনো storage, transmission, বা online processing method সব পরিস্থিতিতে absolutely secure বলে guarantee করা যায় না।
+        </p>
+
+        <h2>১০. Account Deletion এবং Data Deletion</h2>
+        <p>
+          যদি ASK-GPT account-based functionality provide করে, তাহলে user account এবং associated data deletion request করতে পারবে
+          in-app delete option-এর মাধ্যমে, যদি available থাকে,
+          এবং ASK-GPT-এর official web deletion page-এর মাধ্যমে।
+        </p>
+
+        <p>
+          Security, fraud prevention, abuse prevention, legal compliance, বা dispute handling-এর জন্য প্রয়োজন হলে limited information retain করা হতে পারে।
+        </p>
+
+        <p><strong>Delete Account / Data Deletion URL:</strong> [এখানে delete-account page URL দিন]</p>
+
+        <h2>১১. এই গোপনীয়তা নীতির পরিবর্তন</h2>
+        <p>
+          ASK-GPT সময়ে সময়ে এই গোপনীয়তা নীতি revise, update, বা replace করতে পারে।
+          Updated version revised effective date-সহ publish করা হতে পারে।
+        </p>
+
+        <h2>১২. Contact</h2>
+        <p>Privacy-related question, report, বা support request-এর জন্য যোগাযোগ করা যেতে পারে:</p>
+        <p>
+          <strong>App Name:</strong> ASK-GPT<br />
+           <strong>Support Email:</strong> [এখানে support email দিন]<br />
+          <strong>Contact Page:</strong> [এখানে contact page URL দিন]
+        </p>
+      </div>
+    </section>
+
+    <!-- Hindi -->
+    <section class="lang-panel" data-lang="hi">
+      <div class="content">
+        <p>
+          ASK-GPT उपयोगकर्ताओं की गोपनीयता का सम्मान करता है और उपयोगकर्ता जानकारी को जिम्मेदारी और पारदर्शिता के साथ संभालने का प्रयास करता है।
+          यह Privacy Policy बताती है कि ASK-GPT कौन-सी जानकारी process कर सकता है, उसका उपयोग कैसे किया जा सकता है,
+          उसे कैसे store किया जा सकता है, और app उपयोग के दौरान user privacy का सम्मान कैसे किया जाता है।
+        </p>
+
+        <p>
+          ASK-GPT का उपयोग करके आप स्वीकार करते हैं कि आपने इस Privacy Policy को पढ़ लिया है और समझ लिया है।
+        </p>
+
+        <h2>1. ASK-GPT के बारे में</h2>
+        <p>
+          ASK-GPT एक AI-powered application है, जो chat assistance, writing assistance, reasoning support,
+          search-related feature, voice-related feature, और अन्य AI-assisted tools प्रदान कर सकता है।
+          ASK-GPT अपना standalone AI model platform संचालित नहीं करता।
+          App functionality प्रदान करने के लिए ASK-GPT third-party services, APIs, cloud infrastructure,
+          और storage या authentication services पर निर्भर हो सकता है।
+        </p>
+
+        <h2>2. हम कौन-सी जानकारी process कर सकते हैं</h2>
+        <p>
+          यदि आप Google से sign in करते हैं, तो ASK-GPT आपके email address का उपयोग sign-in,
+          account identification, account-related notices, और basic account support के लिए कर सकता है।
+        </p>
+
+        <p>
+          यदि आप sign in करके saved chat feature का उपयोग करते हैं, तो आपके saved messages Firebase में store किए जा सकते हैं,
+          ताकि आपकी chats खो न जाएँ और account में उपलब्ध रहें।
+        </p>
+
+        <p>
+          यदि आप स्वेच्छा से कोई report, bug report, या support request भेजते हैं,
+          तो ASK-GPT report की contents, report से जुड़ा email address,
+          और आपके द्वारा भेजा गया text, screenshot, image, या file process कर सकता है।
+          यह जानकारी केवल support, troubleshooting, और reply purposes के लिए review की जा सकती है।
+        </p>
+
+        <p>
+          ASK-GPT app के भीतर केवल user-provided <strong>official Groq API keys</strong> support करता है,
+          जिनमें official Groq free keys और official Groq paid keys शामिल हैं।
+          भविष्य में officially add किए बिना अन्य user-provided API providers के support का दावा नहीं किया जाता।
+        </p>
+
+        <p>
+          App के intended design के अनुसार user-provided API keys user के device पर locally stored रहते हैं
+          और सामान्य app use के लिए ASK-GPT servers पर ordinary stored records के रूप में रखने के लिए intended नहीं हैं।
+          ASK-GPT users की locally stored personal API keys की routine manual reading या browsing के लिए design नहीं किया गया है।
+        </p>
+
+        <h2>3. हम जानकारी का उपयोग कैसे करते हैं</h2>
+        <p>ASK-GPT जानकारी का उपयोग केवल निम्न सीमित उद्देश्यों के लिए कर सकता है:</p>
+        <ul>
+          <li>user sign-in allow करने के लिए,</li>
+          <li>saved chats उपलब्ध रखने के लिए,</li>
+          <li>app features प्रदान करने के लिए,</li>
+          <li>support requests और reports का उत्तर देने के लिए,</li>
+          <li>app reliability और security बनाए रखने के लिए,</li>
+          <li>app stability improve करने और issues fix करने के लिए।</li>
+        </ul>
+
+        <h2>4. Third-Party Services</h2>
+        <p>
+          ASK-GPT app functionality प्रदान करने के लिए third-party services और APIs का उपयोग कर सकता है।
+          Enabled features के अनुसार इनमें Groq, Firebase, Gemini,
+          और भविष्य में आवश्यकता होने पर जोड़ी गई अन्य third-party services शामिल हो सकती हैं।
+        </p>
+
+        <p>
+          जब ASK-GPT किसी requested feature को पूरा करने के लिए किसी third-party provider पर निर्भर करता है,
+          तब उस feature के लिए आवश्यक content उस provider के माध्यम से process हो सकता है।
+        </p>
+
+        <h2>5. App Limits और API Key Usage</h2>
+        <p>
+          ASK-GPT app के भीतर अपने app-level limits, access rules, message limits, fairness controls,
+          feature restrictions, और internal usage policies लागू कर सकता है।
+        </p>
+
+        <p>
+          ASK-GPT के भीतर अपनी official Groq API key उपयोग करने का अर्थ यह नहीं है
+          कि आपको ASK-GPT platform के भीतर automatically full provider-side quota,
+          full provider-side capacity, या unrestricted provider-level usage मिल जाएगा।
+          ASK-GPT के भीतर उपलब्ध usage, Groq के direct outside usage से अलग हो सकता है।
+          User official Groq free key या official Groq paid key जो भी जोड़े,
+          ASK-GPT अपने अलग app-level limits define और enforce कर सकता है।
+        </p>
+
+        <h2>6. वह data जिसे हम routine रूप से नहीं पढ़ते</h2>
+        <p>
+          ASK-GPT को इस तरह design नहीं किया गया है कि users की private saved chats या personal content
+          को routine रूप से manually पढ़ा जाए।
+        </p>
+
+        <p>
+          हालांकि, यदि user स्वेच्छा से कोई report, bug report, या support request submit करता है,
+          तो उस submission की contents issue की जांच और reply देने के लिए review की जा सकती हैं।
+        </p>
+
+        <h2>7. Data Sharing</h2>
+        <p>ASK-GPT user data बेचता नहीं है।</p>
+
+        <p>
+          ASK-GPT केवल app operation के लिए reasonably necessary होने पर सीमित जानकारी share या transmit कर सकता है,
+          जैसे Firebase जैसे authentication या storage services के साथ,
+          requested features को पूरा करने के लिए AI/API providers के साथ,
+          app functionality के लिए आवश्यक service infrastructure के साथ,
+          या legal compliance, security, abuse prevention, या service protection के लिए।
+        </p>
+
+        <h2>8. Data Storage</h2>
+        <p>
+          Feature के अनुसार कुछ data user के device पर locally रह सकता है,
+          user sign in करके saved chats उपयोग करे तो saved chats Firebase में store हो सकते हैं,
+          और report या support submission user द्वारा voluntary रूप से भेजे जाने पर हमारे पास उपलब्ध हो सकते हैं।
+        </p>
+
+        <h2>9. Data Security</h2>
+        <p>
+          ASK-GPT stored information को protect करने और unnecessary exposure कम करने के लिए reasonable measures लेने का प्रयास करता है।
+        </p>
+
+        <p>
+          हालांकि, कोई भी storage, transmission, या online processing method हर स्थिति में absolutely secure होने की guarantee नहीं दे सकता।
+        </p>
+
+        <h2>10. Account Deletion और Data Deletion</h2>
+        <p>
+          यदि ASK-GPT account-based functionality प्रदान करता है,
+          तो user in-app delete option, यदि उपलब्ध हो,
+          और ASK-GPT के official web deletion page के माध्यम से account और associated data deletion request कर सकता है।
+        </p>
+
+        <p>
+          Security, fraud prevention, abuse prevention, legal compliance, या dispute handling के लिए आवश्यक होने पर limited information retain की जा सकती है।
+        </p>
+
+        <p><strong>Delete Account / Data Deletion URL:</strong> [यहाँ delete-account page URL जोड़ें]</p>
+
+        <h2>11. इस Privacy Policy में बदलाव</h2>
+        <p>
+          ASK-GPT समय-समय पर इस Privacy Policy को revise, update, या replace कर सकता है।
+          Updated version revised effective date के साथ publish किया जा सकता है।
+        </p>
+
+        <h2>12. Contact</h2>
+        <p>Privacy-related questions, reports, या support requests के लिए संपर्क किया जा सकता है:</p>
+        <p>
+          <strong>App Name:</strong> ASK-GPT<br />
+          <strong>Support Email:</strong> [यहाँ support email जोड़ें]<br />
+          <strong>Contact Page:</strong> [यहाँ contact page URL जोड़ें]
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="socials" aria-hidden="true">
+        <span class="social-chip">WhatsApp</span>
+        <span class="social-chip">Facebook</span>
+        <span class="social-chip">GitHub</span>
+        <span class="social-chip">X</span>
+      </div>
+
+      <div class="footer-meta">
+        <div><strong>ASK-GPT © 2026</strong></div>
+        <div>Founder / Created by</div>
+        <div><strong>ANIL GHOSH PROHOR</strong></div>
+        <div>GitHub</div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const select = document.getElementById('languageSelect');
+    const panels = document.querySelectorAll('.lang-panel');
+    const title = document.getElementById('policyTitle');
+
+    function setLanguage(lang) {
+      panels.forEach(panel => {
+        panel.classList.toggle('active', panel.dataset.lang === lang);
+      });
+
+      if (lang === 'bn') {
+        document.documentElement.lang = 'bn';
+        title.textContent = 'গোপনীয়তা নীতি';
+      } else if (lang === 'hi') {
+        document.documentElement.lang = 'hi';
+        title.textContent = 'गोपनीयता नीति';
+      } else {
+        document.documentElement.lang = 'en';
+        title.textContent = 'Privacy policy';
+      }
+    }
+
+    select.addEventListener('change', (e) => {
+      setLanguage(e.target.value);
+    });
+
+    setLanguage('en');
+  </script>
+</body>
+  </html>
