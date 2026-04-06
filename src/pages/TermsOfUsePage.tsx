@@ -6,12 +6,12 @@ const TermsOfUsePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-[#111111]">
-      <div className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-6">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col px-4 pt-4 pb-6">
+        <div className="relative mb-4 flex items-start justify-center">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f7f7f8] text-[#111111]"
+            className="absolute left-0 top-0 flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f7f7f8] text-[#111111]"
             style={{
               fontFamily:
                 '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
@@ -32,14 +32,17 @@ const TermsOfUsePage: React.FC = () => {
           </button>
 
           <div
-            className="flex-1 pl-3 text-[18px] font-bold tracking-[-0.03em] text-[#111111]"
+            className="pt-[4px] text-center"
             style={{
               fontFamily:
                 '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
             }}
           >
-            Terms of Use
-            <div className="mt-0.5 text-[11px] font-medium tracking-[-0.01em] text-[#7c7c82]">
+            <div className="text-[22px] font-bold tracking-[-0.03em] text-[#111111]">
+              TERMS OF USE
+            </div>
+
+            <div className="mt-1 text-[12px] font-semibold tracking-[-0.01em] text-[#5f5f63]">
               Effective Date: 5-4-2026
             </div>
           </div>
@@ -226,7 +229,7 @@ const TermsOfUsePage: React.FC = () => {
           </div>
        </div>
 
-        <div className="pt-6 text-center">
+        <div className="mt-auto pt-5 pb-1 text-center">
           <div
             className="text-[13px] font-medium tracking-[-0.02em] text-[#7c7c82]"
             style={{
