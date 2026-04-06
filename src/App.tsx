@@ -15,6 +15,7 @@ import SecurityPage from './pages/SecurityPage';
 import ReportBugPage from './pages/ReportBugPage';
 import PersonalizationPage from './pages/PersonalizationPage';
 import AboutPage from './pages/AboutPage';
+import TermsOfUsePage from './pages/TermsOfUsePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import AuthPage from './pages/AuthPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
@@ -133,6 +134,7 @@ const startPath = useMemo(() => {
         <Route path="/report-bug" element={<ReportBugPage />} />
         <Route path="/personalization" element={<PersonalizationPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/terms-of-use" element={<TermsOfUsePage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/key" element={<KeySetup />} />
       </Routes>
