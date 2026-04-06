@@ -92,9 +92,17 @@ type RowCardProps = {
   subtitle?: string;
 };
 
-const RowCard: React.FC<RowCardProps> = ({ icon, title, subtitle }) => (
+type RowCardProps = {
+  icon: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  onClick?: () => void;
+};
+
+const RowCard: React.FC<RowCardProps> = ({ icon, title, subtitle, onClick }) => (
   <button
     type="button"
+    onClick={onClick}
     className="w-full rounded-[24px] bg-[#f7f7f8] px-4 py-3 text-left"
     style={{
       fontFamily:
@@ -152,7 +160,11 @@ const AboutPage: React.FC = () => {
         <div className="space-y-[12px]">
           <RowCard icon={<IconWrap><HelpIcon /></IconWrap>} title="Help center" />
           <RowCard icon={<IconWrap><TermsIcon /></IconWrap>} title="Terms of use" />
-          <RowCard icon={<IconWrap><PrivacyIcon /></IconWrap>} title="Privacy policy" />
+          <RowCard
+  icon={<IconWrap><PrivacyIcon /></IconWrap>}
+  title="Privacy policy"
+  onClick={() => navigate('/privacy-policy')}
+/>
           <RowCard
             icon={<IconWrap><VersionIcon /></IconWrap>}
             title="ASK-GPT version"
