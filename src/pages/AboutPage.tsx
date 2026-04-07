@@ -170,8 +170,6 @@ const AboutPage: React.FC = () => {
             title="Privacy policy"
             onClick={() => window.open('/legal/privacy-policy.html', '_blank', 'noopener,noreferrer')}
           />
-  onClick={() => navigate('/privacy-policy')}
-/>
           <RowCard
             icon={<IconWrap><VersionIcon /></IconWrap>}
             title="ASK-GPT version"
