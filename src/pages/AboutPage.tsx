@@ -165,7 +165,6 @@ const AboutPage: React.FC = () => {
             onClick={() => navigate('/terms-of-use')}
           />
           <RowCard
-  <RowCard
             icon={<IconWrap><PrivacyIcon /></IconWrap>}
             title="Privacy policy"
             onClick={() => window.open('/legal/privacy-policy.html', '_blank', 'noopener,noreferrer')}
