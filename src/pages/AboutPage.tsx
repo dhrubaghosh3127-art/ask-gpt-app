@@ -162,7 +162,7 @@ const AboutPage: React.FC = () => {
           <RowCard
             icon={<IconWrap><TermsIcon /></IconWrap>}
             title="Terms of use"
-            onClick={() => navigate('/terms-of-use')}
+            onClick={() => window.open('/legal/terms-of-use.html', '_blank', 'noopener,noreferrer')}
           />
           <RowCard
             icon={<IconWrap><PrivacyIcon /></IconWrap>}
