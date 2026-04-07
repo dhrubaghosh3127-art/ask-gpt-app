@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASK-GPT Terms of Use</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --muted: #6e6e73;
+      --line: #e8e8ed;
+      --chip: #f5f5f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100dvh;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 22px 18px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      color: var(--text);
+    }
+
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: #4b4b50;
+    }
+
+    .top-icons svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+
+    .lang-wrap {
+      margin: 8px 0 42px;
+    }
+
+    .lang-select {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 15px 48px 15px 16px;
+      font-size: 17px;
+      line-height: 1.3;
+      outline: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #666 50%),
+        linear-gradient(135deg, #666 50%, transparent 50%);
+      background-position:
+        calc(100% - 24px) calc(50% - 3px),
+        calc(100% - 18px) calc(50% - 3px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+
+    .updated {
+      text-align: center;
+      font-size: 18px;
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      text-align: center;
+      font-size: clamp(42px, 7vw, 64px);
+      line-height: 1.03;
+      font-weight: 700;
+      letter-spacing: -0.06em;
+      margin: 0 0 36px;
+    }
+
+    .content {
+      font-size: 18px;
+      line-height: 1.9;
+      color: #2f2f33;
+    }
+
+    .content p {
+      margin: 0 0 24px;
+    }
+
+    .content h2 {
+      margin: 38px 0 14px;
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--text);
+    }
+
+    .content ul {
+      margin: 0 0 24px 22px;
+      padding: 0;
+    }
+
+    .content li {
+      margin-bottom: 8px;
+    }
+
+    .content strong {
+      color: var(--text);
+    }
+
+    .lang-panel {
+      display: none;
+    }
+
+    .lang-panel.active {
+      display: block;
+    }
+
+    .footer {
+      margin-top: 54px;
+      padding-top: 26px;
+      border-top: 1px solid var(--line);
+    }
+
+    .socials {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .social-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 92px;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      user-select: none;
+    }
+
+    .footer-meta {
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .footer-meta strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 18px 16px 34px;
+      }
+
+      .brand {
+        font-size: 24px;
+      }
+
+      .lang-select {
+        font-size: 16px;
+      }
+
+      .updated {
+        font-size: 16px;
+      }
+
+      .content {
+        font-size: 17px;
+        line-height: 1.85;
+      }
+
+      .content h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">ASK-GPT</div>
+
+      <div class="top-icons" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+          <path d="M9 4v16"></path>
+        </svg>
+      </div>
+    </header>
+
+    <div class="lang-wrap">
+      <select id="languageSelect" class="lang-select" aria-label="Select language">
+        <option value="en" selected>English</option>
+        <option value="bn">বাংলা (Bangla)</option>
+      </select>
+    </div>
+
+    <div class="updated" id="updatedText">Updated: 5-4-2026</div>
+    <h1 class="title" id="pageTitle">Terms of Use</h1>
+
+    <!-- English -->
+    <section class="lang-panel active" data-lang="en">
+      <div class="content">
+        <p>
+          Welcome to ASK-GPT. These Terms of Use (“Terms”) govern your access to and use of the ASK-GPT application,
+          website, and related services. By accessing or using ASK-GPT, you agree to these Terms.
+          If you do not agree, do not use the service.
+        </p>
+
+        <h2>1. About ASK-GPT</h2>
+        <p>
+          ASK-GPT is an AI-powered application that may provide chat assistance, writing support, reasoning support,
+          search-related features, voice-related features, and other AI-assisted tools.
+          ASK-GPT does not operate its own standalone AI model platform.
+          To provide its features, ASK-GPT may rely on third-party services, APIs, cloud infrastructure,
+          and storage or authentication services.
+        </p>
+
+        <h2>2. Eligibility and Acceptable Use</h2>
+        <p>You may use ASK-GPT only in a lawful, responsible, and authorized manner. You agree not to:</p>
+        <ul>
+          <li>use ASK-GPT for unlawful, abusive, harmful, fraudulent, misleading, or malicious purposes,</li>
+          <li>attempt to disrupt, damage, overload, reverse engineer, exploit, or interfere with the service,</li>
+          <li>use the service to violate the rights, privacy, safety, or security of others,</li>
+          <li>misuse reports, support systems, or platform features,</li>
+          <li>use ASK-GPT in any manner that violates applicable law or third-party provider rules.</li>
+        </ul>
+
+        <h2>3. Nature of AI Output</h2>
+        <p>
+          ASK-GPT provides AI-generated responses. AI output may be incomplete, inaccurate, outdated,
+          imperfect, or unsuitable for your particular use.
+        </p>
+        <p>
+          You are solely responsible for reviewing, verifying, and judging any output before relying on it.
+          ASK-GPT does not guarantee that any response will always be correct, complete, reliable,
+          or suitable for legal, medical, financial, academic, technical, or other important decisions.
+        </p>
+
+        <h2>4. User Accounts and Sign-In</h2>
+        <p>
+          Certain features may require sign-in. If you use Google Sign-In or any supported account system,
+          you are responsible for maintaining the security of your account and for activities associated with your account.
+        </p>
+        <p>
+          You must provide accurate information where required and must not impersonate another person
+          or misrepresent your identity.
+        </p>
+
+        <h2>5. Saved Chats and Account-Based Features</h2>
+        <p>
+          If you sign in and use saved chat features, ASK-GPT may store your saved messages and related account-linked data
+          in order to keep your chats available and prevent loss of conversation history.
+        </p>
+        <p>
+          ASK-GPT may change, limit, or remove saved chat functionality at any time.
+        </p>
+
+        <h2>6. User-Provided API Keys</h2>
+        <p>ASK-GPT supports user-provided <strong>official Groq API keys only</strong>, including:</p>
+        <ul>
+          <li>official Groq free API keys,</li>
+          <li>official Groq paid API keys.</li>
+        </ul>
+        <p>
+          Unless officially added in the future, ASK-GPT does not state support for other user-provided API providers.
+        </p>
+        <p>
+          According to the intended app design, user-provided API keys are stored locally on the user’s own device
+          and are not intended to be kept as ordinary stored records on ASK-GPT servers for normal app use.
+        </p>
+        <p>
+          You are solely responsible for the API key you enter, the security of that key,
+          your use of that key, and your compliance with Groq’s rules, limits, terms, pricing, and restrictions.
+        </p>
+
+        <h2>7. App Limits and Provider Limits</h2>
+        <p>
+          ASK-GPT may apply its own app-level limits, message limits, access rules, fairness controls,
+          feature restrictions, and internal usage policies.
+        </p>
+        <p>
+          Using your own official Groq API key inside ASK-GPT does <strong>not</strong> automatically mean
+          that you will receive the full provider-side quota, full provider-side capacity,
+          or unrestricted provider-level usage inside the ASK-GPT platform.
+        </p>
+        <p>
+          The limits available inside ASK-GPT may differ from the limits available directly from Groq outside the app.
+          ASK-GPT may define and enforce separate app-level limits regardless of whether the user adds
+          an official Groq free key or an official Groq paid key.
+        </p>
+
+        <h2>8. Third-Party Services</h2>
+        <p>
+          ASK-GPT may rely on third-party services and providers, including but not limited to Groq, Firebase,
+          Gemini, and other services that may be added in the future.
+        </p>
+        <p>
+          When you use ASK-GPT, your use may also be affected by the terms, limits, privacy policies,
+          technical behavior, pricing, and restrictions of those third-party services.
+          ASK-GPT is not responsible for the separate conduct, availability, or policies of third-party providers.
+        </p>
+
+        <h2>9. Reports, Bug Reports, and Support</h2>
+        <p>
+          If you voluntarily submit a report, bug report, or support request, ASK-GPT may review the contents
+          of that submission, including attached text, screenshots, files, or your contact email,
+          in order to investigate the issue and respond.
+        </p>
+        <p>
+          You agree not to abuse the reporting or support system with false, unlawful, harmful, or spam submissions.
+        </p>
+
+        <h2>10. Privacy</h2>
+        <p>
+          Your use of ASK-GPT is also governed by the ASK-GPT Privacy Policy.
+          By using ASK-GPT, you also acknowledge the Privacy Policy and any related data-handling disclosures.
+        </p>
+
+        <h2>11. Service Availability and Changes</h2>
+        <p>
+          ASK-GPT may update, modify, suspend, restrict, or discontinue any part of the service, feature, design,
+          model support, storage method, or access method at any time, with or without notice.
+        </p>
+        <p>
+          ASK-GPT does not guarantee uninterrupted service, permanent availability of any feature,
+          or continued support for any specific model, provider, API behavior, or limit structure.
+        </p>
+
+        <h2>12. Prohibited Reliance</h2>
+        <p>
+          ASK-GPT is not a substitute for professional advice, professional review, or independent verification.
+          You must not rely solely on ASK-GPT for decisions involving law, medicine, finance, safety,
+          official compliance, or other high-risk matters.
+        </p>
+
+        <h2>13. Intellectual Property and Platform Rights</h2>
+        <p>
+          All rights in the ASK-GPT app, branding, interface, layout, design, and platform materials remain reserved
+          to their respective owner(s), except where otherwise stated.
+        </p>
+        <p>
+          You may not copy, resell, redistribute, exploit, or misuse ASK-GPT or its platform materials
+          beyond lawful personal or authorized use.
+        </p>
+
+        <h2>14. Disclaimer of Warranties</h2>
+        <p>
+          ASK-GPT is provided on an “as is” and “as available” basis.
+          To the maximum extent permitted by applicable law, ASK-GPT disclaims warranties of any kind,
+          whether express or implied, including implied warranties of accuracy, reliability, availability,
+          merchantability, fitness for a particular purpose, and non-infringement.
+        </p>
+
+        <h2>15. Limitation of Liability</h2>
+        <p>
+          To the fullest extent permitted by applicable law, ASK-GPT and its creator, operator, developer,
+          or related parties shall not be liable for any direct, indirect, incidental, consequential, special,
+          exemplary, or punitive damages arising out of or related to your use of the app, your inability to use the app,
+          AI output, API key use, provider-side limitations, storage issues, service interruption, data loss,
+          or third-party service behavior.
+        </p>
+
+        <h2>16. Account Deletion and Data Deletion</h2>
+        <p>
+          If ASK-GPT provides account-based functionality, users may request deletion of their account
+          and associated data through the in-app delete option, if available,
+          and the official web deletion page provided by ASK-GPT.
+        </p>
+        <p>
+          Limited information may be retained where reasonably necessary for security, fraud prevention,
+          abuse prevention, legal compliance, or dispute handling.
+        </p>
+        <p><strong>Delete Account / Data Deletion URL:</strong> [Add your delete-account page URL here]</p>
+
+        <h2>17. Changes to These Terms</h2>
+        <p>
+          ASK-GPT may revise, update, or replace these Terms of Use at any time.
+          Updated versions may be published with a revised effective date.
+          Continued use of ASK-GPT after such changes may constitute acceptance of the updated Terms.
+        </p>
+
+        <h2>18. Contact</h2>
+        <p>For questions, reports, or support requests, users may contact:</p>
+        <p>
+          <strong>App Name:</strong> ASK-GPT<br />
+          <strong>Support Email:</strong> [Add your support email here]<br />
+          <strong>Contact Page:</strong> [Add your contact page URL here]
+        </p>
+      </div>
+    </section>
+
+    <!-- Bangla -->
+    <section class="lang-panel" data-lang="bn">
+      <div class="content">
+        <p>
+          ASK-GPT-এ স্বাগতম। এই ব্যবহারের শর্তাবলী (“Terms”) ASK-GPT application, website,
+          এবং সংশ্লিষ্ট service ব্যবহারের নিয়ম নির্ধারণ করে।
+          ASK-GPT ব্যবহার বা access করার মাধ্যমে আপনি এই Terms-এ সম্মতি দিচ্ছেন।
+          আপনি যদি সম্মত না হন, তাহলে service ব্যবহার করবেন না।
+        </p>
+
+        <h2>১. ASK-GPT সম্পর্কে</h2>
+        <p>
+          ASK-GPT একটি AI-powered application, যা chat assistance, writing support, reasoning support,
+          search-related feature, voice-related feature, এবং অন্যান্য AI-assisted tool প্রদান করতে পারে।
+          ASK-GPT নিজস্ব standalone AI model platform পরিচালনা করে না।
+          এর feature চালাতে ASK-GPT third-party service, API, cloud infrastructure,
+          এবং storage বা authentication service-এর উপর নির্ভর করতে পারে।
+        </p>
+
+        <h2>২. যোগ্যতা এবং গ্রহণযোগ্য ব্যবহার</h2>
+        <p>আপনি ASK-GPT শুধুমাত্র আইনসম্মত, দায়িত্বশীল, এবং অনুমোদিত উপায়ে ব্যবহার করতে পারবেন। আপনি সম্মত হচ্ছেন যে আপনি:</p>
+        <ul>
+          <li>ASK-GPT unlawful, abusive, harmful, fraudulent, misleading, বা malicious উদ্দেশ্যে ব্যবহার করবেন না,</li>
+          <li>service disrupt, damage, overload, reverse engineer, exploit, বা interfere করার চেষ্টা করবেন না,</li>
+          <li>অন্যের অধিকার, privacy, safety, বা security লঙ্ঘনের জন্য service ব্যবহার করবেন না,</li>
+          <li>report, support system, বা platform feature misuse করবেন না,</li>
+          <li>প্রযোজ্য আইন বা third-party provider rule ভঙ্গ করে ASK-GPT ব্যবহার করবেন না।</li>
+        </ul>
+
+        <h2>৩. AI output-এর প্রকৃতি</h2>
+        <p>
+          ASK-GPT AI-generated response প্রদান করে। AI output অসম্পূর্ণ, ভুল, outdated, imperfect,
+          বা আপনার নির্দিষ্ট ব্যবহারের জন্য অনুপযুক্ত হতে পারে।
+        </p>
+        <p>
+          যেকোনো output ব্যবহার বা বিশ্বাস করার আগে তা review, verify, এবং বিচার করার সম্পূর্ণ দায়িত্ব আপনার।
+          আইন, চিকিৎসা, অর্থনীতি, শিক্ষা, technical, বা অন্য গুরুত্বপূর্ণ সিদ্ধান্তের জন্য ASK-GPT-এর output
+          সবসময় correct, complete, reliable, বা suitable হবে—এমন কোনো guarantee দেওয়া হয় না।
+        </p>
+
+        <h2>৪. User account এবং sign-in</h2>
+        <p>
+          কিছু feature ব্যবহার করতে sign-in লাগতে পারে। আপনি যদি Google Sign-In বা supported account system ব্যবহার করেন,
+          তাহলে আপনার account-এর security এবং account-এর মাধ্যমে হওয়া activity-এর দায়িত্ব আপনার।
+        </p>
+        <p>
+          যেখানে প্রয়োজন সেখানে accurate information দিতে হবে এবং অন্য কারও পরিচয় ব্যবহার বা misrepresent করা যাবে না।
+        </p>
+
+        <h2>৫. Saved chat এবং account-based feature</h2>
+        <p>
+          আপনি sign in করে saved chat feature ব্যবহার করলে, আপনার saved message এবং account-linked data
+          chat available রাখার জন্য এবং conversation history হারানো রোধ করার জন্য store করা হতে পারে।
+        </p>
+        <p>
+          ASK-GPT যেকোনো সময় saved chat feature পরিবর্তন, সীমিত, বা remove করতে পারে।
+        </p>
+
+        <h2>৬. User-provided API key</h2>
+        <p>ASK-GPT app-এর ভিতরে user-provided <strong>official Groq API key only</strong> support করে, যার মধ্যে রয়েছে:</p>
+        <ul>
+          <li>official Groq free API key,</li>
+          <li>official Groq paid API key।</li>
+        </ul>
+        <p>
+          ভবিষ্যতে officially add না করা পর্যন্ত অন্য user-provided API provider support করা হয়—এমন দাবি করা হচ্ছে না।
+        </p>
+        <p>
+          App-এর intended design অনুযায়ী user-provided API key user-এর নিজের device-এ locally store থাকে
+          এবং normal app use-এর জন্য ASK-GPT server-এ ordinary stored record হিসেবে রাখার উদ্দেশ্যে নয়।
+        </p>
+        <p>
+          আপনি যে API key দেবেন, তার নিরাপত্তা, ব্যবহার, এবং Groq-এর rule, limit, terms, pricing,
+          এবং restriction মেনে চলার সম্পূর্ণ দায়িত্ব আপনার।
+        </p>
+
+        <h2>৭. App limit এবং provider limit</h2>
+        <p>
+          ASK-GPT app-এর ভিতরে নিজস্ব app-level limit, message limit, access rule, fairness control,
+          feature restriction, এবং internal usage policy apply করতে পারে।
+        </p>
+        <p>
+          ASK-GPT-এর ভিতরে নিজের official Groq API key ব্যবহার করলেই আপনি ASK-GPT platform-এর ভিতরে
+          provider-side full quota, full provider-side capacity, বা unrestricted provider-level usage automatically পাবেন—এমন নয়।
+        </p>
+        <p>
+          ASK-GPT-এর ভিতরে available limit, Groq-এর direct outside usage থেকে ভিন্ন হতে পারে।
+          User official Groq free key বা official Groq paid key যেটাই add করুক,
+          ASK-GPT তার নিজস্ব app-level limit define এবং enforce করতে পারে।
+        </p>
+
+        <h2>৮. Third-party service</h2>
+        <p>
+          ASK-GPT third-party service এবং provider-এর উপর নির্ভর করতে পারে, যার মধ্যে থাকতে পারে Groq, Firebase,
+          Gemini, এবং ভবিষ্যতে add করা অন্যান্য service।
+        </p>
+        <p>
+          আপনি ASK-GPT ব্যবহার করলে, third-party service-এর terms, limit, privacy policy, technical behavior,
+          pricing, এবং restriction-ও আপনার ব্যবহারে প্রভাব ফেলতে পারে।
+          ASK-GPT third-party provider-এর আলাদা conduct, availability, বা policy-এর জন্য দায়ী নয়।
+        </p>
+
+        <h2>৯. Report, bug report, এবং support</h2>
+        <p>
+          আপনি যদি স্বেচ্ছায় report, bug report, বা support request পাঠান, তাহলে ASK-GPT issue investigate করা
+          এবং reply দেওয়ার জন্য submission-এর content, attached text, screenshot, file,
+          বা contact email review করতে পারে।
+        </p>
+        <p>
+          আপনি report বা support system false, unlawful, harmful, বা spam submission-এর জন্য ব্যবহার করবেন না।
+        </p>
+
+        <h2>১০. Privacy</h2>
+        <p>
+          ASK-GPT ব্যবহার ASK-GPT Privacy Policy-এর অধীনেও পরিচালিত হবে।
+          ASK-GPT ব্যবহার করার মাধ্যমে আপনি Privacy Policy এবং data-handling disclosure সম্পর্কেও অবগত আছেন বলে গণ্য হবে।
+        </p>
+
+        <h2>১১. Service availability এবং পরিবর্তন</h2>
+        <p>
+          ASK-GPT যেকোনো সময় service, feature, design, model support, storage method,
+          বা access method update, modify, suspend, restrict, বা discontinue করতে পারে—notice থাকুক বা না থাকুক।
+        </p>
+        <p>
+          ASK-GPT uninterrupted service, কোনো feature-এর permanent availability,
+          বা কোনো নির্দিষ্ট model, provider, API behavior, বা limit structure-এর continued support guarantee করে না।
+        </p>
+
+        <h2>১২. নিষিদ্ধ নির্ভরতা</h2>
+        <p>
+          ASK-GPT professional advice, professional review, বা independent verification-এর বিকল্প নয়।
+          আপনি কেবল ASK-GPT-এর উপর নির্ভর করে আইন, চিকিৎসা, অর্থনীতি, নিরাপত্তা,
+          official compliance, বা অন্য high-risk matter-এ সিদ্ধান্ত নেবেন না।
+        </p>
+
+        <h2>১৩. মেধাস্বত্ব এবং platform rights</h2>
+        <p>
+          ASK-GPT app, branding, interface, layout, design, এবং platform material-এর সকল অধিকার
+          তাদের নিজ নিজ owner-এর জন্য সংরক্ষিত থাকবে, যদি অন্যভাবে উল্লেখ না করা হয়।
+        </p>
+        <p>
+          আপনি ASK-GPT বা এর platform material আইনসম্মত personal বা authorized use-এর বাইরে
+          copy, resell, redistribute, exploit, বা misuse করতে পারবেন না।
+        </p>
+
+        <h2>১৪. Warranty অস্বীকার</h2>
+        <p>
+          ASK-GPT “as is” এবং “as available” ভিত্তিতে প্রদান করা হয়।
+          প্রযোজ্য আইন যতটুকু অনুমতি দেয়, ASK-GPT কোনো express বা implied warranty প্রদান করে না,
+          যার মধ্যে accuracy, reliability, availability, merchantability,
+          fitness for a particular purpose, এবং non-infringement অন্তর্ভুক্ত।
+        </p>
+
+        <h2>১৫. Liability সীমাবদ্ধতা</h2>
+        <p>
+          প্রযোজ্য আইন যতটুকু অনুমতি দেয়, ASK-GPT এবং এর creator, operator, developer,
+          বা related party কোনো direct, indirect, incidental, consequential, special, exemplary,
+          বা punitive damage-এর জন্য দায়ী থাকবে না,
+          যদি তা সম্পর্কিত হয় app ব্যবহার, app ব্যবহার করতে না পারা, AI output, API key use,
+          provider-side limitation, storage issue, service interruption, data loss,
+          বা third-party service behavior-এর সাথে।
+        </p>
+
+        <h2>১৬. Account deletion এবং data deletion</h2>
+        <p>
+          যদি ASK-GPT account-based feature provide করে, তাহলে user account এবং associated data deletion request করতে পারবে
+          in-app delete option-এর মাধ্যমে, যদি available থাকে,
+          এবং ASK-GPT-এর official web deletion page-এর মাধ্যমে।
+        </p>
+        <p>
+          Security, fraud prevention, abuse prevention, legal compliance,
+          বা dispute handling-এর জন্য প্রয়োজন হলে limited information retain করা হতে পারে।
+        </p>
+        <p><strong>Delete Account / Data Deletion URL:</strong> [এখানে delete-account page URL দিন]</p>
+
+        <h2>১৭. এই Terms-এর পরিবর্তন</h2>
+        <p>
+          ASK-GPT সময়ে সময়ে এই Terms of Use revise, update, বা replace করতে পারে।
+          Updated version revised effective date-সহ publish করা হতে পারে।
+          এই change-এর পরে ASK-GPT ব্যবহার চালিয়ে গেলে updated Terms গ্রহণ করা হয়েছে বলে গণ্য হতে পারে।
+        </p>
+
+        <h2>১৮. Contact</h2>
+        <p>প্রশ্ন, report, বা support request-এর জন্য যোগাযোগ করা যেতে পারে:</p>
+        <p>
+          <strong>App Name:</strong> ASK-GPT<br />
+          <strong>Support Email:</strong> [এখানে support email দিন]<br />
+          <strong>Contact Page:</strong> [এখানে contact page URL দিন]
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="socials" aria-hidden="true">
+        <span class="social-chip">WhatsApp</span>
+        <span class="social-chip">Facebook</span>
+        <span class="social-chip">GitHub</span>
+        <span class="social-chip">X</span>
+      </div>
+
+      <div class="footer-meta">
+        <div><strong>ASK-GPT © 2026</strong></div>
+        <div>Founder / Created by</div>
+        <div><strong>ANIL GHOSH PROHOR</strong></div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const select = document.getElementById('languageSelect');
+    const panels = document.querySelectorAll('.lang-panel');
+    const title = document.getElementById('pageTitle');
+    const updated = document.getElementById('updatedText');
+
+    function setLanguage(lang) {
+      panels.forEach(panel => {
+        panel.classList.toggle('active', panel.dataset.lang === lang);
+      });
+
+      if (lang === 'bn') {
+        document.documentElement.lang = 'bn';
+        title.textContent = 'ব্যবহারের শর্তাবলী';
+        updated.textContent = 'আপডেট: 5-4-2026';
+      } else {
+        document.documentElement.lang = 'en';
+        title.textContent = 'Terms of Use';
+        updated.textContent = 'Updated: 5-4-2026';
+      }
+    }
+
+    select.addEventListener('change', (e) => {
+      setLanguage(e.target.value);
+    });
+
+    setLanguage('en');
+  </script>
+</body>
+</html>
