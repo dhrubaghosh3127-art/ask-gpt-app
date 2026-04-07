@@ -204,12 +204,14 @@ const sidebarText = {
   ⚙ {sidebarText.settingsSupport}
 </Link>
 
-  <Link
-  to="/privacy-policy"
-  className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg"
->
-  📜 {sidebarText.privacyPolicy}
-</Link>
+  <a
+          href="/legal/privacy-policy.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg"
+        >
+          📜{sidebarText.privacyPolicy}
+        </a>
 
   <button className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-red-500 hover:bg-[#f5f5f7] rounded-lg">
     ⎋ {sidebarText.logOut}
