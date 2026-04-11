@@ -156,9 +156,11 @@ const PersonalizationRow: React.FC<{
   icon: React.ReactNode;
   title: string;
   value?: string;
-}> = ({ icon, title, value }) => (
+  onClick?: () => void;
+}> = ({ icon, title, value, onClick }) => (
   <button
     type="button"
+    onClick={onClick}
     className={rowBase}
     style={{
       fontFamily:
@@ -213,10 +215,11 @@ const PersonalizationPage: React.FC = () => {
 
         <div className="space-y-[2px]">
           <PersonalizationRow
-            icon={<LanguageIcon />}
-            title="Language"
-            value="English"
-          />
+  icon={<LanguageIcon />}
+  title="Language"
+  value="English"
+  onClick={() => navigate('/general')}
+/>
           <PersonalizationRow
             icon={<ResponseStyleIcon />}
             title="Response Style"
