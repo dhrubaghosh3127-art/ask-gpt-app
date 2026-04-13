@@ -112,7 +112,7 @@ const DataControlsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const openArchivedPage = () => {
-    navigate('/archived');
+    navigate('/history/archived');
   };
 
   return (
