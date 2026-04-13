@@ -319,28 +319,32 @@ const [showClearSuccess, setShowClearSuccess] = useState(false);
   </div>
 ) : null}
               {showClearSuccess ? (
-  <div className="fixed inset-x-4 bottom-6 z-50 mx-auto flex w-full max-w-[430px] items-center justify-between rounded-[20px] bg-[#111111] px-5 py-4 shadow-xl">
-    <div
-      className="text-[15px] font-medium text-white"
-      style={{
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-      }}
-    >
-      Successfully cleared chat history.
-    </div>
+  <div className="fixed inset-x-4 bottom-6 z-50 mx-auto w-full max-w-[430px] rounded-[20px] bg-[#111111] px-4 py-4 shadow-xl">
+    <div className="grid grid-cols-[32px_1fr_32px] items-center">
+      <div />
 
-    <button
-      type="button"
-      onClick={() => setShowClearSuccess(false)}
-      className="ml-4 text-[28px] leading-none text-white"
-      style={{
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-      }}
-    >
-      ×
-    </button>
+      <div
+        className="text-center text-[15px] font-medium text-white"
+        style={{
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+        }}
+      >
+        Successfully cleared chat history.
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setShowClearSuccess(false)}
+        className="flex h-8 w-8 items-center justify-center text-[28px] leading-none text-white"
+        style={{
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+        }}
+      >
+        ×
+      </button>
+    </div>
   </div>
 ) : null}
               <div className="px-4 pt-3 text-[13px] leading-6 text-[#7c7c82]">
