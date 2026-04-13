@@ -319,29 +319,33 @@ const [showClearSuccess, setShowClearSuccess] = useState(false);
   </div>
 ) : null}
               {showClearSuccess ? (
-  <div className="fixed inset-x-4 bottom-6 z-50 mx-auto w-full max-w-[430px] rounded-[18px] bg-[#111111] px-4 py-3 shadow-xl">
-    <div className="relative flex min-h-[44px] items-center justify-center">
-      <div
-        className="px-10 text-center text-[15px] font-medium text-white"
-        style={{
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-        }}
-      >
-        Successfully cleared chat history.
-      </div>
+  <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-6">
+    <div className="w-full max-w-[382px] rounded-[18px] bg-[#111111] px-4 py-3 shadow-xl">
+      <div className="grid min-h-[44px] grid-cols-[36px_1fr_36px] items-center">
+        <div />
 
-      <button
-        type="button"
-        onClick={() => setShowClearSuccess(false)}
-        className="absolute right-0 flex h-8 w-8 items-center justify-center text-[26px] leading-none text-white"
-        style={{
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-        }}
-      >
-        ×
-      </button>
+        <div
+          className="text-center text-[15px] font-semibold tracking-[-0.02em] text-white"
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          Successfully cleared chat history.
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowClearSuccess(false)}
+          className="flex h-9 w-9 items-center justify-center text-[24px] leading-none text-white"
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          ×
+        </button>
+      </div>
     </div>
   </div>
 ) : null}
