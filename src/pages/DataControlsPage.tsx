@@ -261,50 +261,54 @@ const DataControlsPage: React.FC = () => {
       onClick={(e) => e.stopPropagation()}
     >
       <div
-        className="text-center text-[17px] font-semibold text-[#ef4444]"
-        style={{
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-        }}
-      >
-        This will permanently delete all chat history from this device.
-      </div>
+  className="text-center text-[20px] font-semibold tracking-[-0.02em] text-[#111111]"
+  style={{
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+  }}
+>
+  Delete chat history?
+</div>
 
-      <div
-        className="mt-3 text-center text-[14px] leading-6 text-[#ef4444]"
-        style={{
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-        }}
-      >
-        Archived chats will not be deleted. This action cannot be undone.
-      </div>
+<div
+  className="mt-3 text-center text-[14px] leading-6 text-[#6b7280]"
+  style={{
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+  }}
+>
+  All chats on this device will be deleted.
+  <br />
+  Archived chats will remain unchanged.
+  <br />
+  This action cannot be undone.
+</div>
 
-      <div className="mt-5 flex gap-3">
-        <button
-          type="button"
-          onClick={() => setShowClearConfirm(false)}
-          className="h-[48px] flex-1 rounded-full bg-[#f3f3f3] text-[15px] font-semibold text-[#111111]"
-          style={{
-            fontFamily:
-              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-          }}
-        >
-          Cancel
-        </button>
+      <div className="mt-6 flex gap-3">
+  <button
+    type="button"
+    onClick={() => setShowClearConfirm(false)}
+    className="h-[50px] flex-1 rounded-full border border-[#e5e7eb] bg-white text-[15px] font-semibold text-[#111111]"
+    style={{
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+    }}
+  >
+    Cancel
+  </button>
 
-        <button
-          type="button"
-          onClick={handleClearChatHistory}
-          className="h-[48px] flex-1 rounded-full bg-[#ef4444] text-[15px] font-semibold text-white"
-          style={{
-            fontFamily:
-              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-          }}
-        >
-          OK
-        </button>
-      </div>
+  <button
+    type="button"
+    onClick={handleClearChatHistory}
+    className="h-[50px] flex-1 rounded-full bg-[#dc2626] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(220,38,38,0.22)]"
+    style={{
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+    }}
+  >
+    Delete
+  </button>
+</div>
     </div>
   </div>
 ) : null}
