@@ -251,7 +251,63 @@ const DataControlsPage: React.FC = () => {
                   </div>
                 </div>
               </button>
+          {showClearConfirm ? (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+    onClick={() => setShowClearConfirm(false)}
+  >
+    <div
+      className="w-full max-w-[360px] rounded-[24px] bg-white px-5 py-5 shadow-xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div
+        className="text-center text-[17px] font-semibold text-[#ef4444]"
+        style={{
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+        }}
+      >
+        This will permanently delete all chat history from this device.
+      </div>
 
+      <div
+        className="mt-3 text-center text-[14px] leading-6 text-[#ef4444]"
+        style={{
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+        }}
+      >
+        Archived chats will not be deleted. This action cannot be undone.
+      </div>
+
+      <div className="mt-5 flex gap-3">
+        <button
+          type="button"
+          onClick={() => setShowClearConfirm(false)}
+          className="h-[48px] flex-1 rounded-full bg-[#f3f3f3] text-[15px] font-semibold text-[#111111]"
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={handleClearChatHistory}
+          className="h-[48px] flex-1 rounded-full bg-[#ef4444] text-[15px] font-semibold text-white"
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+) : null}
               <div className="px-4 pt-3 text-[13px] leading-6 text-[#7c7c82]">
                 Deleting your ASK-GPT account is permanent. After deletion, you
                 may not be able to recover your chats, settings, or saved data.
