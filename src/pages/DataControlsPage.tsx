@@ -111,6 +111,10 @@ const rowBase =
 const DataControlsPage: React.FC = () => {
   const navigate = useNavigate();
 
+  const openArchivedPage = () => {
+    navigate('/archived');
+  };
+
   return (
     <div className="min-h-screen bg-white text-[#111111] dark:bg-[#0b0b0c] dark:text-white">
       <div className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-5">
@@ -158,40 +162,42 @@ const DataControlsPage: React.FC = () => {
 
             <div className="space-y-[2px]">
               <button
-                type="button"
-                className={`${rowBase} rounded-t-[24px] rounded-b-[8px]`}
-                style={{
-                  fontFamily:
-                    '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <IconWrap>
-                    <ArchiveIcon />
-                  </IconWrap>
-                  <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111] dark:text-white">
-                    View archived chats
-                  </div>
-                </div>
-              </button>
+  type="button"
+  onClick={openArchivedPage}
+  className={`${rowBase} rounded-t-[24px] rounded-b-[8px]`}
+  style={{
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+  }}
+>
+  <div className="flex items-center gap-3">
+    <IconWrap>
+      <ArchiveIcon />
+    </IconWrap>
+    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111] dark:text-white">
+      View archived chats
+    </div>
+  </div>
+</button>
 
               <button
-                type="button"
-                className={`${rowBase} rounded-t-[8px] rounded-b-[24px]`}
-                style={{
-                  fontFamily:
-                    '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <IconWrap>
-                    <HistoryIcon />
-                  </IconWrap>
-                  <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111] dark:text-white">
-                    Archive chat history
-                  </div>
-                </div>
-              </button>
+  type="button"
+  onClick={openArchivedPage}
+  className={`${rowBase} rounded-t-[8px] rounded-b-[24px]`}
+  style={{
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+  }}
+>
+  <div className="flex items-center gap-3">
+    <IconWrap>
+      <HistoryIcon />
+    </IconWrap>
+    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111] dark:text-white">
+      Archive chat history
+    </div>
+  </div>
+</button>
             </div>
           </div>
 
