@@ -112,15 +112,21 @@ const rowBase =
 const DataControlsPage: React.FC = () => {
   const navigate = useNavigate();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+const [showClearSuccess, setShowClearSuccess] = useState(false);
 
   const openArchivedPage = () => {
     navigate('/history/archived');
   };
 
   const handleClearChatHistory = () => {
-    clearCurrentConversations();
-    setShowClearConfirm(false);
-  };
+  clearCurrentConversations();
+  setShowClearConfirm(false);
+  setShowClearSuccess(true);
+
+  window.setTimeout(() => {
+    setShowClearSuccess(false);
+  }, 3000);
+};
 
   return (
     <div className="min-h-screen bg-white text-[#111111] dark:bg-[#0b0b0c] dark:text-white">
@@ -310,6 +316,31 @@ const DataControlsPage: React.FC = () => {
   </button>
 </div>
     </div>
+  </div>
+) : null}
+              {showClearSuccess ? (
+  <div className="fixed inset-x-4 bottom-6 z-50 mx-auto flex w-full max-w-[430px] items-center justify-between rounded-[20px] bg-[#111111] px-5 py-4 shadow-xl">
+    <div
+      className="text-[15px] font-medium text-white"
+      style={{
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+      }}
+    >
+      Successfully cleared chat history.
+    </div>
+
+    <button
+      type="button"
+      onClick={() => setShowClearSuccess(false)}
+      className="ml-4 text-[28px] leading-none text-white"
+      style={{
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+      }}
+    >
+      ×
+    </button>
   </div>
 ) : null}
               <div className="px-4 pt-3 text-[13px] leading-6 text-[#7c7c82]">
