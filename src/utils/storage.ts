@@ -188,3 +188,8 @@ const getConversationStorageKey = () => {
 export const clearGuestConversations = () => {
   sessionStorage.removeItem(GUEST_CONVERSATION_STORAGE_KEY);
 };
+export const clearCurrentConversations = () => {
+  const store = getConversationStore();
+  const key = getConversationStorageKey();
+  store.removeItem(key);
+};
