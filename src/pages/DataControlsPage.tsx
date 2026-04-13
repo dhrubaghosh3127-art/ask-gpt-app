@@ -320,12 +320,12 @@ const [showClearSuccess, setShowClearSuccess] = useState(false);
 ) : null}
               {showClearSuccess ? (
   <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-6">
-    <div className="w-full max-w-[382px] rounded-[18px] bg-[#111111] px-4 py-3 shadow-xl">
-      <div className="grid min-h-[44px] grid-cols-[36px_1fr_36px] items-center">
+    <div className="w-full max-w-[388px] rounded-[18px] bg-[#111111] px-4 py-[10px] shadow-xl">
+      <div className="grid h-[40px] grid-cols-[30px_1fr_30px] items-center">
         <div />
 
         <div
-          className="text-center text-[15px] font-semibold tracking-[-0.02em] text-white"
+          className="whitespace-nowrap text-center text-[14px] font-semibold tracking-[-0.02em] text-white"
           style={{
             fontFamily:
               '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
@@ -337,7 +337,7 @@ const [showClearSuccess, setShowClearSuccess] = useState(false);
         <button
           type="button"
           onClick={() => setShowClearSuccess(false)}
-          className="flex h-9 w-9 items-center justify-center text-[24px] leading-none text-white"
+          className="flex h-[30px] w-[30px] items-center justify-center text-[22px] leading-none text-white"
           style={{
             fontFamily:
               '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
