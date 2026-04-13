@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { clearCurrentConversations } from '../utils/storage';
 
 const IconWrap: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <span className="flex h-5 w-5 items-center justify-center text-[#111111] dark:text-white">
@@ -110,9 +111,15 @@ const rowBase =
 
 const DataControlsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const openArchivedPage = () => {
     navigate('/history/archived');
+  };
+
+  const handleClearChatHistory = () => {
+    clearCurrentConversations();
+    setShowClearConfirm(false);
   };
 
   return (
@@ -204,22 +211,23 @@ const DataControlsPage: React.FC = () => {
           <div>
             <div className="space-y-[2px]">
               <button
-                type="button"
-                className={`${rowBase} rounded-t-[24px] rounded-b-[8px]`}
-                style={{
-                  fontFamily:
-                    '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center text-[#ef4444]">
-                    <ClearIcon />
-                  </span>
-                  <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#ef4444]">
-                    Clear chat history
-                  </div>
-                </div>
-              </button>
+  type="button"
+  onClick={() => setShowClearConfirm(true)}
+  className={`${rowBase} rounded-t-[24px] rounded-b-[8px]`}
+  style={{
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+  }}
+>
+  <div className="flex items-center gap-3">
+    <span className="flex h-5 w-5 items-center justify-center text-[#ef4444]">
+      <ClearIcon />
+    </span>
+    <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#ef4444]">
+      Clear chat history
+    </div>
+  </div>
+</button>
 
               <div className="px-4 pt-3 pb-4 text-[13px] leading-6 text-[#7c7c82]">
                 This will remove your chat history from this device and it may
