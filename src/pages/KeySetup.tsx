@@ -10,6 +10,7 @@ const pageFont =
   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif';
 
 const GROQ_KEYS_URL = 'https://console.groq.com/keys';
+const GROQ_MODELS_URL = 'https://console.groq.com/settings/limits';
 
 const BackIcon = () => (
   <svg
@@ -84,7 +85,7 @@ const ShieldIcon = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M12 3l7 4v5c0 5-3 8-7 9-4-1-7-4-7-9V7l7-4z" />
+    <path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z" />
   </svg>
 );
 
@@ -101,9 +102,7 @@ const copyText = async (value: string): Promise<boolean> => {
       await navigator.clipboard.writeText(value);
       return true;
     }
-  } catch {
-    // fallback below
-  }
+  } catch {}
 
   try {
     const el = document.createElement('textarea');
@@ -144,6 +143,10 @@ const KeySetup: React.FC = () => {
 
   const handleOpenGroqKeys = () => {
     window.open(GROQ_KEYS_URL, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleOpenGroqModels = () => {
+    window.open(GROQ_MODELS_URL, '_blank', 'noopener,noreferrer');
   };
 
   const handleSave = () => {
@@ -204,7 +207,7 @@ const KeySetup: React.FC = () => {
           <div className="w-[42px]" />
         </div>
 
-        <div className="mb-2 text-center">
+        <div className="mb-3 text-center">
           <h1
             className="text-[24px] font-bold tracking-[-0.03em] text-[#111111]"
             style={{ fontFamily: pageFont }}
@@ -216,177 +219,227 @@ const KeySetup: React.FC = () => {
             className="mx-auto mt-1 max-w-[330px] text-[12px] leading-5 text-[#6b7280]"
             style={{ fontFamily: pageFont }}
           >
-            Use your own Groq key to power ASK-GPT on this device with a clean direct setup.
+            Use your own Groq API key to power ASK-GPT on this device with a clean,
+            direct setup.
           </p>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-          <div
-            className="rounded-[20px] border border-[#ffd7d7] bg-[#fff5f5] px-3 py-3"
-            style={{ fontFamily: pageFont }}
-          >
-            <div className="flex items-start gap-2">
-              <div className="mt-[1px] text-[#d92d20]">
-                <ShieldIcon />
-              </div>
-
-              <div className="min-w-0">
-                <div className="text-[14px] font-semibold tracking-[-0.02em] text-[#d92d20]">
-                  Private device-only storage
-                </div>
-                <div className="mt-1 text-[11px] leading-4 text-[#b2413f]">
-                  Your API key stays only in this browser on this device.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="rounded-[20px] border border-[#ececf2] bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
-            style={{ fontFamily: pageFont }}
-          >
-            <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-              Quick setup
-            </div>
-
-            <div className="mt-2 space-y-1.5 text-[11px] leading-4 text-[#4b5563]">
-              <div>
-                <span className="font-semibold text-[#111111]">1.</span> Open your Groq Console
-              </div>
-              <div>
-                <span className="font-semibold text-[#111111]">2.</span> Create a new API key
-              </div>
-              <div>
-                <span className="font-semibold text-[#111111]">3.</span> Paste it below
-              </div>
-              <div>
-                <span className="font-semibold text-[#111111]">4.</span> Tap Save to keep it on
-                this device
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleOpenGroqKeys}
-              className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#111111] px-4 py-2 text-[12px] font-semibold text-white"
-              style={{ fontFamily: pageFont }}
-            >
-              <span>Open Groq API Keys</span>
-              <ExternalLinkIcon />
-            </button>
-          </div>
-
-          <div
-            className="rounded-[20px] border border-[#ececf2] bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
-            style={{ fontFamily: pageFont }}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <div className="text-[#111111]">
-                <KeyIcon />
-              </div>
-              <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-                Paste API key
-              </div>
-            </div>
-
-            <textarea
-              value={inputKey}
-              onChange={(e) => {
-                setInputKey(e.target.value);
-                if (statusText) {
-                  setStatusText('');
-                  setStatusType('');
-                }
-              }}
-              placeholder="Paste your Groq API key here"
-              className="h-[78px] w-full resize-none rounded-[18px] border border-[#e5e7eb] bg-[#fafafa] px-3 py-3 text-[12px] text-[#111111] outline-none placeholder:text-[#9ca3af]"
-              style={{ fontFamily: pageFont }}
-            />
-
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={handleSave}
-                className="flex-1 rounded-full bg-[#111111] px-4 py-2.5 text-[12px] font-semibold text-white"
-                style={{ fontFamily: pageFont }}
-              >
-                Save key
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setInputKey('');
-                  setStatusText('');
-                  setStatusType('');
-                }}
-                className="rounded-full border border-[#e5e7eb] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#111111]"
-                style={{ fontFamily: pageFont }}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-
-          <div
-            className="rounded-[20px] border border-[#ececf2] bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
-            style={{ fontFamily: pageFont }}
-          >
-            <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-              Saved key
-            </div>
-
-            <div className="mt-2 rounded-[16px] border border-[#e5e7eb] bg-[#fafafa] px-3 py-2.5">
-              {savedKey ? (
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#9ca3af]">
-                      Stored on this device
-                    </div>
-                    <div className="mt-1 truncate text-[12px] font-semibold tracking-[-0.01em] text-[#111111]">
-                      {maskedSavedKey}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleCopySavedKey}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3 py-2 text-[11px] font-semibold text-[#111111]"
-                    style={{ fontFamily: pageFont }}
-                  >
-                    <CopyIcon />
-                    <span>{isCopying ? 'Copying...' : 'Copy'}</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="text-[12px] text-[#9ca3af]">No key saved on this device yet.</div>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleClearSavedKey}
-              className="mt-2 w-full rounded-full border border-[#f0d5d5] bg-[#fff5f5] px-4 py-2.5 text-[12px] font-semibold text-[#d92d20]"
-              style={{ fontFamily: pageFont }}
-            >
-              Clear saved key
-            </button>
-          </div>
-
-          {statusText ? (
+        <div className="min-h-0 flex-1 overflow-hidden rounded-[28px] border border-[#ececf2] bg-white shadow-[0_8px_28px_rgba(15,23,42,0.05)]">
+          <div className="h-full overflow-y-auto px-3 py-3">
             <div
-              className={`rounded-[18px] px-3 py-2 text-[11px] leading-4 ${
-                statusType === 'success'
-                  ? 'border border-[#c7f0d1] bg-[#f4fff6] text-[#067647]'
-                  : 'border border-[#ffd7d7] bg-[#fff5f5] text-[#d92d20]'
-              }`}
+              className="rounded-[20px] border border-[#ffd7d7] bg-[#fff5f5] px-3 py-3"
               style={{ fontFamily: pageFont }}
             >
-              {statusText}
+              <div className="flex items-start gap-2">
+                <div className="mt-[1px] text-[#d92d20]">
+                  <ShieldIcon />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="text-[14px] font-semibold tracking-[-0.02em] text-[#d92d20]">
+                    Private device-only storage
+                  </div>
+                  <div className="mt-1 text-[11px] leading-4 text-[#b42318]">
+                    Your API key stays only in this browser on this device. It is not
+                    sent to our server for storage.
+                  </div>
+                </div>
+              </div>
             </div>
-          ) : (
-            <div className="h-[2px]" />
-          )}
+
+            <div
+              className="mt-3 rounded-[20px] border border-[#ececf2] bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+              style={{ fontFamily: pageFont }}
+            >
+              <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                Quick setup
+              </div>
+
+              <div className="mt-2 space-y-1.5 text-[11px] leading-4 text-[#4b5563]">
+                <div>
+                  <span className="font-semibold text-[#111111]">1.</span> Open your Groq
+                  Console
+                </div>
+                <div>
+                  <span className="font-semibold text-[#111111]">2.</span> Create a new API
+                  key
+                </div>
+                <div>
+                  <span className="font-semibold text-[#111111]">3.</span> Paste it below
+                </div>
+                <div>
+                  <span className="font-semibold text-[#111111]">4.</span> Tap Save key to
+                  keep it on this device
+                </div>
+                <div>
+                  <span className="font-semibold text-[#111111]">5.</span> In Groq, review
+                  your enabled models if replies do not appear
+                </div>
+                <div>
+                  <span className="font-semibold text-[#111111]">6.</span> If the app stops
+                  replying after model changes, first check whether the required models are
+                  still enabled in your Groq account
+                </div>
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleOpenGroqKeys}
+                  className="inline-flex h-[40px] items-center gap-2 rounded-full bg-[#111111] px-4 text-[12px] font-semibold text-white"
+                  style={{ fontFamily: pageFont }}
+                >
+                  <span>Open Groq API Keys</span>
+                  <ExternalLinkIcon />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenGroqModels}
+                  className="inline-flex h-[40px] items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-4 text-[12px] font-semibold text-[#111111]"
+                  style={{ fontFamily: pageFont }}
+                >
+                  <span>Check enabled models</span>
+                  <ExternalLinkIcon />
+                </button>
+              </div>
+            </div>
+
+            <div
+              className="mt-3 rounded-[20px] border border-[#ececf2] bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+              style={{ fontFamily: pageFont }}
+            >
+              <div className="mb-2 flex items-center gap-2">
+                <div className="text-[#111111]">
+                  <KeyIcon />
+                </div>
+                <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  Paste API key
+                </div>
+              </div>
+
+              <textarea
+                value={inputKey}
+                onChange={(e) => {
+                  setInputKey(e.target.value);
+                  if (statusText) {
+                    setStatusText('');
+                    setStatusType('');
+                  }
+                }}
+                placeholder="Paste your Groq API key here"
+                className="h-[118px] w-full resize-none rounded-[18px] border border-[#e5e7eb] bg-[#fafafa] px-3 py-3 text-[13px] text-[#111111] outline-none placeholder:text-[#9ca3af]"
+                style={{ fontFamily: pageFont }}
+              />
+
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="flex h-[42px] flex-1 items-center justify-center rounded-full bg-[#111111] px-4 text-[14px] font-semibold text-white"
+                  style={{ fontFamily: pageFont }}
+                >
+                  Save key
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInputKey('');
+                    setStatusText('');
+                    setStatusType('');
+                  }}
+                  className="flex h-[42px] items-center justify-center rounded-full border border-[#e5e7eb] bg-white px-5 text-[14px] font-semibold text-[#111111]"
+                  style={{ fontFamily: pageFont }}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div
+              className="mt-3 rounded-[20px] border border-[#ececf2] bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+              style={{ fontFamily: pageFont }}
+            >
+              <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                Saved key
+              </div>
+
+              <div className="mt-2 rounded-[16px] border border-[#e5e7eb] bg-[#fafafa] px-3 py-2.5">
+                {savedKey ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#9ca3af]">
+                        Stored on this device
+                      </div>
+                      <div className="mt-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-[#111111]">
+                        {maskedSavedKey}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleCopySavedKey}
+                      className="inline-flex h-[36px] items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3 text-[13px] font-semibold text-[#111111]"
+                      style={{ fontFamily: pageFont }}
+                    >
+                      <CopyIcon />
+                      <span>{isCopying ? 'Copying...' : 'Copy'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-[12px] text-[#9ca3af]">No key saved on this device yet.</div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleClearSavedKey}
+                className="mt-2 flex h-[42px] w-full items-center justify-center rounded-full border border-[#ffd5d5] bg-[#fff5f5] px-4 text-[14px] font-semibold text-[#d92d20]"
+                style={{ fontFamily: pageFont }}
+              >
+                Clear saved key
+              </button>
+            </div>
+
+            <div
+              className="mt-3 rounded-[20px] border border-[#ececf2] bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+              style={{ fontFamily: pageFont }}
+            >
+              <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                Privacy
+              </div>
+
+              <div className="mt-1 text-[11px] leading-4 text-[#6b7280]">
+                Review how ASK-GPT handles local device data before saving your key.
+              </div>
+
+              <button
+                type="button"
+                onClick={() => window.open('/legal/privacy-policy.html', '_blank', 'noopener,noreferrer')}
+                className="mt-2 inline-flex h-[40px] items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-4 text-[12px] font-semibold text-[#111111]"
+                style={{ fontFamily: pageFont }}
+              >
+                <span>Open Privacy Policy</span>
+                <ExternalLinkIcon />
+              </button>
+            </div>
+
+            {statusText ? (
+              <div
+                className={`mt-3 rounded-[18px] px-3 py-2 text-[11px] leading-4 ${
+                  statusType === 'success'
+                    ? 'border border-[#c7f0d1] bg-[#f4fff6] text-[#067647]'
+                    : 'border border-[#ffd7d7] bg-[#fff5f5] text-[#d92d20]'
+                }`}
+                style={{ fontFamily: pageFont }}
+              >
+                {statusText}
+              </div>
+            ) : (
+              <div className="h-[2px]" />
+            )}
+          </div>
         </div>
       </div>
     </div>
