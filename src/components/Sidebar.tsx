@@ -192,6 +192,7 @@ const sidebarText = {
 
   <Link
   to="/key"
+    onClick={() => setIsOpen(false)}
   className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg"
 >
   🔑 {sidebarText.yourApiKey}
@@ -199,6 +200,7 @@ const sidebarText = {
 
   <Link
   to="/settings"
+    onClick={() => setIsOpen(false)}
   className="w-full flex items-center gap-3 px-2 py-2 text-[14px] text-[#111111] hover:bg-[#f5f5f7] rounded-lg"
 >
   ⚙ {sidebarText.settingsSupport}
