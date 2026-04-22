@@ -4,37 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ASK-GPT Help Center</title>
-
   <style>
     :root {
       --bg: #f5f5f7;
       --card: #ffffff;
       --text: #111111;
       --muted: #6e6e73;
-      --border: #d2d2d7;
-      --shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+      --line: #d2d2d7;
+      --chip: #f2f2f2;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
       --radius-xl: 28px;
       --radius-lg: 20px;
     }
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      margin: 0;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.65;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
     }
 
     .page {
       width: 100%;
       max-width: 760px;
       margin: 0 auto;
-      padding: 20px 16px 48px;
+      padding: 20px 16px 40px;
     }
 
     .topbar {
@@ -42,98 +50,265 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 28px;
-    }
-
-    .back-btn,
-    .lang-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 48px;
-      padding: 0 16px;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: var(--card);
-      color: var(--text);
-      text-decoration: none;
-      font-size: 15px;
-      font-weight: 600;
-      box-shadow: var(--shadow);
+      margin-bottom: 20px;
     }
 
     .back-btn {
       width: 48px;
-      padding: 0;
+      height: 48px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
       font-size: 24px;
-      line-height: 1;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .lang-wrap {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .lang-select {
+      min-height: 48px;
+      padding: 0 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      outline: none;
+      cursor: pointer;
     }
 
     .hero {
       background: var(--card);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
       border-radius: var(--radius-xl);
-      padding: 28px 22px;
+      padding: 26px 22px;
       box-shadow: var(--shadow);
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .brand {
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 700;
-      margin-bottom: 8px;
       letter-spacing: -0.02em;
+      margin-bottom: 8px;
     }
 
     .hero-title {
-      font-size: 40px;
-      line-height: 1.05;
+      font-size: 44px;
+      line-height: 1.02;
       font-weight: 800;
-      letter-spacing: -0.04em;
-      margin-bottom: 10px;
+      letter-spacing: -0.05em;
+      margin: 0 0 10px;
     }
 
     .hero-subtitle {
-      font-size: 17px;
+      margin: 0;
       color: var(--muted);
-      max-width: 560px;
+      font-size: 17px;
+      line-height: 1.7;
     }
 
-    .placeholder-card {
+    .cards {
       background: var(--card);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+
+    .help-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 22px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .help-card:last-child {
+      border-bottom: none;
+    }
+
+    .help-card:hover {
+      background: #fafafa;
+    }
+
+    .card-text {
+      min-width: 0;
+    }
+
+    .card-title {
+      margin: 0 0 6px;
+      font-size: 18px;
+      line-height: 1.45;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .card-subtitle {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .arrow {
+      flex-shrink: 0;
+      font-size: 28px;
+      line-height: 1;
+      color: #6f6f74;
+    }
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: var(--radius-xl);
       padding: 24px 22px;
       box-shadow: var(--shadow);
+      margin-bottom: 18px;
+      scroll-margin-top: 16px;
     }
 
-    .placeholder-card h2 {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 26px;
+      line-height: 1.2;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+      color: var(--text);
     }
 
-    .placeholder-card p {
-      color: var(--muted);
+    .section p {
+      margin: 0 0 14px;
       font-size: 16px;
+      color: var(--text);
+    }
+
+    .section p.muted {
+      color: var(--muted);
+    }
+
+    .section ul {
+      margin: 0 0 14px 20px;
+      padding: 0;
+    }
+
+    .section li {
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    .info-box {
+      margin-top: 14px;
+      padding: 16px 16px;
+      background: #f8f8f8;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .legal {
+      margin-top: 30px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .legal-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .footer-meta {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .footer-meta strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .lang-panel {
+      display: none;
+    }
+
+    .lang-panel.active {
+      display: block;
     }
 
     @media (max-width: 640px) {
       .page {
-        padding: 16px 14px 40px;
+        padding: 18px 14px 34px;
+      }
+
+      .hero {
+        padding: 22px 18px;
       }
 
       .hero-title {
         font-size: 34px;
       }
 
-      .hero-subtitle {
-        font-size: 16px;
+      .hero-subtitle,
+      .card-subtitle,
+      .section p,
+      .section li,
+      .footer-meta {
+        font-size: 15px;
       }
 
-      .placeholder-card h2 {
-        font-size: 22px;
+      .section h2 {
+        font-size: 23px;
+      }
+
+      .card-title {
+        font-size: 17px;
+      }
+
+      .help-card {
+        padding: 20px 18px;
       }
     }
   </style>
@@ -141,24 +316,346 @@
 <body>
   <main class="page">
     <div class="topbar">
-      <a class="back-btn" href="javascript:history.back()" aria-label="Go back">←</a>
-      <button class="lang-btn" type="button">English</button>
+      <button class="back-btn" onclick="history.back()" aria-label="Go back">←</button>
+
+      <div class="lang-wrap">
+        <select id="languageSelect" class="lang-select" aria-label="Select language">
+          <option value="en" selected>English</option>
+          <option value="bn">বাংলা</option>
+        </select>
+      </div>
     </div>
 
-    <section class="hero">
-      <div class="brand">ASK-GPT</div>
-      <h1 class="hero-title">Help Center</h1>
-      <p class="hero-subtitle">
-        Find guidance, support information, and important help resources for ASK-GPT.
-      </p>
+    <!-- English -->
+    <section class="lang-panel active" data-lang="en">
+      <section class="hero">
+        <div class="brand">ASK-GPT</div>
+        <h1 class="hero-title">Help Center</h1>
+        <p class="hero-subtitle">
+          Find guidance, setup help, support information, and important usage instructions for ASK-GPT.
+        </p>
+      </section>
+
+      <section class="cards">
+        <a class="help-card" href="#en-started">
+          <div class="card-text">
+            <h3 class="card-title">Getting Started with ASK-GPT</h3>
+            <p class="card-subtitle">Learn the basics of using ASK-GPT for chat, voice input, and image analysis.</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#en-voice">
+          <div class="card-text">
+            <h3 class="card-title">Voice Input</h3>
+            <p class="card-subtitle">Understand how voice input works and what may affect recognition quality.</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#en-image">
+          <div class="card-text">
+            <h3 class="card-title">Image Upload and Analysis</h3>
+            <p class="card-subtitle">Upload screenshots, notes, or visible content and get AI-based analysis.</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#en-api">
+          <div class="card-text">
+            <h3 class="card-title">API Key Setup</h3>
+            <p class="card-subtitle">Learn how to set up a valid official Groq API key for ASK-GPT.</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#en-support">
+          <div class="card-text">
+            <h3 class="card-title">Contact Support</h3>
+            <p class="card-subtitle">Find the official ASK-GPT support email and what to include in your message.</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#en-faq">
+          <div class="card-text">
+            <h3 class="card-title">FAQ / Common Help</h3>
+            <p class="card-subtitle">Read quick answers to common ASK-GPT questions.</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+      </section>
+
+      <section class="section" id="en-started">
+        <h2>Getting Started with ASK-GPT</h2>
+        <p>
+          ASK-GPT is designed to help you with AI chat, writing support, study help, translation, coding help,
+          voice input, and image-based analysis.
+        </p>
+        <p>
+          You can use ASK-GPT by typing a message, speaking with voice input, or uploading an image for analysis.
+        </p>
+        <div class="info-box">
+          <strong>Important</strong>
+          <p class="muted">
+            ASK-GPT currently supports image analysis only. It does not support AI image generation or photo creation.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="en-voice">
+        <h2>Voice Input</h2>
+        <p>
+          ASK-GPT supports voice input so you can speak instead of typing.
+        </p>
+        <p>
+          Voice recognition quality may depend on microphone quality, internet connection, background noise,
+          speaking clarity, and the selected input language.
+        </p>
+        <p>
+          If voice input does not work properly, try again in a quieter environment and make sure microphone permission is enabled.
+        </p>
+      </section>
+
+      <section class="section" id="en-image">
+        <h2>Image Upload and Analysis</h2>
+        <p>
+          ASK-GPT supports image upload for analysis.
+        </p>
+        <p>
+          You can upload screenshots, notes, text images, and other visible content for AI assistance.
+        </p>
+        <p>
+          The app analyzes the visible content in the uploaded image and responds based on what is shown.
+        </p>
+        <div class="info-box">
+          <strong>Important</strong>
+          <p class="muted">
+            ASK-GPT supports image understanding and image analysis. It does not support image generation or photo creation.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="en-api">
+        <h2>API Key Setup</h2>
+        <p>
+          API key setup is important for using ASK-GPT properly.
+        </p>
+        <p>
+          To use the built-in Groq model options in ASK-GPT, you must add a valid official Groq API key from your own Groq account.
+        </p>
+        <p>
+          If the key is unsupported, invalid, expired, or entered incorrectly, some model options may not work correctly.
+        </p>
+        <p>
+          Please watch the API key setup video carefully and follow the full process step by step.
+          If you complete the setup correctly and add a valid official Groq API key, you will be able to use ASK-GPT and its supported features properly.
+        </p>
+
+        <div class="link-row">
+          <a class="pill-btn" href="#" target="_blank" rel="noopener noreferrer">API Key Video Guide</a>
+          <a class="pill-btn" href="#" target="_blank" rel="noopener noreferrer">Demo Link</a>
+        </div>
+      </section>
+
+      <section class="section" id="en-support">
+        <h2>Contact Support</h2>
+        <p>
+          If you need help with app usage, API key setup, voice input, image analysis, or other technical issues,
+          please contact ASK-GPT Support by email.
+        </p>
+        <p><strong>Support Email:</strong> <a href="mailto:askgpt.support@gmail.com">askgpt.support@gmail.com</a></p>
+        <p>
+          To help us respond faster, include your device name, a short description of the issue, and a screenshot if available.
+        </p>
+      </section>
+
+      <section class="section" id="en-faq">
+        <h2>FAQ / Common Help</h2>
+        <p><strong>Does ASK-GPT support voice input?</strong><br />Yes. ASK-GPT supports voice input.</p>
+        <p><strong>Can ASK-GPT analyze uploaded images?</strong><br />Yes. ASK-GPT supports image analysis.</p>
+        <p><strong>Can ASK-GPT generate photos or AI images?</strong><br />No. ASK-GPT does not support image generation or photo creation.</p>
+        <p><strong>Which API key should I use for built-in Groq model options?</strong><br />Use a valid official Groq API key from your own Groq account.</p>
+      </section>
+
+      <section class="legal">
+        <div class="legal-links">
+          <a class="pill-btn" href="/legal/privacy-policy.html">Privacy Policy</a>
+          <a class="pill-btn" href="/legal/terms-of-use.html">Terms of Use</a>
+        </div>
+
+        <div class="footer-meta">
+          <strong>Founded and Created by Anil Ghosh Prohor</strong><br />
+          ASK-GPT Help Center
+        </div>
+      </section>
     </section>
 
-    <section class="placeholder-card">
-      <h2>Help Center Home</h2>
-      <p>
-        The main help center layout is now being prepared. In the next step, we will add the 6 help topic cards.
-      </p>
+    <!-- Bangla -->
+    <section class="lang-panel" data-lang="bn">
+      <section class="hero">
+        <div class="brand">ASK-GPT</div>
+        <h1 class="hero-title">হেল্প সেন্টার</h1>
+        <p class="hero-subtitle">
+          ASK-GPT ব্যবহার, setup, support এবং গুরুত্বপূর্ণ help information এখানে পাওয়া যাবে।
+        </p>
+      </section>
+
+      <section class="cards">
+        <a class="help-card" href="#bn-started">
+          <div class="card-text">
+            <h3 class="card-title">ASK-GPT ব্যবহার শুরু</h3>
+            <p class="card-subtitle">Chat, voice input এবং image analysis কীভাবে ব্যবহার করবেন তা জানুন।</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#bn-voice">
+          <div class="card-text">
+            <h3 class="card-title">ভয়েস ইনপুট</h3>
+            <p class="card-subtitle">Voice input কীভাবে কাজ করে এবং কোন বিষয়ে quality কমতে পারে তা জানুন।</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#bn-image">
+          <div class="card-text">
+            <h3 class="card-title">ইমেজ আপলোড এবং অ্যানালাইসিস</h3>
+            <p class="card-subtitle">Screenshot, note বা visible content upload করে AI analysis নিন।</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#bn-api">
+          <div class="card-text">
+            <h3 class="card-title">API Key Setup</h3>
+            <p class="card-subtitle">ASK-GPT-এর জন্য valid official Groq API key setup করার নিয়ম জানুন।</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#bn-support">
+          <div class="card-text">
+            <h3 class="card-title">সাপোর্টে যোগাযোগ</h3>
+            <p class="card-subtitle">ASK-GPT Support email এবং support message-এ কী লিখবেন তা জানুন।</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a class="help-card" href="#bn-faq">
+          <div class="card-text">
+            <h3 class="card-title">FAQ / সাধারণ সাহায্য</h3>
+            <p class="card-subtitle">ASK-GPT নিয়ে সাধারণ প্রশ্নের ছোট উত্তর পড়ুন।</p>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+      </section>
+
+      <section class="section" id="bn-started">
+        <h2>ASK-GPT ব্যবহার শুরু</h2>
+        <p>
+          ASK-GPT ব্যবহার করে আপনি AI chat, writing support, study help, translation, coding help,
+          voice input এবং image-based analysis নিতে পারবেন।
+        </p>
+        <p>
+          আপনি message টাইপ করে, voice দিয়ে, অথবা image upload করে ASK-GPT ব্যবহার করতে পারবেন।
+        </p>
+        <div class="info-box">
+          <strong>গুরুত্বপূর্ণ</strong>
+          <p class="muted">
+            ASK-GPT বর্তমানে শুধু image analysis support করে। এটি AI image generation বা photo creation support করে না।
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="bn-voice">
+        <h2>ভয়েস ইনপুট</h2>
+        <p>
+          ASK-GPT-তে voice input আছে, তাই আপনি টাইপ না করে কথা বলে message দিতে পারবেন।
+        </p>
+        <p>
+          Voice recognition-এর quality microphone quality, internet connection, background noise,
+          speaking clarity এবং selected input language-এর উপর depend করতে পারে।
+        </p>
+        <p>
+          যদি voice input ঠিকমতো কাজ না করে, তাহলে একটু শান্ত জায়গায় আবার try করুন এবং microphone permission on আছে কিনা check করুন।
+        </p>
+      </section>
+
+      <section class="section" id="bn-image">
+        <h2>ইমেজ আপলোড এবং অ্যানালাইসিস</h2>
+        <p>
+          ASK-GPT image upload support করে analysis-এর জন্য।
+        </p>
+        <p>
+          আপনি screenshot, note, text image এবং অন্য visible content upload করে AI help নিতে পারবেন।
+        </p>
+        <p>
+          App image-এর ভিতরে visible content analyze করে সেই অনুযায়ী response দেয়।
+        </p>
+        <div class="info-box">
+          <strong>গুরুত্বপূর্ণ</strong>
+          <p class="muted">
+            ASK-GPT image understanding এবং image analysis support করে। এটি image generation বা photo creation support করে না।
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="bn-api">
+        <h2>API Key Setup</h2>
+        <p>
+          ASK-GPT সঠিকভাবে ব্যবহার করার জন্য API key setup গুরুত্বপূর্ণ।
+        </p>
+        <p>
+          ASK-GPT-এর built-in Groq model option ব্যবহার করতে হলে আপনার নিজের valid official Groq API key add করতে হবে।
+        </p>
+        <p>
+          যদি key unsupported, invalid, expired বা ভুলভাবে add করা হয়, তাহলে কিছু model option ঠিকভাবে কাজ নাও করতে পারে।
+        </p>
+        <p>
+          API key setup video-টি ভালো করে দেখুন এবং পুরো process step by step follow করুন।
+          আপনি যদি valid official Groq API key সঠিকভাবে add করেন, তাহলে ASK-GPT এবং এর supported feature গুলো ঠিকভাবে ব্যবহার করতে পারবেন।
+        </p>
+
+        <div class="link-row">
+          <a class="pill-btn" href="#" target="_blank" rel="noopener noreferrer">API Key Video Guide</a>
+          <a class="pill-btn" href="#" target="_blank" rel="noopener noreferrer">Demo Link</a>
+        </div>
+      </section>
+
+      <section class="section" id="bn-support">
+        <h2>সাপোর্টে যোগাযোগ</h2>
+        <p>
+          App use, API key setup, voice input, image analysis বা অন্য technical problem-এর জন্য ASK-GPT Support-এ যোগাযোগ করুন।
+        </p>
+        <p><strong>Support Email:</strong> <a href="mailto:askgpt.support@gmail.com">askgpt.support@gmail.com</a></p>
+        <p>
+          Support message-এ আপনার device name, problem-এর ছোট description, এবং সম্ভব হলে screenshot দিলে দ্রুত help পাওয়া সহজ হয়।
+        </p>
+      </section>
+
+      <section class="section" id="bn-faq">
+        <h2>FAQ / সাধারণ সাহায্য</h2>
+        <p><strong>ASK-GPT কি voice input support করে?</strong><br />হ্যাঁ, ASK-GPT voice input support করে।</p>
+        <p><strong>ASK-GPT কি uploaded image analyze করতে পারে?</strong><br />হ্যাঁ, ASK-GPT image analysis support করে।</p>
+        <p><strong>ASK-GPT কি photo বা AI image generate করতে পারে?</strong><br />না, ASK-GPT image generation বা photo creation support করে না।</p>
+        <p><strong>Built-in Groq model option-এর জন্য কোন key লাগবে?</strong><br />আপনার নিজের valid official Groq API key ব্যবহার করতে হবে।</p>
+      </section>
+
+      <section class="legal">
+        <div class="legal-links">
+          <a class="pill-btn" href="/legal/privacy-policy.html">Privacy Policy</a>
+          <a class="pill-btn" href="/legal/terms-of-use.html">Terms of Use</a>
+        </div>
+
+        <div class="footer-meta">
+          <strong>Founded and Created by Anil Ghosh Prohor</strong><br />
+          ASK-GPT Help Center
+        </div>
+      </section>
     </section>
   </main>
-</body>
-  </html>
+
+  <script>
+    const languageSelect = document.getElementById('languageSelect');
+    const panels = document.querySelect
