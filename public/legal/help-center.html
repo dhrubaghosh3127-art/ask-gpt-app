@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASK-GPT Help Center</title>
+
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --text: #111111;
+      --muted: #6e6e73;
+      --border: #d2d2d7;
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .back-btn,
+    .lang-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+
+    .back-btn {
+      width: 48px;
+      padding: 0;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-title {
+      font-size: 40px;
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .hero-subtitle {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 560px;
+    }
+
+    .placeholder-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 24px 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .placeholder-card h2 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .placeholder-card p {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px 14px 40px;
+      }
+
+      .hero-title {
+        font-size: 34px;
+      }
+
+      .hero-subtitle {
+        font-size: 16px;
+      }
+
+      .placeholder-card h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <a class="back-btn" href="javascript:history.back()" aria-label="Go back">←</a>
+      <button class="lang-btn" type="button">English</button>
+    </div>
+
+    <section class="hero">
+      <div class="brand">ASK-GPT</div>
+      <h1 class="hero-title">Help Center</h1>
+      <p class="hero-subtitle">
+        Find guidance, support information, and important help resources for ASK-GPT.
+      </p>
+    </section>
+
+    <section class="placeholder-card">
+      <h2>Help Center Home</h2>
+      <p>
+        The main help center layout is now being prepared. In the next step, we will add the 6 help topic cards.
+      </p>
+    </section>
+  </main>
+</body>
+  </html>
