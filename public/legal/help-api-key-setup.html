@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASK-GPT Help Center - API Key Setup</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --text: #111111;
+      --muted: #6e6e73;
+      --line: #d2d2d7;
+      --chip: #f2f2f2;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 18px 16px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .back-btn {
+      width: 48px;
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .lang-select {
+      min-height: 48px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .breadcrumbs {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    .hero-title {
+      margin: 0 0 8px;
+      font-size: 38px;
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .article {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 24px 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .article h2 {
+      margin: 0 0 12px;
+      font-size: 26px;
+      line-height: 1.2;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+    }
+
+    .article p {
+      margin: 0 0 14px;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    .article ul {
+      margin: 0 0 16px 20px;
+      padding: 0;
+    }
+
+    .article li {
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .info-box {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f8f8f8;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .legal {
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .legal-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .footer-meta {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .footer-meta strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .lang-panel {
+      display: none;
+    }
+
+    .lang-panel.active {
+      display: block;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 18px 14px 34px;
+      }
+
+      .hero-title {
+        font-size: 32px;
+      }
+
+      .hero-subtitle,
+      .article p,
+      .article li,
+      .footer-meta {
+        font-size: 15px;
+      }
+
+      .article h2 {
+        font-size: 23px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <button class="back-btn" onclick="history.back()" aria-label="Go back">←</button>
+
+      <select id="languageSelect" class="lang-select" aria-label="Select language">
+        <option value="en">English</option>
+        <option value="bn">বাংলা</option>
+      </select>
+    </div>
+
+    <!-- English -->
+    <section class="lang-panel" data-lang="en">
+      <section class="hero">
+        <div class="breadcrumbs">All collections &nbsp;›&nbsp; ASK-GPT &nbsp;›&nbsp; Help Center</div>
+        <h1 class="hero-title">API Key Setup</h1>
+        <p class="hero-subtitle">
+          Learn how to add a valid official Groq API key and use ASK-GPT properly.
+        </p>
+      </section>
+
+      <section class="article">
+        <h2>Using an API Key</h2>
+        <p>
+          API key setup is important for using ASK-GPT properly.
+        </p>
+        <p>
+          To use the built-in Groq model options in ASK-GPT, you must add a valid official Groq API key from your own Groq account.
+        </p>
+
+        <h2>Important Requirements</h2>
+        <ul>
+          <li>Use an official Groq API key from your own Groq account.</li>
+          <li>Make sure the key is active and valid.</li>
+          <li>Make sure the selected model options are available for that key.</li>
+          <li>Enter the key correctly during setup.</li>
+        </ul>
+
+        <h2>If the Key Does Not Work</h2>
+        <p>
+          If the key is invalid, unsupported, expired, or entered incorrectly, some model options or supported features may not work correctly.
+        </p>
+
+        <div class="info-box">
+          <strong>Important</strong>
+          <p>
+            Please watch the API key setup video carefully and follow the full process step by step.
+            If you follow the process correctly and add a valid official Groq API key, you will be able to use ASK-GPT and its supported features properly.
+          </p>
+        </div>
+
+        <div class="link-row">
+          <a class="pill-btn" href="#" target="_blank" rel="noopener noreferrer">API Key Video Guide</a>
+          <a class="pill-btn" href="#" target="_blank" rel="noopener noreferrer">Demo Link</a>
+        </div>
+      </section>
+
+      <section class="legal">
+        <div class="legal-links">
+          <a class="pill-btn" href="/legal/privacy-policy.html">Privacy Policy</a>
+          <a class="pill-btn" href="/legal/terms-of-use.html">Terms of Use</a>
+        </div>
+
+        <div class="footer-meta">
+          <strong>Founded and Created by Anil Ghosh Prohor</strong><br />
+          ASK-GPT Help Center
+        </div>
+      </section>
+    </section>
+
+    <!-- Bangla -->
+    <section class="lang-panel" data-lang="bn">
+      <section class="hero">
+        <div class="breadcrumbs">সব সংগ্রহ &nbsp;›&nbsp; ASK-GPT &nbsp;›&nbsp; হেল্প সেন্টার</div>
+        <h1 class="hero-title">API Key Setup</h1>
+        <p class="hero-subtitle">
+          কীভাবে valid official Groq API key add করতে হবে এবং ASK-GPT ঠিকভাবে ব্যবহার করতে হবে তা এখানে জানুন।
+        </p>
+      </section>
+
+      <section class="article">
+        <h2>API Key ব্যবহার</h2>
+        <p>
+          ASK-GPT সঠিকভাবে ব্যবহার করার জন্য API key setup গুরুত্বপূর্ণ।
+        </p>
+        <p>
+          ASK-GPT-এর built-in Groq model option ব্যবহার করতে হলে আপনার নিজের valid official Groq API key add করতে হবে।
+        </p>
+
+        <h2>গুরুত্বপূর্ণ শর্ত</h2>
+        <ul>
+          <li>আপনার নিজের Groq account-এর official Groq API key ব্যবহার করুন।</li>
+          <li>Key active এবং valid আছে কিনা নিশ্চিত করুন।</li>
+          <li>Selected model option গুলো ওই key-তে available আছে কিনা নিশ্চিত করুন।</li>
+          <li>Setup-এর সময় key সঠিকভাবে লিখুন।</li>
+        </ul>
+
+        <h2>Key কাজ না করলে</h2>
+        <p>
+          যদি key invalid, unsupported, expired বা ভুলভাবে add করা হয়, তাহলে কিছু model option বা supported feature ঠিকভাবে কাজ নাও করতে পারে।
+        </p>
+
+        <div class="info-box">
+          <strong>গুরুত্বপূর্ণ</strong>
+          <p>
+            API key setup video-টি ভালো করে দেখুন এবং পুরো process step by step follow করুন।
+            আপনি যদি process ঠিকভাবে follow করেন এবং valid official Groq API key add করেন, তাহলে ASK-GPT এবং এর supported feature গুলো ঠিকভাবে ব্যবহার করতে পারবেন।
+          </p>
+        </div>
+
+        <div class="link-row">
+          <a class="pill-btn" href="#" target="_blank" rel="noopener noreferrer">API Key Video Guide</a>
+          <a class="pill-btn" href="#" target="_blank" rel="noopener noreferrer">Demo Link</a>
+        </div>
+      </section>
+
+      <section class="legal">
+        <div class="legal-links">
+          <a class="pill-btn" href="/legal/privacy-policy.html">Privacy Policy</a>
+          <a class="pill-btn" href="/legal/terms-of-use.html">Terms of Use</a>
+        </div>
+
+        <div class="footer-meta">
+          <strong>Founded and Created by Anil Ghosh Prohor</strong><br />
+          ASK-GPT হেল্প সেন্টার
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const languageSelect = document.getElementById('languageSelect');
+    const panels = document.querySelectorAll('.lang-panel');
+
+    function getInitialLanguage() {
+      const params = new URLSearchParams(window.location.search);
+      const lang = params.get('lang');
+      return lang === 'bn' ? 'bn' : 'en';
+    }
+
+    function setLanguage(lang) {
+      panels.forEach((panel) => {
+        panel.classList.toggle('active', panel.dataset.lang === lang);
+      });
+      document.documentElement.lang = lang;
+      languageSelect.value = lang;
+    }
+
+    languageSelect.addEventListener('change', function () {
+      setLanguage(this.value);
+    });
+
+    setLanguage(getInitialLanguage());
+  </script>
+</body>
+</html>
