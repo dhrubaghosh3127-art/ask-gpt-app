@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASK-GPT Help Center - FAQ</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --text: #111111;
+      --muted: #6e6e73;
+      --line: #d2d2d7;
+      --chip: #f2f2f2;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 18px 16px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .back-btn {
+      width: 48px;
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .lang-select {
+      min-height: 48px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .breadcrumbs {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    .hero-title {
+      margin: 0 0 8px;
+      font-size: 38px;
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .article {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 24px 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .faq-item {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .faq-item:first-child {
+      padding-top: 0;
+    }
+
+    .faq-question {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.35;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+    }
+
+    .faq-answer {
+      margin: 0;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    .legal {
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .legal-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .footer-meta {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .footer-meta strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .lang-panel {
+      display: none;
+    }
+
+    .lang-panel.active {
+      display: block;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 18px 14px 34px;
+      }
+
+      .hero-title {
+        font-size: 32px;
+      }
+
+      .hero-subtitle,
+      .faq-answer,
+      .footer-meta {
+        font-size: 15px;
+      }
+
+      .faq-question {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <button class="back-btn" onclick="history.back()" aria-label="Go back">←</button>
+
+      <select id="languageSelect" class="lang-select" aria-label="Select language">
+        <option value="en">English</option>
+        <option value="bn">বাংলা</option>
+      </select>
+    </div>
+
+    <!-- English -->
+    <section class="lang-panel" data-lang="en">
+      <section class="hero">
+        <div class="breadcrumbs">All collections &nbsp;›&nbsp; ASK-GPT &nbsp;›&nbsp; Help Center</div>
+        <h1 class="hero-title">FAQ / Common Help</h1>
+        <p class="hero-subtitle">
+          Quick answers to common ASK-GPT questions.
+        </p>
+      </section>
+
+      <section class="article">
+        <div class="faq-item">
+          <h2 class="faq-question">What can ASK-GPT do?</h2>
+          <p class="faq-answer">ASK-GPT supports AI chat, writing help, study help, translation, coding help, voice input, and image analysis.</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">Does ASK-GPT support image generation?</h2>
+          <p class="faq-answer">No. ASK-GPT currently supports image analysis only. It does not support AI image generation or photo creation.</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">Why is my API key not working?</h2>
+          <p class="faq-answer">This may happen if the key is invalid, expired, unsupported, entered incorrectly, or if the selected model is not available for that key.</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">Why is voice input not working properly?</h2>
+          <p class="faq-answer">Voice input quality can be affected by microphone permission, internet connection, background noise, and speaking clarity.</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">How do I contact support?</h2>
+          <p class="faq-answer">You can contact ASK-GPT Support by email at askgpt.support@gmail.com.</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">Will more features be added later?</h2>
+          <p class="faq-answer">ASK-GPT may be updated over time with improvements, fixes, and additional supported features.</p>
+        </div>
+      </section>
+
+      <section class="legal">
+        <div class="legal-links">
+          <a class="pill-btn" href="/legal/privacy-policy.html">Privacy Policy</a>
+          <a class="pill-btn" href="/legal/terms-of-use.html">Terms of Use</a>
+        </div>
+
+        <div class="footer-meta">
+          <strong>Founded and Created by Anil Ghosh Prohor</strong><br />
+          ASK-GPT Help Center
+        </div>
+      </section>
+    </section>
+
+    <!-- Bangla -->
+    <section class="lang-panel" data-lang="bn">
+      <section class="hero">
+        <div class="breadcrumbs">সব সংগ্রহ &nbsp;›&nbsp; ASK-GPT &nbsp;›&nbsp; হেল্প সেন্টার</div>
+        <h1 class="hero-title">FAQ / সাধারণ সাহায্য</h1>
+        <p class="hero-subtitle">
+          ASK-GPT নিয়ে সাধারণ কিছু প্রশ্নের ছোট ও পরিষ্কার উত্তর।
+        </p>
+      </section>
+
+      <section class="article">
+        <div class="faq-item">
+          <h2 class="faq-question">ASK-GPT কী কী করতে পারে?</h2>
+          <p class="faq-answer">ASK-GPT AI chat, writing help, study help, translation, coding help, voice input, এবং image analysis support করে।</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">ASK-GPT কি image generation support করে?</h2>
+          <p class="faq-answer">না। ASK-GPT বর্তমানে শুধু image analysis support করে। এটি AI image generation বা photo creation support করে না।</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">API key কেন কাজ নাও করতে পারে?</h2>
+          <p class="faq-answer">Key invalid, expired, unsupported, ভুলভাবে add করা, অথবা selected model key-তে available না থাকলে এমন হতে পারে।</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">Voice input কেন ঠিকভাবে কাজ নাও করতে পারে?</h2>
+          <p class="faq-answer">Microphone permission, internet connection, background noise, এবং clear speech-এর উপর voice input quality depend করে।</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">Support-এ কীভাবে যোগাযোগ করবো?</h2>
+          <p class="faq-answer">আপনি askgpt.support@gmail.com এই email-এ ASK-GPT Support-এর সাথে যোগাযোগ করতে পারবেন।</p>
+        </div>
+
+        <div class="faq-item">
+          <h2 class="faq-question">ভবিষ্যতে কি আরও feature add হতে পারে?</h2>
+          <p class="faq-answer">হ্যাঁ। সময়ের সাথে ASK-GPT update, improvement, fix, এবং নতুন supported feature পেতে পারে।</p>
+        </div>
+      </section>
+
+      <section class="legal">
+        <div class="legal-links">
+          <a class="pill-btn" href="/legal/privacy-policy.html">Privacy Policy</a>
+          <a class="pill-btn" href="/legal/terms-of-use.html">Terms of Use</a>
+        </div>
+
+        <div class="footer-meta">
+          <strong>Founded and Created by Anil Ghosh Prohor</strong><br />
+          ASK-GPT হেল্প সেন্টার
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const languageSelect = document.getElementById('languageSelect');
+    const panels = document.querySelectorAll('.lang-panel');
+
+    function getInitialLanguage() {
+      const params = new URLSearchParams(window.location.search);
+      const lang = params.get('lang');
+      return lang === 'bn' ? 'bn' : 'en';
+    }
+
+    function setLanguage(lang) {
+      panels.forEach((panel) => {
+        panel.classList.toggle('active', panel.dataset.lang === lang);
+      });
+      document.documentElement.lang = lang;
+      languageSelect.value = lang;
+    }
+
+    languageSelect.addEventListener('change', function () {
+      setLanguage(this.value);
+    });
+
+    setLanguage(getInitialLanguage());
+  </script>
+</body>
+  </html>
