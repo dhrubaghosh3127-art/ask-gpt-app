@@ -67,12 +67,46 @@ const ReportBugPage: React.FC = () => {
   const navigate = useNavigate();
   const [bugText, setBugText] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEmailValid = useMemo(() => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail.trim());
   }, [userEmail]);
 
-  const canSubmit = bugText.trim().length > 0 && isEmailValid;
+  const canSubmit = bugText.trim().length > 0 && isEmailValid && !isSubmitting;
+
+  const handleSubmit = async () => {
+    const message = bugText.trim();
+    const email = userEmail.trim();
+
+    if (!message || !isEmailValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await addDoc(collection(db, 'bugReports'), {
+        userEmail: email,
+        message,
+        appVersion: 'ASK-GPT Web version',
+        pageUrl: window.location.href,
+        deviceInfo: window.navigator.userAgent,
+        language: window.navigator.language || '',
+        screenSize: `${window.innerWidth}x${window.innerHeight}`,
+        status: 'new',
+        createdAt: serverTimestamp(),
+        createdAtClient: new Date().toISOString(),
+      });
+
+      setBugText('');
+      setUserEmail('');
+      alert('Report submitted successfully.');
+    } catch (error) {
+      console.error('Bug report submit failed:', error);
+      alert('Report submit failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-[#111111] dark:bg-[#0b0b0c] dark:text-white">
@@ -145,20 +179,21 @@ const ReportBugPage: React.FC = () => {
         </div>
 
         <button
-          type="button"
-          disabled={!canSubmit}
-          className={`mt-6 h-[56px] w-full rounded-full text-[17px] font-semibold transition-all ${
-            canSubmit
-              ? 'bg-[#111111] text-white'
-              : 'bg-[#e5e5e5] text-[#a3a3a3] dark:bg-[#2a2a2d] dark:text-[#7c7c82]'
-          }`}
-          style={{
-            fontFamily:
-              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-          }}
-        >
-          Submit
-        </button>
+  type="button"
+  disabled={!canSubmit}
+  onClick={handleSubmit}
+  className={`mt-6 h-[56px] w-full rounded-full text-[17px] font-semibold transition-all ${
+    canSubmit
+      ? 'bg-[#111111] text-white'
+      : 'bg-[#e5e5e5] text-[#a3a3a3] dark:bg-[#2a2a2d] dark:text-[#7c7c82]'
+  }`}
+  style={{
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+  }}
+>
+  {isSubmitting ? 'Submitting...' : 'Submit'}
+</button>
       </div>
     </div>
   );
