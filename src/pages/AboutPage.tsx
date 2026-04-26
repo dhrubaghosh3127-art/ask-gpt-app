@@ -158,7 +158,11 @@ const AboutPage: React.FC = () => {
         </div>
 
         <div className="space-y-[12px]">
-          <RowCard icon={<IconWrap><HelpIcon /></IconWrap>} title="Help center" />
+          <RowCard
+  icon={<IconWrap><HelpIcon /></IconWrap>}
+  title="Help center"
+  onClick={() => window.open('/legal/help-center.html', '_blank', 'noopener,noreferrer')}
+/>
           <RowCard
             icon={<IconWrap><TermsIcon /></IconWrap>}
             title="Terms of use"
