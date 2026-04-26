@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const IconWrap: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <span className="flex h-5 w-5 items-center justify-center text-[#111111] dark:text-white">
