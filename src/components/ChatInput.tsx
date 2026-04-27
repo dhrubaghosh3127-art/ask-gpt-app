@@ -306,108 +306,139 @@ const handleImageFile = async (file: File | null) => {
   )}
 {modelOpen && (
   <div className="fixed inset-0 z-50 flex items-end bg-black/35">
-    <div className="w-full max-h-[88vh] overflow-y-auto rounded-t-[32px] bg-[#fbfcf8] px-6 pt-4 pb-8 shadow-[0_-20px_60px_rgba(0,0,0,0.18)]">
-      <div className="mx-auto mb-5 h-[7px] w-[68px] rounded-full bg-[#c7c7c2]" />
+    <div className="h-[92vh] w-full overflow-hidden rounded-t-[30px] bg-[#fbfcf8] px-5 pt-3 pb-5 shadow-[0_-20px_60px_rgba(0,0,0,0.18)]">
+      <div className="mx-auto mb-4 h-[6px] w-[58px] rounded-full bg-[#c7c7c2]" />
 
-      <div className="mb-5 flex items-center justify-between">
-        <div className="text-[26px] font-bold tracking-[-0.03em] text-[#143238]">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-[24px] font-bold tracking-[-0.03em] text-[#143238]">
           Models
         </div>
 
         <button
           type="button"
           onClick={() => setModelOpen(false)}
-          className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f1f3f0] text-[34px] leading-none text-[#143238]"
+          className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#f1f3f0] text-[30px] leading-none text-[#143238]"
           aria-label="Close models"
         >
           ×
         </button>
       </div>
 
-      <div className="mb-5 rounded-[22px] border border-[#0f7a83] bg-[#eaf7f6] px-5 py-4">
-        <div className="text-[18px] font-semibold tracking-[-0.02em] text-[#143238]">
+      <div className="mb-4 rounded-[20px] border border-[#0f7a83] bg-[#eaf7f6] px-4 py-3">
+        <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#143238]">
           Explore ASK-GPT models
         </div>
-        <div className="mt-1 text-[14px] leading-6 text-[#657174]">
+        <div className="mt-1 text-[12px] leading-5 text-[#657174]">
           View available and locked AI models inside ASK-GPT.
         </div>
       </div>
 
-      <div className="mb-6 h-px w-full bg-[#d8ddd7]" />
+      <div className="mb-2 h-px w-full bg-[#d8ddd7]" />
 
-      <div className="space-y-3">
+      <div className="space-y-0">
         {[
           {
             name: 'Llama 3.3 70B',
             desc: 'Fast and balanced for everyday chat, writing, and general tasks.',
-            icon: 'L',
+            type: 'llama',
             locked: false,
           },
           {
             name: 'GPT-OSS 120B',
             desc: 'Hard reasoning, math solving, coding, and deep problem analysis.',
-            icon: 'G',
+            type: 'openai',
             locked: false,
           },
           {
             name: 'GPT-OSS 20B',
             desc: 'Quick reasoning and lightweight problem solving.',
-            icon: 'G',
+            type: 'openai',
             locked: false,
           },
           {
             name: 'Qwen 3-32B',
             desc: 'Strong multilingual model for Bangla, English, writing, and coding.',
-            icon: 'Q',
+            type: 'qwen',
             locked: false,
           },
           {
             name: 'GPT-5.5',
             desc: 'Advanced reasoning and high-quality responses for complex tasks.',
-            icon: 'G',
+            type: 'openai',
             locked: true,
           },
           {
             name: 'Gemini 3.1 Pro',
             desc: 'Strong for multimodal understanding, long-context tasks, and smart analysis.',
-            icon: '✦',
+            type: 'gemini',
             locked: true,
           },
           {
             name: 'Claude Sonnet 4.6',
             desc: 'Excellent for writing, analysis, and clear natural responses.',
-            icon: '✺',
+            type: 'claude',
             locked: true,
           },
           {
             name: 'Claude Opus 4.7',
             desc: 'Top-tier deep reasoning, creative writing, and high-level problem solving.',
-            icon: '✺',
+            type: 'claude',
             locked: true,
           },
         ].map((model) => (
           <div
             key={model.name}
-            className={`flex w-full items-center gap-4 rounded-[24px] px-4 py-4 ${
+            className={`flex w-full items-center gap-3 border-b border-[#e3e6e1] px-1 py-[10px] ${
               model.locked ? 'opacity-55' : ''
             }`}
           >
-            <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[#eef1ee] text-[18px] font-bold text-[#6f7775]">
-              {model.icon}
+            <div className="flex h-[36px] w-[36px] shrink-0 items-center justify-center text-[24px]">
+              {model.type === 'llama' && (
+                <span className="text-[28px] font-bold text-[#1677f2]">∞</span>
+              )}
+
+              {model.type === 'openai' && (
+                <svg
+                  className="h-[30px] w-[30px] text-[#111111]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 3.2c2.1 0 3.7 1.4 4.2 3.1 1.8.4 3.2 2 3.2 4 0 1.3-.6 2.4-1.5 3.2.2 1.8-.7 3.5-2.3 4.4-1.1.6-2.4.7-3.5.2-1.3 1.2-3.3 1.5-4.9.6-1.1-.7-1.8-1.7-2.1-2.9-1.7-.6-2.9-2.1-2.9-4 0-1.3.6-2.5 1.6-3.3-.1-1.8.8-3.4 2.4-4.3 1.1-.6 2.4-.7 3.5-.2.7-.6 1.5-.9 2.3-.9Z" />
+                  <path d="M8.3 6.6 15.7 11v6.3" />
+                  <path d="M15.7 6.7 8.3 11v6.2" />
+                  <path d="M5.2 10.3 12 14.3l6.8-4" />
+                </svg>
+              )}
+
+              {model.type === 'qwen' && (
+                <span className="text-[25px] font-bold text-[#6d5cff]">✦</span>
+              )}
+
+              {model.type === 'gemini' && (
+                <span className="text-[27px] text-[#4285f4]">✦</span>
+              )}
+
+              {model.type === 'claude' && (
+                <span className="text-[28px] text-[#d97745]">✺</span>
+              )}
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="text-[20px] font-semibold tracking-[-0.02em] text-[#111111]">
+              <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
                 {model.name}
               </div>
-              <div className="mt-1 text-[13px] leading-5 text-[#6f7775]">
+              <div className="mt-[2px] text-[11px] leading-[15px] text-[#6f7775]">
                 {model.desc}
               </div>
             </div>
 
             {model.locked && (
               <svg
-                className="h-7 w-7 shrink-0 text-[#6f7775]"
+                className="h-[24px] w-[24px] shrink-0 text-[#6f7775]"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -425,6 +456,7 @@ const handleImageFile = async (file: File | null) => {
     </div>
   </div>
 )}
+
   {attachOpen && (
     <div className="absolute left-0 bottom-[58px] z-20 w-44 overflow-hidden rounded-2xl border border-[#e7ebf0] bg-white shadow-[0_10px_28px_rgba(15,23,42,0.12)]">
       <button
