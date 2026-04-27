@@ -29,6 +29,7 @@ const openCamera = () => { setAttachOpen(false); cameraRef.current?.click(); };
 const formClassName = 'relative mx-auto w-full max-w-[760px] rounded-[30px] border border-[#e8ebf0] bg-white px-5 pt-4 pb-3 shadow-[0_10px_26px_rgba(15,23,42,0.07)]'
   const [mode, setMode] = useState<'Auto' | 'Fast' | 'Thinking'>('Auto');
   const [modeOpen, setModeOpen] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
   const [webActive, setWebActive] = useState(false);
   useEffect(() => {
     if (textareaRef.current) {
@@ -268,12 +269,13 @@ const handleImageFile = async (file: File | null) => {
   <span className="text-[9px] text-[#6b7280]">▾</span>
 </button>
 
-    <button
+<button
   type="button"
-  className="shrink-0 inline-flex h-[30px]  items-center gap-[6px] rounded-[15px] border border-[#e7eaf0] bg-white pl-[11px] pr-[7px] text-[13px] font-medium text-[#111827] shadow-none"
+  onClick={() => setModelOpen(true)}
+  className="shrink-0 inline-flex h-[30px] items-center gap-[6px] rounded-[15px] border border-[#e7eaf0] bg-white pl-[11px] pr-[10px] text-[13px]"
 >
   <span>Model</span>
-  <span className="text-[10px] text-[#6b7280]">▾</span>
+  <span className="text-[10px] text-[#6b7280]">⌄</span>
 </button>
   </div>
 
@@ -302,7 +304,127 @@ const handleImageFile = async (file: File | null) => {
       </button>
     </div>
   )}
+{modelOpen && (
+  <div className="fixed inset-0 z-50 flex items-end bg-black/35">
+    <div className="w-full max-h-[88vh] overflow-y-auto rounded-t-[32px] bg-[#fbfcf8] px-6 pt-4 pb-8 shadow-[0_-20px_60px_rgba(0,0,0,0.18)]">
+      <div className="mx-auto mb-5 h-[7px] w-[68px] rounded-full bg-[#c7c7c2]" />
 
+      <div className="mb-5 flex items-center justify-between">
+        <div className="text-[26px] font-bold tracking-[-0.03em] text-[#143238]">
+          Models
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setModelOpen(false)}
+          className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f1f3f0] text-[34px] leading-none text-[#143238]"
+          aria-label="Close models"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="mb-5 rounded-[22px] border border-[#0f7a83] bg-[#eaf7f6] px-5 py-4">
+        <div className="text-[18px] font-semibold tracking-[-0.02em] text-[#143238]">
+          Explore ASK-GPT models
+        </div>
+        <div className="mt-1 text-[14px] leading-6 text-[#657174]">
+          View available and locked AI models inside ASK-GPT.
+        </div>
+      </div>
+
+      <div className="mb-6 h-px w-full bg-[#d8ddd7]" />
+
+      <div className="space-y-3">
+        {[
+          {
+            name: 'Llama 3.3 70B',
+            desc: 'Fast and balanced for everyday chat, writing, and general tasks.',
+            icon: 'L',
+            locked: false,
+          },
+          {
+            name: 'GPT-OSS 120B',
+            desc: 'Hard reasoning, math solving, coding, and deep problem analysis.',
+            icon: 'G',
+            locked: false,
+          },
+          {
+            name: 'GPT-OSS 20B',
+            desc: 'Quick reasoning and lightweight problem solving.',
+            icon: 'G',
+            locked: false,
+          },
+          {
+            name: 'Qwen 3-32B',
+            desc: 'Strong multilingual model for Bangla, English, writing, and coding.',
+            icon: 'Q',
+            locked: false,
+          },
+          {
+            name: 'GPT-5.5',
+            desc: 'Advanced reasoning and high-quality responses for complex tasks.',
+            icon: 'G',
+            locked: true,
+          },
+          {
+            name: 'Gemini 3.1 Pro',
+            desc: 'Strong for multimodal understanding, long-context tasks, and smart analysis.',
+            icon: '✦',
+            locked: true,
+          },
+          {
+            name: 'Claude Sonnet 4.6',
+            desc: 'Excellent for writing, analysis, and clear natural responses.',
+            icon: '✺',
+            locked: true,
+          },
+          {
+            name: 'Claude Opus 4.7',
+            desc: 'Top-tier deep reasoning, creative writing, and high-level problem solving.',
+            icon: '✺',
+            locked: true,
+          },
+        ].map((model) => (
+          <div
+            key={model.name}
+            className={`flex w-full items-center gap-4 rounded-[24px] px-4 py-4 ${
+              model.locked ? 'opacity-55' : ''
+            }`}
+          >
+            <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[#eef1ee] text-[18px] font-bold text-[#6f7775]">
+              {model.icon}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="text-[20px] font-semibold tracking-[-0.02em] text-[#111111]">
+                {model.name}
+              </div>
+              <div className="mt-1 text-[13px] leading-5 text-[#6f7775]">
+                {model.desc}
+              </div>
+            </div>
+
+            {model.locked && (
+              <svg
+                className="h-7 w-7 shrink-0 text-[#6f7775]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="5" y="10" width="14" height="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+              </svg>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
   {attachOpen && (
     <div className="absolute left-0 bottom-[58px] z-20 w-44 overflow-hidden rounded-2xl border border-[#e7ebf0] bg-white shadow-[0_10px_28px_rgba(15,23,42,0.12)]">
       <button
