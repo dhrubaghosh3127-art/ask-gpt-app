@@ -304,91 +304,7 @@ const handleImageFile = async (file: File | null) => {
       </button>
     </div>
   )}
-{modelOpen && (
-  <div className="fixed inset-0 z-50 flex items-end bg-black/35">
-    <div className="h-[92vh] w-full overflow-hidden rounded-t-[30px] bg-[#fbfcf8] px-5 pt-3 pb-5 shadow-[0_-20px_60px_rgba(0,0,0,0.18)]">
-      <div className="mx-auto mb-4 h-[6px] w-[58px] rounded-full bg-[#c7c7c2]" />
-
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-[24px] font-bold tracking-[-0.03em] text-[#143238]">
-          Models
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setModelOpen(false)}
-          className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#f1f3f0] text-[30px] leading-none text-[#143238]"
-          aria-label="Close models"
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="mb-4 rounded-[20px] border border-[#0f7a83] bg-[#eaf7f6] px-4 py-3">
-        <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#143238]">
-          Explore ASK-GPT models
-        </div>
-        <div className="mt-1 text-[12px] leading-5 text-[#657174]">
-          View available and locked AI models inside ASK-GPT.
-        </div>
-      </div>
-
-      <div className="mb-2 h-px w-full bg-[#d8ddd7]" />
-
-      <div className="space-y-0">
-        {[
-          {
-            name: 'Llama 3.3 70B',
-            desc: 'Fast and balanced for everyday chat, writing, and general tasks.',
-            type: 'llama',
-            locked: false,
-          },
-          {
-            name: 'GPT-OSS 120B',
-            desc: 'Hard reasoning, math solving, coding, and deep problem analysis.',
-            type: 'openai',
-            locked: false,
-          },
-          {
-            name: 'GPT-OSS 20B',
-            desc: 'Quick reasoning and lightweight problem solving.',
-            type: 'openai',
-            locked: false,
-          },
-          {
-            name: 'Qwen 3-32B',
-            desc: 'Strong multilingual model for Bangla, English, writing, and coding.',
-            type: 'qwen',
-            locked: false,
-          },
-          {
-            name: 'GPT-5.5',
-            desc: 'Advanced reasoning and high-quality responses for complex tasks.',
-            type: 'openai',
-            locked: true,
-          },
-          {
-            name: 'Gemini 3.1 Pro',
-            desc: 'Strong for multimodal understanding, long-context tasks, and smart analysis.',
-            type: 'gemini',
-            locked: true,
-          },
-          {
-            name: 'Claude Sonnet 4.6',
-            desc: 'Excellent for writing, analysis, and clear natural responses.',
-            type: 'claude',
-            locked: true,
-          },
-          {
-            name: 'Claude Opus 4.7',
-            desc: 'Top-tier deep reasoning, creative writing, and high-level problem solving.',
-            type: 'claude',
-            locked: true,
-          },
-        ].map((model) => (
-          <div
-            key={model.name}
-            className={`flex w-full items-center gap-3 border-b border-[#e3e6e1] px-1 py-[10px] ${
+className={`flex w-full items-center gap-3 border-b border-[#e3e6e1] px-1 py-[10px] ${
               model.locked ? 'opacity-55' : ''
             }`}
           >
@@ -456,7 +372,7 @@ const handleImageFile = async (file: File | null) => {
     </div>
   </div>
 )}
-
+            
   {attachOpen && (
     <div className="absolute left-0 bottom-[58px] z-20 w-44 overflow-hidden rounded-2xl border border-[#e7ebf0] bg-white shadow-[0_10px_28px_rgba(15,23,42,0.12)]">
       <button
