@@ -431,23 +431,205 @@ const handleImageFile = async (file: File | null) => {
 )}
      
   {attachOpen && (
-    <div className="absolute left-0 bottom-[58px] z-20 w-44 overflow-hidden rounded-2xl border border-[#e7ebf0] bg-white shadow-[0_10px_28px_rgba(15,23,42,0.12)]">
-      <button
-        type="button"
-        onClick={openUpload}
-        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
-      >
-        Gallery
-      </button>
-      <button
-        type="button"
-        onClick={openCamera}
-        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
-      >
-        Camera
-      </button>
+  <div className="fixed inset-0 z-50 flex items-end bg-black/35">
+    <div
+      className="w-full rounded-t-[32px] bg-[#fbfcf8] px-5 pt-3 pb-6 shadow-[0_-18px_50px_rgba(0,0,0,0.18)]"
+      style={{ minHeight: '54vh' }}
+    >
+      <div className="mb-4 flex justify-center">
+        <div className="h-[6px] w-[58px] rounded-full bg-[#d5d7dc]" />
+      </div>
+
+      <div className="mb-5 flex items-center justify-between">
+        <div className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+          Options
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setAttachOpen(false)}
+          className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[#f1f3f0] text-[28px] leading-none text-[#111111]"
+          aria-label="Close options"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="mb-6 grid grid-cols-3 gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            setAttachOpen(false);
+            handleCamera();
+          }}
+          className="flex h-[104px] flex-col items-center justify-center gap-3 rounded-[20px] border border-[#e2e2dd] bg-white text-[#111111]"
+        >
+          <svg
+            className="h-7 w-7"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M14.5 4.5 13 3H9L7.5 4.5H5a2 2 0 0 0-2 2v11A2.5 2.5 0 0 0 5.5 20h13A2.5 2.5 0 0 0 21 17.5v-11a2 2 0 0 0-2-2h-4.5Z" />
+            <circle cx="12" cy="12.5" r="3.5" />
+          </svg>
+          <span className="text-[15px] font-medium tracking-[-0.02em]">
+            Camera
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAttachOpen(false);
+            handleUpload();
+          }}
+          className="flex h-[104px] flex-col items-center justify-center gap-3 rounded-[20px] border border-[#e2e2dd] bg-white text-[#111111]"
+        >
+          <svg
+            className="h-7 w-7"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="4" y="4" width="16" height="16" rx="3" />
+            <circle cx="9" cy="9" r="1.5" />
+            <path d="M20 15.5 16 11.5 10 17.5 7.5 15 4 18.5" />
+          </svg>
+          <span className="text-[15px] font-medium tracking-[-0.02em]">
+            Photos
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => alert('File upload will be available soon.')}
+          className="flex h-[104px] flex-col items-center justify-center gap-3 rounded-[20px] border border-[#e2e2dd] bg-white text-[#111111]"
+        >
+          <svg
+            className="h-7 w-7"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" />
+            <path d="M14 3v5h5" />
+            <path d="M9 13h6" />
+            <path d="M9 17h4" />
+          </svg>
+          <span className="text-[15px] font-medium tracking-[-0.02em]">
+            Files
+          </span>
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-[24px] bg-white">
+        <div className="flex h-[70px] items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            <svg
+              className="h-7 w-7 text-[#111111]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2 15 8.5 22 12 15 15.5 12 22 9 15.5 2 12 9 8.5 12 2Z" />
+            </svg>
+
+            <div>
+              <div className="text-[17px] font-medium tracking-[-0.02em] text-[#111111]">
+                Thinking
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-[15px] font-medium text-[#8b8e98]">
+            <span>Auto</span>
+            <span className="text-[20px] leading-none">⌄</span>
+          </div>
+        </div>
+
+        <div className="mx-4 h-px bg-[#e7e7e2]" />
+
+        <div className="flex h-[70px] items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            <svg
+              className="h-7 w-7 text-[#111111]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 3 20 7.5 12 12 4 7.5 12 3Z" />
+              <path d="M4 7.5V16.5L12 21 20 16.5V7.5" />
+              <path d="M12 12V21" />
+            </svg>
+
+            <div>
+              <div className="text-[17px] font-medium tracking-[-0.02em] text-[#111111]">
+                Deep research
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-4 h-px bg-[#e7e7e2]" />
+
+        <div className="flex h-[70px] items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            <svg
+              className="h-7 w-7 text-[#111111]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M3 12h18" />
+              <path d="M12 3c2.4 2.5 3.6 5.5 3.6 9S14.4 18.5 12 21" />
+              <path d="M12 3C9.6 5.5 8.4 8.5 8.4 12S9.6 18.5 12 21" />
+            </svg>
+
+            <div>
+              <div className="text-[17px] font-medium tracking-[-0.02em] text-[#111111]">
+                Web search
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setWebActive((v) => !v)}
+            className={`relative h-[34px] w-[58px] rounded-full transition-all ${
+              webActive ? 'bg-[#2f8cff]' : 'bg-[#d7d8dc]'
+            }`}
+          >
+            <span
+              className={`absolute top-[3px] h-[28px] w-[28px] rounded-full bg-white shadow-sm transition-all ${
+                webActive ? 'left-[27px]' : 'left-[3px]'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
     </div>
-  )}
+  </div>
+)}
 
   <input
     ref={uploadRef}
