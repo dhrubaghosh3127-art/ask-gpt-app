@@ -304,67 +304,218 @@ const handleImageFile = async (file: File | null) => {
       </button>
     </div>
   )}
-className={`flex w-full items-center gap-3 border-b border-[#e3e6e1] px-1 py-[10px] ${
+{modelOpen && (
+  <div className="fixed inset-0 z-50">
+    <div
+      className="absolute inset-0 bg-black/35"
+      onClick={closeModelSheet}
+    />
+
+    <div
+      className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[520px] overflow-hidden rounded-t-[32px] bg-[#fbfcf8] px-5 pt-3 pb-5 shadow-[0_-18px_50px_rgba(0,0,0,0.18)] transition-transform duration-200 ease-out"
+      style={{
+        height: '88vh',
+        transform: `translateY(${modelSheetY}px)`,
+      }}
+      onTouchStart={handleModelSheetTouchStart}
+      onTouchMove={handleModelSheetTouchMove}
+      onTouchEnd={handleModelSheetTouchEnd}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="mb-4 flex justify-center">
+        <div className="h-[6px] w-[64px] rounded-full bg-[#cfcfc8]" />
+      </div>
+
+      <div className="mb-5 flex items-center justify-between">
+        <h3 className="text-[24px] font-bold tracking-[-0.03em] text-[#143238]">
+          Models
+        </h3>
+
+        <button
+          type="button"
+          onClick={closeModelSheet}
+          className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#eef0ec] text-[30px] leading-none text-[#143238]"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="h-px w-full bg-[#deded8]" />
+
+      <div>
+        {[
+          {
+            name: 'Llama 3.3 70B',
+            desc: 'Fast and balanced for everyday chat, writing, and general tasks.',
+            logo: 'meta',
+            locked: false,
+          },
+          {
+            name: 'GPT-OSS 120B',
+            desc: 'Hard reasoning, math solving, coding, and deep problem analysis.',
+            logo: 'openai',
+            locked: false,
+          },
+          {
+            name: 'GPT-OSS 20B',
+            desc: 'Quick reasoning and lightweight problem solving.',
+            logo: 'openai',
+            locked: false,
+          },
+          {
+            name: 'Qwen 3-32B',
+            desc: 'Strong multilingual model for Bangla, English, writing, and coding.',
+            logo: 'qwen',
+            locked: false,
+          },
+          {
+            name: 'GPT-5.5',
+            desc: 'Advanced reasoning and high-quality responses for complex tasks.',
+            logo: 'openai',
+            locked: true,
+          },
+          {
+            name: 'Gemini 3.1 Pro',
+            desc: 'Strong for multimodal understanding, long-context tasks, and smart analysis.',
+            logo: 'gemini',
+            locked: true,
+          },
+          {
+            name: 'Claude Sonnet 4.6',
+            desc: 'Excellent for writing, analysis, and clear natural responses.',
+            logo: 'claude',
+            locked: true,
+          },
+          {
+            name: 'Claude Opus 4.7',
+            desc: 'Top-tier deep reasoning, creative writing, and high-level problem solving.',
+            logo: 'claude',
+            locked: true,
+          },
+        ].map((model) => (
+          <div
+            key={model.name}
+            className={`flex h-[66px] w-full items-center gap-4 border-b border-[#e6e6e1] ${
               model.locked ? 'opacity-55' : ''
             }`}
           >
-            <div className="flex h-[36px] w-[36px] shrink-0 items-center justify-center text-[24px]">
-              {model.type === 'llama' && (
-                <span className="text-[28px] font-bold text-[#1677f2]">∞</span>
-              )}
-
-              {model.type === 'openai' && (
+            <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+              {model.logo === 'meta' && (
                 <svg
-                  className="h-[30px] w-[30px] text-[#111111]"
-                  viewBox="0 0 24 24"
+                  className="h-[32px] w-[32px]"
+                  viewBox="0 0 64 40"
                   fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
                 >
-                  <path d="M12 3.2c2.1 0 3.7 1.4 4.2 3.1 1.8.4 3.2 2 3.2 4 0 1.3-.6 2.4-1.5 3.2.2 1.8-.7 3.5-2.3 4.4-1.1.6-2.4.7-3.5.2-1.3 1.2-3.3 1.5-4.9.6-1.1-.7-1.8-1.7-2.1-2.9-1.7-.6-2.9-2.1-2.9-4 0-1.3.6-2.5 1.6-3.3-.1-1.8.8-3.4 2.4-4.3 1.1-.6 2.4-.7 3.5-.2.7-.6 1.5-.9 2.3-.9Z" />
-                  <path d="M8.3 6.6 15.7 11v6.3" />
-                  <path d="M15.7 6.7 8.3 11v6.2" />
-                  <path d="M5.2 10.3 12 14.3l6.8-4" />
+                  <path
+                    d="M8 28C8 16 14 7 22 7C28 7 32 15 36 21C40 27 43 33 49 33C55 33 59 27 59 20C59 13 55 7 49 7C42 7 38 15 32 24C26 33 21 33 17 33C11 33 8 31 8 28Z"
+                    stroke="#1684ff"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               )}
 
-              {model.type === 'qwen' && (
-                <span className="text-[25px] font-bold text-[#6d5cff]">✦</span>
+              {model.logo === 'openai' && (
+                <svg
+                  className="h-[31px] w-[31px] text-[#111111]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.85"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 3.1c2 0 3.7 1.3 4.2 3.1 1.8.4 3.2 2 3.2 3.9 0 1.3-.6 2.5-1.5 3.2.2 1.8-.7 3.5-2.3 4.4-1.1.7-2.5.7-3.6.2-1.3 1.3-3.3 1.5-4.9.6-1.1-.6-1.9-1.7-2.1-2.9-1.7-.6-2.9-2.1-2.9-4 0-1.3.6-2.5 1.6-3.3-.1-1.8.8-3.4 2.4-4.3 1.1-.6 2.4-.7 3.5-.2.7-.5 1.5-.7 2.4-.7Z" />
+                  <path d="M8.2 6.6 15.8 11v6.3" />
+                  <path d="M15.8 6.7 8.2 11v6.2" />
+                  <path d="M5.1 10.3 12 14.3l6.9-4" />
+                </svg>
               )}
 
-              {model.type === 'gemini' && (
-                <span className="text-[27px] text-[#4285f4]">✦</span>
+              {model.logo === 'qwen' && (
+                <svg
+                  className="h-[33px] w-[33px]"
+                  viewBox="0 0 40 40"
+                  fill="none"
+                >
+                  <path d="M20 3L31 9V21L20 27L9 21V9L20 3Z" fill="#6d5cff" />
+                  <path d="M20 13L31 19V31L20 37L9 31V19L20 13Z" fill="#4f46e5" opacity="0.78" />
+                  <path d="M20 3V13M9 9L20 15L31 9M9 21L20 27L31 21" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               )}
 
-              {model.type === 'claude' && (
-                <span className="text-[28px] text-[#d97745]">✺</span>
+              {model.logo === 'gemini' && (
+                <svg
+                  className="h-[33px] w-[33px]"
+                  viewBox="0 0 40 40"
+                  fill="none"
+                >
+                  <path
+                    d="M20 2C22.5 11.2 28.8 17.5 38 20C28.8 22.5 22.5 28.8 20 38C17.5 28.8 11.2 22.5 2 20C11.2 17.5 17.5 11.2 20 2Z"
+                    fill="#6aa5ff"
+                  />
+                  <path
+                    d="M20 2C22.5 11.2 28.8 17.5 38 20C28.8 22.5 22.5 28.8 20 38C17.5 28.8 11.2 22.5 2 20C11.2 17.5 17.5 11.2 20 2Z"
+                    fill="url(#geminiGradient)"
+                    opacity="0.9"
+                  />
+                  <defs>
+                    <linearGradient id="geminiGradient" x1="4" y1="36" x2="36" y2="4" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#34A853" />
+                      <stop offset="0.45" stopColor="#4285F4" />
+                      <stop offset="1" stopColor="#EA4335" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              )}
+
+              {model.logo === 'claude' && (
+                <svg
+                  className="h-[34px] w-[34px]"
+                  viewBox="0 0 40 40"
+                  fill="none"
+                >
+                  <g stroke="#d97745" strokeWidth="3.2" strokeLinecap="round">
+                    <path d="M20 4V36" />
+                    <path d="M4 20H36" />
+                    <path d="M8.7 8.7L31.3 31.3" />
+                    <path d="M31.3 8.7L8.7 31.3" />
+                    <path d="M13 5.6L27 34.4" />
+                    <path d="M27 5.6L13 34.4" />
+                    <path d="M5.6 13L34.4 27" />
+                    <path d="M34.4 13L5.6 27" />
+                  </g>
+                </svg>
               )}
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+              <div className="text-[15px] font-semibold leading-[19px] tracking-[-0.02em] text-[#111111]">
                 {model.name}
               </div>
-              <div className="mt-[2px] text-[11px] leading-[15px] text-[#6f7775]">
+
+              <div className="mt-[2px] text-[12px] leading-[16px] text-[#6b7280]">
                 {model.desc}
               </div>
             </div>
 
-            {model.locked && (
+            {model.locked ? (
               <svg
-                className="h-[24px] w-[24px] shrink-0 text-[#6f7775]"
+                className="h-[24px] w-[24px] shrink-0 text-[#8f9698]"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2.2"
+                strokeWidth="2.1"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
                 <rect x="5" y="10" width="14" height="10" rx="2" />
                 <path d="M8 10V7a4 4 0 0 1 8 0v3" />
               </svg>
+            ) : (
+              <div className="h-[24px] w-[24px] shrink-0" />
             )}
           </div>
         ))}
