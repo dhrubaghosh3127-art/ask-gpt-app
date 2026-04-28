@@ -24,8 +24,8 @@ const stopStreamTracks = () => {
   streamRef.current?.getTracks().forEach(track => track.stop());
   streamRef.current = null;
 };
-  const openUpload = () => { uploadRef.current?.click(); setTimeout(() => setAttachOpen(false), 300); };
-const openCamera = () => { cameraRef.current?.click(); setTimeout(() => setAttachOpen(false), 300); };
+  const openUpload = () => { setAttachOpen(false); uploadRef.current?.click(); };
+const openCamera = () => { setAttachOpen(false); cameraRef.current?.click(); };
 const formClassName = 'relative mx-auto w-full max-w-[760px] rounded-[30px] border border-[#e8ebf0] bg-white px-5 pt-4 pb-3 shadow-[0_10px_26px_rgba(15,23,42,0.07)]'
   const [mode, setMode] = useState<'Auto' | 'Fast' | 'Thinking'>('Auto');
   const [modeOpen, setModeOpen] = useState(false);
