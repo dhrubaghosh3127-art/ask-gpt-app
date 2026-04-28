@@ -528,30 +528,91 @@ const handleImageFile = async (file: File | null) => {
       </div>
 
       <div className="overflow-hidden rounded-[24px] bg-white">
-        <div className="flex h-[58px] items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <svg
-              className="h-6 w-6 text-[#111111]"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.1"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 2 15 8.5 22 12 15 15.5 12 22 9 15.5 2 12 9 8.5 12 2Z" />
-            </svg>
+        <div className="relative">
+  <button
+    type="button"
+    onClick={() => setModeOpen((v) => !v)}
+    className="flex h-[58px] w-full items-center justify-between px-4 text-left"
+  >
+    <div className="flex items-center gap-3">
+      <svg
+        className="h-6 w-6 text-[#111111]"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 2 15 8.5 22 12 15 15.5 12 22 9 15.5 2 12 9 8.5 12 2Z" />
+      </svg>
 
-            <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
-              Thinking
-            </div>
-          </div>
+      <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+        Thinking
+      </div>
+    </div>
 
-          <div className="flex items-center gap-1.5 text-[14px] font-medium text-[#8b8e98]">
-            <span>Auto</span>
-            <span className="text-[18px] leading-none">⌄</span>
-          </div>
-        </div>
+    <div className="flex items-center gap-2 text-[14px] font-medium text-[#8b8e98]">
+      <span>{mode}</span>
+      <span className="flex flex-col items-center justify-center leading-none text-[#9ca0aa]">
+        <span className="h-[8px] text-[12px] leading-[8px]">⌃</span>
+        <span className="h-[8px] text-[12px] leading-[8px]">⌄</span>
+      </span>
+    </div>
+  </button>
+
+  {modeOpen && (
+    <div className="absolute right-3 top-[50px] z-50 w-[150px] overflow-hidden rounded-[18px] bg-white shadow-[0_14px_36px_rgba(0,0,0,0.18)]">
+      <button
+        type="button"
+        onClick={() => {
+          setMode('Auto');
+          setModeOpen(false);
+        }}
+        className="flex h-[48px] w-full items-center justify-between border-b border-[#eeeeea] px-4 text-left"
+      >
+        <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+          Auto
+        </span>
+        {mode === 'Auto' && (
+          <span className="text-[16px] font-semibold text-[#111111]">✓</span>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setMode('Thinking');
+          setModeOpen(false);
+        }}
+        className="flex h-[48px] w-full items-center justify-between border-b border-[#eeeeea] px-4 text-left"
+      >
+        <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+          Thinking
+        </span>
+        {mode === 'Thinking' && (
+          <span className="text-[16px] font-semibold text-[#111111]">✓</span>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setMode('Fast');
+          setModeOpen(false);
+        }}
+        className="flex h-[48px] w-full items-center justify-between px-4 text-left"
+      >
+        <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+          Fast
+        </span>
+        {mode === 'Fast' && (
+          <span className="text-[16px] font-semibold text-[#111111]">✓</span>
+        )}
+      </button>
+    </div>
+  )}
+</div>
 
         <div className="mx-4 h-px bg-[#e7e7e2]" />
 
