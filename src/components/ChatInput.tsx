@@ -24,8 +24,8 @@ const stopStreamTracks = () => {
   streamRef.current?.getTracks().forEach(track => track.stop());
   streamRef.current = null;
 };
-const openUpload = () => { setAttachOpen(false); uploadRef.current?.click(); };
-const openCamera = () => { setAttachOpen(false); cameraRef.current?.click(); };
+  const openUpload = () => { uploadRef.current?.click(); setTimeout(() => setAttachOpen(false), 300); };
+const openCamera = () => { cameraRef.current?.click(); setTimeout(() => setAttachOpen(false), 300); };
 const formClassName = 'relative mx-auto w-full max-w-[760px] rounded-[30px] border border-[#e8ebf0] bg-white px-5 pt-4 pb-3 shadow-[0_10px_26px_rgba(15,23,42,0.07)]'
   const [mode, setMode] = useState<'Auto' | 'Fast' | 'Thinking'>('Auto');
   const [modeOpen, setModeOpen] = useState(false);
@@ -458,10 +458,8 @@ const handleImageFile = async (file: File | null) => {
       <div className="mb-5 grid grid-cols-3 gap-2.5">
         <button
           type="button"
-          onClick={() => {
-            setAttachOpen(false);
-            handleCamera();
-          }}
+      onClick={handleCamera}
+          
           className="flex h-[78px] flex-col items-center justify-center gap-1.5 rounded-[17px] border border-[#e2e2dd] bg-white text-[#111111]"
         >
           <svg
@@ -483,10 +481,7 @@ const handleImageFile = async (file: File | null) => {
 
         <button
           type="button"
-          onClick={() => {
-            setAttachOpen(false);
-            handleUpload();
-          }}
+          onClick={handleUpload}
           className="flex h-[78px] flex-col items-center justify-center gap-1.5 rounded-[17px] border border-[#e2e2dd] bg-white text-[#111111]"
         >
           <svg
