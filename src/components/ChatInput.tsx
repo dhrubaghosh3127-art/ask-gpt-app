@@ -458,7 +458,7 @@ const handleImageFile = async (file: File | null) => {
       <div className="mb-5 grid grid-cols-3 gap-2.5">
         <button
           type="button"
-      onClick={handleCamera}
+      onClick={openCamera}
           
           className="flex h-[78px] flex-col items-center justify-center gap-1.5 rounded-[17px] border border-[#e2e2dd] bg-white text-[#111111]"
         >
@@ -481,7 +481,7 @@ const handleImageFile = async (file: File | null) => {
 
         <button
           type="button"
-          onClick={handleUpload}
+          onClick={openUpload}
           className="flex h-[78px] flex-col items-center justify-center gap-1.5 rounded-[17px] border border-[#e2e2dd] bg-white text-[#111111]"
         >
           <svg
