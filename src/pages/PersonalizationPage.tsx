@@ -269,6 +269,61 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
           />
         </div>
       </div>
+      {defaultModeOpen && (
+  <div
+    className="fixed inset-0 z-50 flex items-end bg-black/35"
+    onClick={() => setDefaultModeOpen(false)}
+  >
+    <div
+      className="w-full rounded-t-[32px] bg-[#fbfcf8] px-5 pt-3 pb-5 shadow-[0_-18px_50px_rgba(0,0,0,0.18)]"
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+      }}
+    >
+      <div className="mb-4 flex justify-center">
+        <div className="h-[6px] w-[58px] rounded-full bg-[#d5d7dc]" />
+      </div>
+
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+          Default Mode
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setDefaultModeOpen(false)}
+          className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#f1f3f0] text-[26px] leading-none text-[#111111]"
+          aria-label="Close default mode"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-[24px] bg-white">
+        {(['Auto', 'Thinking', 'Fast'] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => selectDefaultMode(mode)}
+            className="flex h-[58px] w-full items-center justify-between border-b border-[#e7e7e2] px-4 text-left last:border-b-0"
+          >
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+              {mode}
+            </span>
+
+            {defaultMode === mode && (
+              <span className="text-[18px] font-semibold text-[#111111]">
+                ✓
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
