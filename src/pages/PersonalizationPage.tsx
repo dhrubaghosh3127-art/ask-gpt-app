@@ -198,6 +198,24 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
     localStorage.setItem('askgpt_default_mode', mode);
     setDefaultModeOpen(false);
   };
+  const [toneOpen, setToneOpen] = useState(false);
+  const [tone, setTone] = useState<'Default' | 'Professional' | 'Friendly' | 'Simple' | 'Funny' | 'Direct'>(() => {
+    const saved = localStorage.getItem('askgpt_tone');
+    return saved === 'Default' ||
+      saved === 'Professional' ||
+      saved === 'Friendly' ||
+      saved === 'Simple' ||
+      saved === 'Funny' ||
+      saved === 'Direct'
+      ? saved
+      : 'Friendly';
+  });
+
+  const selectTone = (value: 'Default' | 'Professional' | 'Friendly' | 'Simple' | 'Funny' | 'Direct') => {
+    setTone(value);
+    localStorage.setItem('askgpt_tone', value);
+    setToneOpen(false);
+  };
   return (
     <div className="h-[100dvh] overflow-hidden bg-white text-[#111111]">
       <div className="mx-auto flex h-full w-full max-w-[430px] flex-col px-4 pt-4 pb-5">
@@ -210,6 +228,7 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
               '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
           }}
         >
+    
           <ArrowLeftIcon />
         </button>
 
@@ -236,10 +255,11 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
             value="Balanced"
           />
           <PersonalizationRow
-            icon={<ToneIcon />}
-            title="Tone"
-            value="Friendly"
-          />
+  icon={<ToneIcon />}
+  title="Tone"
+  value={tone}
+  onClick={() => setToneOpen(true)}
+/>
         </div>
 
         <div className="mt-5 space-y-[2px]">
@@ -269,6 +289,56 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
           />
         </div>
       </div>
+      {toneOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-end bg-black/25 px-7"
+          onClick={() => setToneOpen(false)}
+        >
+          <div
+            className="w-[285px] overflow-hidden rounded-[28px] bg-white shadow-[0_18px_55px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              fontFamily:
+                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+            }}
+          >
+            {[
+              { name: 'Default', desc: 'Preset style and tone' },
+              { name: 'Professional', desc: 'Polished and precise' },
+              { name: 'Friendly', desc: 'Warm and helpful' },
+              { name: 'Simple', desc: 'Clear and easy' },
+              { name: 'Funny', desc: 'Playful and light' },
+              { name: 'Direct', desc: 'Concise and straight' },
+            ].map((item) => (
+              <button
+                key={item.name}
+                type="button"
+                onClick={() =>
+                  selectTone(
+                    item.name as 'Default' | 'Professional' | 'Friendly' | 'Simple' | 'Funny' | 'Direct'
+                  )
+                }
+                className="flex w-full items-center justify-between px-5 py-3.5 text-left"
+              >
+                <div>
+                  <div className="text-[16px] font-semibold tracking-[-0.02em] text-[#111111]">
+                    {item.name}
+                  </div>
+                  <div className="mt-0.5 text-[13px] font-medium text-[#9a9a9a]">
+                    {item.desc}
+                  </div>
+                </div>
+
+                {tone === item.name && (
+                  <span className="text-[24px] font-semibold leading-none text-[#111111]">
+                    ✓
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {defaultModeOpen && (
   <div
     className="fixed inset-0 z-50 flex items-end bg-black/35"
