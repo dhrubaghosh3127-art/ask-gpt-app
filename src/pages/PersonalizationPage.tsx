@@ -216,6 +216,26 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
     localStorage.setItem('askgpt_tone', value);
     setToneOpen(false);
   };
+  const [responseStyleOpen, setResponseStyleOpen] = useState(false);
+  const [responseStyle, setResponseStyle] = useState<
+    'Balanced' | 'Detailed' | 'Short' | 'Creative'
+  >(() => {
+    const saved = localStorage.getItem('askgpt_response_style');
+    return saved === 'Balanced' ||
+      saved === 'Detailed' ||
+      saved === 'Short' ||
+      saved === 'Creative'
+      ? saved
+      : 'Balanced';
+  });
+
+  const selectResponseStyle = (
+    value: 'Balanced' | 'Detailed' | 'Short' | 'Creative'
+  ) => {
+    setResponseStyle(value);
+    localStorage.setItem('askgpt_response_style', value);
+    setResponseStyleOpen(false);
+  };
   return (
     <div className="h-[100dvh] overflow-hidden bg-white text-[#111111]">
       <div className="mx-auto flex h-full w-full max-w-[430px] flex-col px-4 pt-4 pb-5">
@@ -250,10 +270,11 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
   onClick={() => navigate('/general')}
 />
           <PersonalizationRow
-            icon={<ResponseStyleIcon />}
-            title="Response Style"
-            value="Balanced"
-          />
+  icon={<ResponseStyleIcon />}
+  title="Response Style"
+  value={responseStyle}
+  onClick={() => setResponseStyleOpen(true)}
+/>
           <PersonalizationRow
   icon={<ToneIcon />}
   title="Tone"
@@ -289,6 +310,58 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
           />
         </div>
       </div>
+      {responseStyleOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/25"
+          onClick={() => setResponseStyleOpen(false)}
+        >
+          <div className="flex h-full items-center justify-end px-6">
+            <div
+              className="w-[232px] overflow-hidden rounded-[24px] bg-white shadow-[0_16px_45px_rgba(0,0,0,0.16)]"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                fontFamily:
+                  '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+              }}
+            >
+              {[
+                { name: 'Balanced', desc: 'Normal and clear' },
+                { name: 'Detailed', desc: 'More explanation' },
+                { name: 'Short', desc: 'Quick and concise' },
+                { name: 'Creative', desc: 'Ideas and writing' },
+              ].map((item, index) => (
+                <button
+                  key={item.name}
+                  type="button"
+                  onClick={() =>
+                    selectResponseStyle(
+                      item.name as 'Balanced' | 'Detailed' | 'Short' | 'Creative'
+                    )
+                  }
+                  className={`flex w-full items-center justify-between px-4 py-2.5 text-left ${
+                    index !== 0 ? 'border-t border-[#efefef]' : ''
+                  }`}
+                >
+                  <div className="pr-3">
+                    <div className="text-[14px] font-semibold leading-[1.2] tracking-[-0.02em] text-[#111111]">
+                      {item.name}
+                    </div>
+                    <div className="mt-0.5 text-[11px] font-medium leading-[1.2] text-[#9a9a9a]">
+                      {item.desc}
+                    </div>
+                  </div>
+
+                  {responseStyle === item.name && (
+                    <span className="shrink-0 text-[22px] font-semibold leading-none text-[#111111]">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 {toneOpen && (
   <div
     className="fixed inset-0 z-50 bg-black/25"
