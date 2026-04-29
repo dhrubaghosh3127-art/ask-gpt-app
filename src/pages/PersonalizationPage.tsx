@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const IconWrap: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -187,7 +187,17 @@ const PersonalizationRow: React.FC<{
 
 const PersonalizationPage: React.FC = () => {
   const navigate = useNavigate();
+const [defaultModeOpen, setDefaultModeOpen] = useState(false);
+  const [defaultMode, setDefaultMode] = useState<'Auto' | 'Thinking' | 'Fast'>(() => {
+    const saved = localStorage.getItem('askgpt_default_mode');
+    return saved === 'Auto' || saved === 'Thinking' || saved === 'Fast' ? saved : 'Auto';
+  });
 
+  const selectDefaultMode = (mode: 'Auto' | 'Thinking' | 'Fast') => {
+    setDefaultMode(mode);
+    localStorage.setItem('askgpt_default_mode', mode);
+    setDefaultModeOpen(false);
+  };
   return (
     <div className="h-[100dvh] overflow-hidden bg-white text-[#111111]">
       <div className="mx-auto flex h-full w-full max-w-[430px] flex-col px-4 pt-4 pb-5">
@@ -234,10 +244,11 @@ const PersonalizationPage: React.FC = () => {
 
         <div className="mt-5 space-y-[2px]">
           <PersonalizationRow
-            icon={<DefaultModeIcon />}
-            title="Default Mode"
-            value="Auto"
-          />
+  icon={<DefaultModeIcon />}
+  title="Default Mode"
+  value={defaultMode}
+  onClick={() => setDefaultModeOpen(true)}
+/>
           <PersonalizationRow
             icon={<CustomInstructionIcon />}
             title="Custom Instruction"
