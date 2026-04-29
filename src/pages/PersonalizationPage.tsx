@@ -289,56 +289,66 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
           />
         </div>
       </div>
-      {toneOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-end bg-black/25 px-7"
-          onClick={() => setToneOpen(false)}
-        >
-          <div
-            className="w-[285px] overflow-hidden rounded-[28px] bg-white shadow-[0_18px_55px_rgba(0,0,0,0.18)]"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-            }}
+{toneOpen && (
+  <div
+    className="fixed inset-0 z-50 bg-black/25"
+    onClick={() => setToneOpen(false)}
+  >
+    <div className="flex h-full items-center justify-end px-5">
+      <div
+        className="w-[252px] overflow-hidden rounded-[26px] bg-white shadow-[0_16px_45px_rgba(0,0,0,0.16)]"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+        }}
+      >
+        {[
+          { name: 'Default', desc: 'Preset style and tone' },
+          { name: 'Professional', desc: 'Polished and precise' },
+          { name: 'Friendly', desc: 'Warm and helpful' },
+          { name: 'Simple', desc: 'Clear and easy' },
+          { name: 'Funny', desc: 'Playful and light' },
+          { name: 'Direct', desc: 'Concise and straight' },
+        ].map((item, index) => (
+          <button
+            key={item.name}
+            type="button"
+            onClick={() =>
+              selectTone(
+                item.name as
+                  | 'Default'
+                  | 'Professional'
+                  | 'Friendly'
+                  | 'Simple'
+                  | 'Funny'
+                  | 'Direct'
+              )
+            }
+            className={`flex w-full items-center justify-between px-4 py-2.5 text-left ${
+              index !== 0 ? 'border-t border-[#efefef]' : ''
+            }`}
           >
-            {[
-              { name: 'Default', desc: 'Preset style and tone' },
-              { name: 'Professional', desc: 'Polished and precise' },
-              { name: 'Friendly', desc: 'Warm and helpful' },
-              { name: 'Simple', desc: 'Clear and easy' },
-              { name: 'Funny', desc: 'Playful and light' },
-              { name: 'Direct', desc: 'Concise and straight' },
-            ].map((item) => (
-              <button
-                key={item.name}
-                type="button"
-                onClick={() =>
-                  selectTone(
-                    item.name as 'Default' | 'Professional' | 'Friendly' | 'Simple' | 'Funny' | 'Direct'
-                  )
-                }
-                className="flex w-full items-center justify-between px-5 py-3.5 text-left"
-              >
-                <div>
-                  <div className="text-[16px] font-semibold tracking-[-0.02em] text-[#111111]">
-                    {item.name}
-                  </div>
-                  <div className="mt-0.5 text-[13px] font-medium text-[#9a9a9a]">
-                    {item.desc}
-                  </div>
-                </div>
+            <div className="pr-3">
+              <div className="text-[14px] font-semibold leading-[1.2] tracking-[-0.02em] text-[#111111]">
+                {item.name}
+              </div>
+              <div className="mt-0.5 text-[11.5px] font-medium leading-[1.25] text-[#9a9a9a]">
+                {item.desc}
+              </div>
+            </div>
 
-                {tone === item.name && (
-                  <span className="text-[24px] font-semibold leading-none text-[#111111]">
-                    ✓
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+            {tone === item.name && (
+              <span className="shrink-0 text-[22px] font-semibold leading-none text-[#111111]">
+                ✓
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
       {defaultModeOpen && (
   <div
     className="fixed inset-0 z-50 flex items-end bg-black/35"
