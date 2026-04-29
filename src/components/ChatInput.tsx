@@ -527,7 +527,7 @@ const handleImageFile = async (file: File | null) => {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-[24px] bg-white">
+      <div className="relative overflow-visible rounded-[24px] bg-white">
         <div className="relative">
   <button
     type="button"
@@ -562,7 +562,7 @@ const handleImageFile = async (file: File | null) => {
   </button>
 
   {modeOpen && (
-    <div className="absolute right-3 top-[50px] z-50 w-[150px] overflow-hidden rounded-[18px] bg-white shadow-[0_14px_36px_rgba(0,0,0,0.18)]">
+    <div className="absolute right-3 top-[42px] z-[999] w-[150px] overflow-hidden rounded-[18px] bg-white shadow-[0_14px_36px_rgba(0,0,0,0.18)]">
       <button
         type="button"
         onClick={() => {
