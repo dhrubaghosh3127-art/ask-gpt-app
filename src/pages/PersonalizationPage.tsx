@@ -254,18 +254,18 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
     });
   };
   const [fontSizeOpen, setFontSizeOpen] = useState(false);
-  const [fontSize, setFontSize] = useState<'Small' | 'Medium' | 'Large'>(() => {
-    const saved = localStorage.getItem('askgpt_font_size');
-    return saved === 'Small' || saved === 'Medium' || saved === 'Large'
-      ? saved
-      : 'Medium';
-  });
+const [fontSize, setFontSize] = useState(() => {
+  const saved = localStorage.getItem('askgpt_font_size');
+  return saved === 'Small' || saved === 'Medium' || saved === 'Large'
+    ? saved
+    : 'Medium';
+});
 
-  const selectFontSize = (value: 'Small' | 'Medium' | 'Large') => {
-    setFontSize(value);
-    localStorage.setItem('askgpt_font_size', value);
-    setFontSizeOpen(false);
-  };
+const selectFontSize = (value: string) => {
+  setFontSize(value);
+  localStorage.setItem('askgpt_font_size', value);
+  setFontSizeOpen(false);
+};
   return (
     <div className="h-[100dvh] overflow-hidden bg-white text-[#111111]">
       <div className="mx-auto flex h-full w-full max-w-[430px] flex-col px-4 pt-4 pb-5">
@@ -356,7 +356,7 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
                   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
               }}
             >
-              {(['Small', 'Medium', 'Large'] as const).map((size, index) => (
+              {['Small', 'Medium', 'Large'].map((size, index) => (
                 <button
                   key={size}
                   type="button"
