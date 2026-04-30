@@ -9,6 +9,6 @@ export type ReplyMode = 'full' | 'stream';
  * Default false/old safe mode.
  * App এখনো আগের মতো full reply দিয়েই চলবে।
  */
-export const REPLY_MODE: ReplyMode = 'stream';
+export const REPLY_MODE: ReplyMode = 'full';
 
 export const USE_STREAMING_REPLY = REPLY_MODE === 'stream';
