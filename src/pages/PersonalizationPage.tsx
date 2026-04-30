@@ -236,6 +236,10 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
     localStorage.setItem('askgpt_response_style', value);
     setResponseStyleOpen(false);
   };
+  const hasCustomInstructions =
+    Boolean(localStorage.getItem('askgpt_custom_name')?.trim()) ||
+    Boolean(localStorage.getItem('askgpt_custom_about')?.trim()) ||
+    Boolean(localStorage.getItem('askgpt_custom_response')?.trim());
   return (
     <div className="h-[100dvh] overflow-hidden bg-white text-[#111111]">
       <div className="mx-auto flex h-full w-full max-w-[430px] flex-col px-4 pt-4 pb-5">
@@ -291,10 +295,11 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
   onClick={() => setDefaultModeOpen(true)}
 />
           <PersonalizationRow
-            icon={<CustomInstructionIcon />}
-            title="Custom Instruction"
-            value="Set"
-          />
+  icon={<CustomInstructionIcon />}
+  title="Custom Instruction"
+  value={hasCustomInstructions ? 'Added' : 'Set'}
+  onClick={() => navigate('/custom-instructions')}
+/>
           <PersonalizationRow
             icon={<MemoryIcon />}
             title="Memory"
