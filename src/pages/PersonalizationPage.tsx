@@ -240,6 +240,19 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
     Boolean(localStorage.getItem('askgpt_custom_name')?.trim()) ||
     Boolean(localStorage.getItem('askgpt_custom_about')?.trim()) ||
     Boolean(localStorage.getItem('askgpt_custom_response')?.trim());
+  const [memoryOpen, setMemoryOpen] = useState(false);
+  const [memoryEnabled, setMemoryEnabled] = useState(() => {
+    const saved = localStorage.getItem('askgpt_memory_enabled');
+    return saved === null ? true : saved === 'true';
+  });
+
+  const toggleMemory = () => {
+    setMemoryEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem('askgpt_memory_enabled', String(next));
+      return next;
+    });
+  };
   return (
     <div className="h-[100dvh] overflow-hidden bg-white text-[#111111]">
       <div className="mx-auto flex h-full w-full max-w-[430px] flex-col px-4 pt-4 pb-5">
@@ -301,10 +314,11 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
   onClick={() => navigate('/custom-instructions')}
 />
           <PersonalizationRow
-            icon={<MemoryIcon />}
-            title="Memory"
-            value="On"
-          />
+  icon={<MemoryIcon />}
+  title="Memory"
+  value={memoryEnabled ? 'On' : 'Off'}
+  onClick={() => setMemoryOpen(true)}
+/>
         </div>
 
         <div className="mt-5">
@@ -315,6 +329,80 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
           />
         </div>
       </div>
+      {memoryOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-black/35"
+          onClick={() => setMemoryOpen(false)}
+        >
+          <div
+            className="w-full rounded-t-[32px] bg-[#fbfcf8] px-5 pt-3 pb-5 shadow-[0_-18px_50px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              fontFamily:
+                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+            }}
+          >
+            <div className="mb-4 flex justify-center">
+              <div className="h-[6px] w-[58px] rounded-full bg-[#d5d7dc]" />
+            </div>
+
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">
+                Memory
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMemoryOpen(false)}
+                className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#f1f3f0] text-[26px] leading-none text-[#111111]"
+                aria-label="Close memory"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="mb-5 text-[14px] font-medium leading-[1.45] text-[#7c7c82]">
+              Allow ASK-GPT to remember your preferences on this device.
+            </p>
+
+            <div className="overflow-hidden rounded-[24px] bg-white">
+              <div className="flex h-[64px] items-center justify-between px-4">
+                <div>
+                  <div className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                    Memory
+                  </div>
+                  <div className="mt-0.5 text-[12px] font-medium text-[#8b8e98]">
+                    {memoryEnabled ? 'On' : 'Off'}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={toggleMemory}
+                  className={`relative h-[32px] w-[56px] rounded-full transition-all ${
+                    memoryEnabled ? 'bg-[#111111]' : 'bg-[#d7d8dc]'
+                  }`}
+                  aria-label="Toggle memory"
+                >
+                  <span
+                    className={`absolute top-[3px] h-[26px] w-[26px] rounded-full bg-white shadow-sm transition-all ${
+                      memoryEnabled ? 'left-[27px]' : 'left-[3px]'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setMemoryOpen(false)}
+              className="mt-4 h-[52px] w-full rounded-[22px] bg-[#111111] text-[16px] font-semibold tracking-[-0.02em] text-white"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
       {responseStyleOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/25"
