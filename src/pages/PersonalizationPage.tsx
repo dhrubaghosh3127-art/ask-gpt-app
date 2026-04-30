@@ -253,6 +253,19 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
       return next;
     });
   };
+  const [fontSizeOpen, setFontSizeOpen] = useState(false);
+  const [fontSize, setFontSize] = useState<'Small' | 'Medium' | 'Large'>(() => {
+    const saved = localStorage.getItem('askgpt_font_size');
+    return saved === 'Small' || saved === 'Medium' || saved === 'Large'
+      ? saved
+      : 'Medium';
+  });
+
+  const selectFontSize = (value: 'Small' | 'Medium' | 'Large') => {
+    setFontSize(value);
+    localStorage.setItem('askgpt_font_size', value);
+    setFontSizeOpen(false);
+  };
   return (
     <div className="h-[100dvh] overflow-hidden bg-white text-[#111111]">
       <div className="mx-auto flex h-full w-full max-w-[430px] flex-col px-4 pt-4 pb-5">
@@ -321,14 +334,52 @@ const [defaultModeOpen, setDefaultModeOpen] = useState(false);
 />
         </div>
 
-        <div className="mt-5">
-          <PersonalizationRow
-            icon={<FontSizeIcon />}
-            title="Font Size"
-            value="Medium"
-          />
+        <PersonalizationRow
+  icon={<FontSizeIcon />}
+  title="Font Size"
+  value={fontSize}
+  onClick={() => setFontSizeOpen(true)}
+/>
         </div>
       </div>
+    {fontSizeOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/25"
+          onClick={() => setFontSizeOpen(false)}
+        >
+          <div className="flex h-full items-center justify-end px-6">
+            <div
+              className="w-[190px] overflow-hidden rounded-[24px] bg-white shadow-[0_16px_45px_rgba(0,0,0,0.16)]"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                fontFamily:
+                  '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+              }}
+            >
+              {(['Small', 'Medium', 'Large'] as const).map((size, index) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => selectFontSize(size)}
+                  className={`flex h-[52px] w-full items-center justify-between px-4 text-left ${
+                    index !== 0 ? 'border-t border-[#efefef]' : ''
+                  }`}
+                >
+                  <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#111111]">
+                    {size}
+                  </span>
+
+                  {fontSize === size && (
+                    <span className="shrink-0 text-[22px] font-semibold leading-none text-[#111111]">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {memoryOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end bg-black/35"
