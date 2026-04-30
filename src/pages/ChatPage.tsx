@@ -6,7 +6,6 @@ import ChatMessage from '../components/ChatMessage';
 import { Conversation, Message, Role } from '../types';
 import { getConversations, saveConversations, getUserApiKey, getFreeCount, incFreeCount } from '../utils/storage';
 import { getGeminiResponse } from '../services/geminiService';
-
 import { generateImage } from '../services/imageService';
 import {
   TOOL_CATEGORIES,
