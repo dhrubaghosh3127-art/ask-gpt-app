@@ -6,8 +6,7 @@ import ChatMessage from '../components/ChatMessage';
 import { Conversation, Message, Role } from '../types';
 import { getConversations, saveConversations, getUserApiKey, getFreeCount, incFreeCount } from '../utils/storage';
 import { getGeminiResponse } from '../services/geminiService';
-import { USE_STREAMING_REPLY } from '../streaming/streamingConfig';
-import { streamChatResponse } from '../streaming/streamClient';
+
 import { generateImage } from '../services/imageService';
 import {
   TOOL_CATEGORIES,
@@ -521,55 +520,35 @@ if (isThinkingModel) {
   stopThinking();
 }
 
-      const imageBase64ForReply = (() => {
-  const firstImage: any = images?.[0];
-  return typeof firstImage === "string"
-    ? firstImage
-    : firstImage?.base64 ||
+      const response = await getGeminiResponse({
+  prompt: images.length > 0 ? routeContent : content,
+  history: apiHistory,
+  modelId: routeModelId,
+  systemInstruction: systemPrompt,
+  imageBase64: (() => {
+    const firstImage: any = images?.[0];
+    return typeof firstImage === "string"
+      ? firstImage
+      : firstImage?.base64 ||
         firstImage?.imageBase64 ||
         firstImage?.dataUrl ||
         firstImage?.url ||
         "";
-})();
-
-const mimeTypeForReply = (() => {
-  const firstImage: any = images?.[0];
-  return firstImage?.mimeType || firstImage?.type || "image/jpeg";
-})();
+  })(),
+  mimeType: (() => {
+    const firstImage: any = images?.[0];
+    return firstImage?.mimeType || firstImage?.type || "image/jpeg";
+  })(),
+});
 
 const botMessage: Message = {
   id: (Date.now() + 1).toString(),
   role: Role.MODEL,
-  content: "",
-  timestamp: Date.now(),
+  content: response,
+  timestamp: Date.now()
 };
 
-if (USE_STREAMING_REPLY) {
-  let streamedText = "";
-
-  updateConversation([...updatedMessages, botMessage]);
-
-  try {
-    await streamChatResponse({
-      prompt: images.length > 0 ? routeContent : content,
-      messages: apiHistory,
-      modelId: routedModelId,
-      systemInstruction: systemPrompt,
-      imageBase64: imageBase64ForReply,
-      mimeType: mimeTypeForReply,
-      userApiKey: getUserApiKey()?.trim() || "",
-      userKey: getUserApiKey()?.trim() || "",
-      onChunk: (chunk) => {
-        streamedText += chunk;
-
-        updateConversation([
-          ...updatedMessages,
-          {
-            ...botMessage,
-            content: streamedText,
-          },
-        ]);
-      },
+updateConversation([...updatedMessages, botMessage]);
     });
   } catch {
     const response = await getGeminiResponse({
