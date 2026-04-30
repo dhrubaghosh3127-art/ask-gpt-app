@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const ArrowLeftIcon = () => (
@@ -49,7 +49,7 @@ const CustomInstructionsPage: React.FC = () => {
 
   const showToast = (message: string) => {
     setToast(message);
-    setTimeout(() => setToast(''), 2200);
+    setTimeout(() => setToast(''), 1800);
   };
 
   const handleSave = () => {
@@ -73,17 +73,14 @@ const CustomInstructionsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-white text-[#111111]">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col px-4 pb-6 pt-4">
-        <div className="mb-8 flex items-center justify-between">
+    <div className="h-[100dvh] overflow-hidden bg-white text-[#111111]">
+      <div className="mx-auto flex h-full w-full max-w-[430px] flex-col px-5 pb-4 pt-4">
+        <div className="mb-5 flex items-center justify-between">
           <button
             type="button"
             onClick={() => navigate(-1)}
             className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f7f7f8] text-[#111111]"
-            style={{
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-            }}
+            aria-label="Back"
           >
             <ArrowLeftIcon />
           </button>
@@ -92,10 +89,6 @@ const CustomInstructionsPage: React.FC = () => {
             type="button"
             onClick={handleSave}
             className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#f7f7f8] text-[#111111]"
-            style={{
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-            }}
             aria-label="Save custom instructions"
           >
             <CheckIcon />
@@ -103,7 +96,7 @@ const CustomInstructionsPage: React.FC = () => {
         </div>
 
         <div
-          className="mb-8 text-center text-[30px] font-bold tracking-[-0.04em] text-[#111111]"
+          className="mb-6 text-center text-[30px] font-bold tracking-[-0.04em] text-[#111111]"
           style={{
             fontFamily:
               '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
@@ -112,7 +105,7 @@ const CustomInstructionsPage: React.FC = () => {
           Custom Instructions
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div>
             <div
               className="mb-2 px-1 text-[15px] font-semibold tracking-[-0.02em] text-[#111111]"
@@ -128,7 +121,7 @@ const CustomInstructionsPage: React.FC = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name or nickname"
-              className="w-full rounded-[24px] bg-[#f7f7f8] px-5 py-4 text-[16px] font-medium tracking-[-0.02em] text-[#111111] outline-none placeholder:text-[#9b9ca3]"
+              className="h-[56px] w-full rounded-[24px] bg-[#f7f7f8] px-5 text-[16px] font-medium tracking-[-0.02em] text-[#111111] outline-none placeholder:text-[#9b9ca3]"
               style={{
                 fontFamily:
                   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
@@ -151,8 +144,7 @@ const CustomInstructionsPage: React.FC = () => {
               value={about}
               onChange={(e) => setAbout(e.target.value)}
               placeholder="Share anything that may help ASK-GPT give better responses."
-              rows={5}
-              className="w-full resize-none rounded-[24px] bg-[#f7f7f8] px-5 py-4 text-[16px] font-medium leading-[1.45] tracking-[-0.02em] text-[#111111] outline-none placeholder:text-[#9b9ca3]"
+              className="h-[112px] w-full resize-none rounded-[24px] bg-[#f7f7f8] px-5 py-4 text-[15px] font-medium leading-[1.35] tracking-[-0.02em] text-[#111111] outline-none placeholder:text-[#9b9ca3]"
               style={{
                 fontFamily:
                   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
@@ -175,8 +167,7 @@ const CustomInstructionsPage: React.FC = () => {
               value={response}
               onChange={(e) => setResponse(e.target.value)}
               placeholder="Tell ASK-GPT your preferred language, tone, detail level, or format."
-              rows={5}
-              className="w-full resize-none rounded-[24px] bg-[#f7f7f8] px-5 py-4 text-[16px] font-medium leading-[1.45] tracking-[-0.02em] text-[#111111] outline-none placeholder:text-[#9b9ca3]"
+              className="h-[112px] w-full resize-none rounded-[24px] bg-[#f7f7f8] px-5 py-4 text-[15px] font-medium leading-[1.35] tracking-[-0.02em] text-[#111111] outline-none placeholder:text-[#9b9ca3]"
               style={{
                 fontFamily:
                   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
@@ -185,23 +176,11 @@ const CustomInstructionsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-7 space-y-3">
-          <button
-            type="button"
-            onClick={handleSave}
-            className="h-[56px] w-full rounded-[24px] bg-[#111111] text-[16px] font-semibold tracking-[-0.02em] text-white"
-            style={{
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-            }}
-          >
-            Save
-          </button>
-
+        <div className="mt-5 grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={handleReset}
-            className="h-[56px] w-full rounded-[24px] bg-[#f7f7f8] text-[16px] font-semibold tracking-[-0.02em] text-[#111111]"
+            className="h-[52px] rounded-[22px] bg-[#f7f7f8] text-[16px] font-semibold tracking-[-0.02em] text-[#111111]"
             style={{
               fontFamily:
                 '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
@@ -209,21 +188,23 @@ const CustomInstructionsPage: React.FC = () => {
           >
             Reset
           </button>
-        </div>
 
-        <p
-          className="mt-5 px-2 text-center text-[12px] font-medium leading-[1.45] text-[#8b8e98]"
-          style={{
-            fontFamily:
-              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-          }}
-        >
-          These instructions will be used later to personalize ASK-GPT responses.
-        </p>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="h-[52px] rounded-[22px] bg-[#111111] text-[16px] font-semibold tracking-[-0.02em] text-white"
+            style={{
+              fontFamily:
+                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+            }}
+          >
+            Save
+          </button>
+        </div>
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4">
+        <div className="fixed bottom-5 left-0 right-0 z-50 flex justify-center px-4">
           <div
             className="rounded-[18px] bg-[#111111] px-5 py-3 text-[14px] font-medium text-white shadow-[0_14px_34px_rgba(0,0,0,0.25)]"
             style={{
