@@ -1,8 +1,10 @@
-// ASK-GPT Brain Types
+// ASK-GPT Brain Types - v2 Semantic
 
 export type BrainMode = 'old' | 'new';
 
 export type BrainIntent =
+  | 'general'
+  | 'casual_chat'
   | 'general_explanation'
   | 'math_reasoning'
   | 'coding'
@@ -12,7 +14,6 @@ export type BrainIntent =
   | 'current_information'
   | 'image_analysis'
   | 'study_help'
-  | 'casual_chat'
   | 'multi_task'
   | 'unknown';
 
@@ -24,7 +25,7 @@ export type BrainRoute =
   | 'image_analysis'
   | 'workflow';
 
-export type BrainLanguage = 'en' | 'bn' | 'mixed';
+export type BrainLanguage = 'en' | 'bn' | 'mixed' | 'auto';
 
 export type BrainTone =
   | 'default'
@@ -57,6 +58,8 @@ export interface BrainInput {
   text: string;
   hasImage?: boolean;
   selectedMode?: 'Auto' | 'Fast' | 'Thinking';
+  userApiKey?: string;
+  userKey?: string;
   userSettings?: {
     tone?: BrainTone;
     responseStyle?: BrainDepth;
@@ -85,4 +88,12 @@ export interface BrainDecision {
   modelId: string;
   tasks: BrainTask[];
   finalResponsePlan: string;
+}
+
+// Raw output from brain classifier model before validation
+export interface BrainClassifierResult {
+  raw: string;
+  parsed: BrainDecision | null;
+  success: boolean;
+  error?: string;
 }
