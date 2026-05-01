@@ -54,39 +54,8 @@ onClick={() => navigate('/history')}
     aria-label="Open Discover"
     className="h-[46px] px-4 rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center gap-2 text-[#111827] active:scale-[0.97] transition"
   >
-    <svg
-      className="w-[20px] h-[20px]"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2.2}
-        d="M4 7.5C4 6.12 5.12 5 6.5 5h8A2.5 2.5 0 0 1 17 7.5v8A2.5 2.5 0 0 1 14.5 18h-8A2.5 2.5 0 0 1 4 15.5v-8Z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2.2}
-        d="M8 3.5h8.5A3.5 3.5 0 0 1 20 7v8.5"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2.2}
-        d="M9 11.5l2 2 4-4"
-      />
-    </svg>
-
-    <span
-      className="text-[13px] font-semibold tracking-[-0.01em]"
-      style={{
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
-      }}
-    >
+    <span className="text-[20px] leading-none">🧭</span>
+    <span className="text-[13px] font-semibold tracking-[-0.01em]">
       Discover
     </span>
   </button>
