@@ -1,14 +1,16 @@
-// ASK-GPT Brain Config
-// BRAIN_MODE = 'old' means current app works normally, brain is inactive
+// ASK-GPT Brain Config - v2 Semantic
+// Default: everything inactive. Current app is NOT affected.
 
-export const BRAIN_MODE = 'old' as 'old' | 'new';
+export const BRAIN_MODE: 'old' | 'new' = 'old';
 
-export const BRAIN_VERSION = 'v1';
+export const BRAIN_VERSION = 'v2-semantic';
 
 export const BRAIN_CLASSIFIER_MODEL_ID = 'openai/gpt-oss-120b';
 
-export const BRAIN_TOKEN_CONFIG = {
-  maxTokens: 250,
-  temperature: 0,
-  topP: 1,
-};
+export const BRAIN_CLASSIFIER_MAX_TOKENS = 250;
+
+export const BRAIN_CLASSIFIER_TEMPERATURE = 0;
+
+// Master switch for AI classifier API call.
+// Must be explicitly set to true to activate.
+export const ENABLE_AI_BRAIN_CLASSIFIER = false;
