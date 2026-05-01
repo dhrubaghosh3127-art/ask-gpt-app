@@ -6,6 +6,8 @@ import ChatMessage from '../components/ChatMessage';
 import { Conversation, Message, Role } from '../types';
 import { getConversations, saveConversations, getUserApiKey, getFreeCount, incFreeCount } from '../utils/storage';
 import { getGeminiResponse } from '../services/geminiService';
+import { decideAskGptRoute } from '../brain/askGptBrain';
+import { BRAIN_MODE, ENABLE_AI_BRAIN_CLASSIFIER } from '../brain/brainConfig';
 import { generateImage } from '../services/imageService';
 import {
   TOOL_CATEGORIES,
@@ -504,13 +506,59 @@ const routeModelId =
       ? ADMIN_THINK_ID
       : ADMIN_DEFAULT_ID
     : autoModel;
+      let finalModelId = routeModelId;
+let finalSystemPrompt = systemPrompt;
+
+if (BRAIN_MODE === 'new' && ENABLE_AI_BRAIN_CLASSIFIER) {
+  try {
+    const brainDecision = await decideAskGptRoute({
+      text: routeContent,
+      hasImage: images.length > 0,
+      selectedMode: selectedModel === DEFAULT_MODEL_ID ? 'Auto' : 'Auto',
+      userApiKey: userKey?.trim() || '',
+      userKey: userKey?.trim() || '',
+      userSettings: {
+        tone: 'friendly',
+        responseStyle: 'balanced',
+        defaultMode: 'Auto',
+        memoryEnabled: true,
+      },
+      recentContext: apiHistory
+        .slice(-3)
+        .map((m) => `${m.role}: ${m.content}`)
+        .join('\n')
+        .slice(0, 500),
+    });
+
+    finalModelId = brainDecision.modelId || routeModelId;
+
+    finalSystemPrompt = [
+      systemPrompt,
+      brainDecision.finalResponsePlan
+        ? `ASK-GPT Brain plan: ${brainDecision.finalResponsePlan}`
+        : '',
+      brainDecision.isMultiTask && brainDecision.tasks.length > 0
+        ? `Follow this workflow internally: ${brainDecision.tasks
+            .map((task) => `${task.id}: ${task.description}`)
+            .join(' | ')}`
+        : '',
+      'Do not mention internal routing, model selection, or brain decisions to the user.',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+  } catch (error) {
+    console.warn('[ASK-GPT Brain] Falling back to old route:', error);
+    finalModelId = routeModelId;
+  finalSystemPrompt = systemPrompt;
+  }
+}
 const isThinkingModel =
-  routeModelId === AUTO_THINK_ID ||
-  routeModelId === ADMIN_THINK_ID ||
-  routeModelId === ADMIN_WEB_ID;
+  finalModelId === AUTO_THINK_ID ||
+  finalModelId === ADMIN_THINK_ID ||
+  finalModelId === ADMIN_WEB_ID;
 
 if (isThinkingModel) {
-  if (routeModelId === ADMIN_WEB_ID) {
+  if (finalModelId === ADMIN_WEB_ID) {
     startThinking("Searching web", WEB_SEARCH_LINES);
   } else {
     startThinking("Thinking", THINKING_LINES);
@@ -521,8 +569,8 @@ if (isThinkingModel) {
       const response = await getGeminiResponse({
   prompt: images.length > 0 ? routeContent : content,
   history: apiHistory,
-  modelId: routeModelId,
-  systemInstruction: systemPrompt,
+  modelId: finalModelId,
+systemInstruction: finalSystemPrompt,
   imageBase64: (() => {
     const firstImage: any = images?.[0];
     return typeof firstImage === "string"
