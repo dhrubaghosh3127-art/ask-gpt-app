@@ -518,7 +518,6 @@ if (isThinkingModel) {
 } else {
   stopThinking();
 }
-
       const response = await getGeminiResponse({
   prompt: images.length > 0 ? routeContent : content,
   history: apiHistory,
@@ -548,43 +547,6 @@ const botMessage: Message = {
 };
 
 updateConversation([...updatedMessages, botMessage]);
-    });
-  } catch {
-    const response = await getGeminiResponse({
-      prompt: images.length > 0 ? routeContent : content,
-      history: apiHistory,
-      modelId: routedModelId,
-      systemInstruction: systemPrompt,
-      imageBase64: imageBase64ForReply,
-      mimeType: mimeTypeForReply,
-    });
-
-    updateConversation([
-      ...updatedMessages,
-      {
-        ...botMessage,
-        content: response,
-      },
-    ]);
-  }
-} else {
-  const response = await getGeminiResponse({
-    prompt: images.length > 0 ? routeContent : content,
-    history: apiHistory,
-    modelId: routedModelId,
-    systemInstruction: systemPrompt,
-    imageBase64: imageBase64ForReply,
-    mimeType: mimeTypeForReply,
-  });
-
-  updateConversation([
-    ...updatedMessages,
-    {
-      ...botMessage,
-      content: response,
-    },
-  ]);
-                          }
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
