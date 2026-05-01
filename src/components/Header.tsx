@@ -48,30 +48,49 @@ onClick={() => navigate('/history')}
     </div>
 
     <div className="pointer-events-auto absolute right-4 top-4">
-  <div className="h-[46px] w-[94px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center gap-[8px] px-[8px]">
-    <button
-      type="button"
-      onClick={() => {
-        window.location.href = '/chat';
-      }}
-      className="h-[30px] w-[30px] rounded-full border border-[#d9dbe3] flex items-center justify-center text-[#111827]"
+  <button
+    type="button"
+    onClick={() => navigate('/discover')}
+    aria-label="Open Discover"
+    className="h-[46px] px-4 rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center gap-2 text-[#111827] active:scale-[0.97] transition"
+  >
+    <svg
+      className="w-[20px] h-[20px]"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
     >
-      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.3} d="M12 5v14M5 12h14" />
-      </svg>
-    </button>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.2}
+        d="M4 7.5C4 6.12 5.12 5 6.5 5h8A2.5 2.5 0 0 1 17 7.5v8A2.5 2.5 0 0 1 14.5 18h-8A2.5 2.5 0 0 1 4 15.5v-8Z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.2}
+        d="M8 3.5h8.5A3.5 3.5 0 0 1 20 7v8.5"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.2}
+        d="M9 11.5l2 2 4-4"
+      />
+    </svg>
 
-    <button
-      type="button"
-      className="h-[30px] w-[30px] flex items-center justify-center text-[#111827]"
+    <span
+      className="text-[13px] font-semibold tracking-[-0.01em]"
+      style={{
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
+      }}
     >
-      <svg className="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="5" r="2" />
-        <circle cx="12" cy="12" r="2" />
-        <circle cx="12" cy="19" r="2" />
-      </svg>
-    </button>
-  </div>
+      Discover
+    </span>
+  </button>
+</div>
 </div>
   </header>
 );
