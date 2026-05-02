@@ -39,12 +39,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
           '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
       }}
     >
-      Chat History
+      History
     </span>
-
-    className="text-[14px] text-[#6b7280] leading-none mt-[1px]"
-      ˅
-    </span>
+<span className="text-[14px] text-[#6b7280] leading-none mt-[1px]">
+  ˅
+</span>
   </button>
 </div>
 
