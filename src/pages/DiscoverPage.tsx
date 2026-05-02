@@ -363,7 +363,7 @@ const DiscoverPage: React.FC = () => {
           <Card
             key={card.id}
             card={card}
-            onClick={() => alert(`Opening: ${card.headline}`)}
+            onClick={() => navigate(`/discover/${card.id}`)}
           />
         ))}
       </div>
