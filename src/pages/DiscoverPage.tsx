@@ -260,35 +260,36 @@ const DiscoverPage: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          {/* Back button */}
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              width: 44, height: 44,
-              borderRadius: '50%',
-              background: '#fff',
-              border: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.08)',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 5l-7 7 7 7" />
-            </svg>
-          </button>
-
-          {/* Title */}
-          <span style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: '#111827',
-            letterSpacing: '-0.02em',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-          }}>
-            Discover
-          </span>
+          {/* Left: back + title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                width: 44, height: 44,
+                borderRadius: '50%',
+                background: '#fff',
+                border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 1px 6px rgba(0,0,0,0.08)',
+                WebkitTapHighlightColor: 'transparent',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <span style={{
+              fontSize: 26,
+              fontWeight: 800,
+              color: '#111827',
+              letterSpacing: '-0.03em',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}>
+              Discover
+            </span>
+          </div>
 
           {/* Heart / Love button */}
           <button
