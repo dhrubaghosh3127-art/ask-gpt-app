@@ -26,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
       </button>
     </div>
 
-    <div className="pointer-events-auto absolute left-[calc(50%-24px)] top-4 -translate-x-1/2">
+    <div className="pointer-events-auto absolute left-1/2 top-4 -translate-x-1/2">
       <button
         type="button"
 onClick={() => navigate('/history')}
