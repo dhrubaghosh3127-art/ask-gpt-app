@@ -236,10 +236,14 @@ const DiscoverPage: React.FC = () => {
 
   return (
     <div style={{
-      minHeight: '100vh',
-      background: '#f5f5f7',
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-    }}>
+  height: '100dvh',
+  overflowY: 'auto',
+  overflowX: 'hidden',
+  WebkitOverflowScrolling: 'touch',
+  overscrollBehaviorY: 'contain',
+  background: '#f5f5f7',
+  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+}}>
 
       {/* ── Header ── */}
       <div style={{
