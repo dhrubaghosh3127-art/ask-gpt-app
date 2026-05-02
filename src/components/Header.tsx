@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
     className="h-[46px] px-3 flex items-center justify-center gap-2 text-[#111827] active:scale-[0.98] transition-transform"
   >
     <span
-      className="text-[19px] font-semibold tracking-[-0.03em]"
+      className="text-[16px] font-medium tracking-[-0.02em] text-[#1f2933]"
       style={{
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif',
@@ -42,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
       Chat History
     </span>
 
-    <span className="text-[18px] text-[#6b7280] leading-none">
+    className="text-[14px] text-[#6b7280] leading-none mt-[1px]"
       ˅
     </span>
   </button>
