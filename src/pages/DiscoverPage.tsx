@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -231,9 +231,40 @@ const DiscoverPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'foryou' | 'bangladesh'>('foryou');
   const [loved, setLoved] = useState(false);
+  const [cards, setCards] = useState<NewsCard[]>(FOR_YOU_CARDS);
 
-  const cards = activeTab === 'foryou' ? FOR_YOU_CARDS : BANGLADESH_CARDS;
+  useEffect(() => {
+    let cancelled = false;
 
+    async function loadDiscoverCards() {
+      const fallbackCards = activeTab === 'foryou' ? FOR_YOU_CARDS : BANGLADESH_CARDS;
+
+      setCards(fallbackCards);
+
+      try {
+        const response = await fetch(`/api/discover?tab=${activeTab}`);
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+          throw new Error(result?.error || 'Failed to load Discover feed');
+        }
+
+        if (!cancelled) {
+          setCards(Array.isArray(result.cards) && result.cards.length > 0 ? result.cards : fallbackCards);
+        }
+      } catch {
+        if (!cancelled) {
+          setCards(fallbackCards);
+        }
+      }
+    }
+
+    loadDiscoverCards();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
   return (
     <div style={{
   height: '100dvh',
