@@ -22,6 +22,7 @@ import AuthPage from './pages/AuthPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
 import MyProfilePage from './pages/MyProfilePage';
 import DiscoverPage from './pages/DiscoverPage';
+import DiscoverDetailsPage from './pages/DiscoverDetailsPage';
 import { getAuthState } from './utils/storage';
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -126,6 +127,7 @@ const startPath = useMemo(() => {
         <Route path="/chat" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
         <Route path="/chat/:id" element={<ChatPage toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />} />
         <Route path="/discover" element={<DiscoverPage />} />
+        <Route path="/discover/:id" element={<DiscoverDetailsPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/history/archived" element={<ArchivedPage />} />
         <Route path="/settings" element={<SettingsPage />} />
