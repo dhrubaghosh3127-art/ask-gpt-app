@@ -224,13 +224,18 @@ const DiscoverDetailsPage: React.FC = () => {
     );
   }
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f5f5f7',
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-      paddingBottom: 100,
-    }}>
+
+return (
+  <div style={{
+    height: '100dvh',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    WebkitOverflowScrolling: 'touch',
+    overscrollBehaviorY: 'contain',
+    background: '#f5f5f7',
+    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+    paddingBottom: 100,
+  }}>
 
       {/* ── Hero Image with overlay buttons ── */}
       <div style={{ position: 'relative', width: '100%', height: 360 }}>
