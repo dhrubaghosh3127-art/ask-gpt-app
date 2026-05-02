@@ -60,7 +60,7 @@ onClick={() => navigate('/history')}
     </span>
   </button>
 </div>
-</div>
+
   </header>
 );
 };
