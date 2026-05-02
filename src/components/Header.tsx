@@ -50,7 +50,7 @@ onClick={() => navigate('/history')}
 <div className="pointer-events-auto absolute right-4 top-4">
   <button
     type="button"
-    onClick={() => navigate('/discover')}
+    onClick={() => {}}
     aria-label="Open Discover"
     className="h-[46px] w-[46px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center"
   >
