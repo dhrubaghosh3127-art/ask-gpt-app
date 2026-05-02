@@ -47,20 +47,51 @@ onClick={() => navigate('/history')}
       </button>
     </div>
 
-    <div className="pointer-events-auto absolute right-4 top-4">
+<div className="pointer-events-auto absolute right-4 top-4">
   <button
     type="button"
     onClick={() => navigate('/discover')}
     aria-label="Open Discover"
-    className="h-[46px] px-4 rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center gap-2 text-[#111827] active:scale-[0.97] transition"
+    className="h-[46px] w-[46px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center text-[#111827]"
   >
-    <span className="text-[20px] leading-none">🧭</span>
-    <span className="text-[13px] font-semibold tracking-[-0.01em]">
-      Discover
-    </span>
+    <svg
+      className="w-[20px] h-[20px]"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <circle cx="12" cy="12" r="8" strokeWidth={2.2} />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.2}
+        d="M14.5 9.5l-2 5-3 1 2-5 3-1Z"
+      />
+    </svg>
+  </button>
+</div><div className="pointer-events-auto absolute right-4 top-4">
+  <button
+    type="button"
+    onClick={() => navigate('/discover')}
+    aria-label="Open Discover"
+    className="h-[46px] w-[46px] rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.035)] flex items-center justify-center text-[#111827]"
+  >
+    <svg
+      className="w-[20px] h-[20px]"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <circle cx="12" cy="12" r="8" strokeWidth={2.2} />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.2}
+        d="M14.5 9.5l-2 5-3 1 2-5 3-1Z"
+      />
+    </svg>
   </button>
 </div>
-
   </header>
 );
 };
