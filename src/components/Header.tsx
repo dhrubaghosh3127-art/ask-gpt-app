@@ -46,32 +46,27 @@ onClick={() => navigate('/history')}
         </span>
       </button>
     </div>
+
 <div className="pointer-events-auto absolute right-4 top-4">
   <button
     type="button"
     onClick={() => {}}
     aria-label="Open Discover"
-    className="h-[46px] w-[46px] rounded-[17px] bg-[#eef8f7] shadow-[0_2px_8px_rgba(15,23,42,0.04)] flex items-center justify-center text-[#0f766e] active:scale-[0.96] transition-transform"
+    className="relative h-[46px] w-[46px] overflow-hidden rounded-[17px] bg-[#f3f2f8] shadow-[0_2px_8px_rgba(15,23,42,0.04)] active:scale-[0.96] transition-transform"
+    style={{
+      backgroundImage:
+        "url('https://images.unsplash.com/photo-1677442136019-21780ecad995?w=300&auto=format&fit=crop')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }}
   >
-    <svg
-      className="h-[22px] w-[22px]"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.15}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4.5 6.75A2.25 2.25 0 0 1 6.75 4.5h10.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 17.25V6.75Z" />
-      <path d="M8.25 8.75h7.5" />
-      <path d="M8.25 12h5.5" />
-      <path d="M8.25 15.25h3.25" />
-      <path d="M16.75 13.25l1.25 1.25 1.75-2" />
-    </svg>
+    <div className="absolute inset-0 bg-black/10" />
+
+    <div className="absolute bottom-[4px] right-[4px] flex h-[19px] w-[19px] items-center justify-center rounded-full bg-white/95 text-[11px] shadow-sm">
+      📰
+    </div>
   </button>
 </div>
-
-
   </header>
 );
 };
