@@ -16,7 +16,7 @@
     "remark-gfm": "^4.0.0",
     "@google/generativeai": "^1.42.0",
 "firebase": "^11.0.2",
-"firebase-admin": "^13.8.0",
+"firebase-admin": "^13.4.0",
 "rss-parser": "^3.13.0"
   },
   "devDependencies": {
