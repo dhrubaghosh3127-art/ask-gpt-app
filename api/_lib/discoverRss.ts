@@ -342,4 +342,4 @@ export async function fetchDiscoverCardsFromSources(
   return deduplicated
     .sort((a, b) => b.score - a.score || new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, limit);
-  }
+    }
