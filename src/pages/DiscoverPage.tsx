@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+           import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -231,50 +231,15 @@ const DiscoverPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'foryou' | 'bangladesh'>('foryou');
   const [loved, setLoved] = useState(false);
-  const [cards, setCards] = useState<NewsCard[]>(FOR_YOU_CARDS);
 
-  useEffect(() => {
-    let cancelled = false;
+  const cards = activeTab === 'foryou' ? FOR_YOU_CARDS : BANGLADESH_CARDS;
 
-    async function loadDiscoverCards() {
-      const fallbackCards = activeTab === 'foryou' ? FOR_YOU_CARDS : BANGLADESH_CARDS;
-
-      setCards(fallbackCards);
-
-      try {
-        const response = await fetch(`/api/discover?tab=${activeTab}`);
-        const result = await response.json();
-
-        if (!response.ok || !result.ok) {
-          throw new Error(result?.error || 'Failed to load Discover feed');
-        }
-
-        if (!cancelled) {
-          setCards(Array.isArray(result.cards) && result.cards.length > 0 ? result.cards : fallbackCards);
-        }
-      } catch {
-        if (!cancelled) {
-          setCards(fallbackCards);
-        }
-      }
-    }
-
-    loadDiscoverCards();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeTab]);
   return (
     <div style={{
-  height: '100dvh',
-  overflowY: 'auto',
-  overflowX: 'hidden',
-  WebkitOverflowScrolling: 'touch',
-  overscrollBehaviorY: 'contain',
-  background: '#f5f5f7',
-  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-}}>
+      minHeight: '100vh',
+      background: '#f5f5f7',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+    }}>
 
       {/* ── Header ── */}
       <div style={{
@@ -291,36 +256,35 @@ const DiscoverPage: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          {/* Left: back + title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={() => navigate(-1)}
-              style={{
-                width: 44, height: 44,
-                borderRadius: '50%',
-                background: '#fff',
-                border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 1px 6px rgba(0,0,0,0.08)',
-                WebkitTapHighlightColor: 'transparent',
-                flexShrink: 0,
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 5l-7 7 7 7" />
-              </svg>
-            </button>
-            <span style={{
-              fontSize: 26,
-              fontWeight: 800,
-              color: '#111827',
-              letterSpacing: '-0.03em',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}>
-              Discover
-            </span>
-          </div>
+          {/* Back button */}
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              width: 44, height: 44,
+              borderRadius: '50%',
+              background: '#fff',
+              border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.08)',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+          </button>
+
+          {/* Title */}
+          <span style={{
+            fontSize: 22,
+            fontWeight: 700,
+            color: '#111827',
+            letterSpacing: '-0.02em',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+          }}>
+            Discover
+          </span>
 
           {/* Heart / Love button */}
           <button
@@ -394,7 +358,7 @@ const DiscoverPage: React.FC = () => {
           <Card
             key={card.id}
             card={card}
-            onClick={() => navigate(`/discover/${card.id}`)}
+            onClick={() => alert(`Opening: ${card.headline}`)}
           />
         ))}
       </div>
@@ -402,4 +366,4 @@ const DiscoverPage: React.FC = () => {
   );
 };
 
-export default DiscoverPage;
+export default DiscoverPage;           
