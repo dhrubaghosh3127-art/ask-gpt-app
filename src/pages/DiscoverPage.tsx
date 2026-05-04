@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
 interface NewsCard {
   id: string;
   image: string;
@@ -14,10 +12,7 @@ interface NewsCard {
   category: string;
 }
 
-// ── Header height constant (used for snap item min-height) ───────────────────
 const HEADER_H = 126;
-
-// ── Sub-components ────────────────────────────────────────────────────────────
 
 function CategoryBadge({ label }: { label: string }) {
   return (
@@ -50,7 +45,6 @@ function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      {/* Image */}
       <div style={{ position: 'relative', width: '100%', height: 220, overflow: 'hidden' }}>
         <img
           src={card.image}
@@ -61,8 +55,6 @@ function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
           <CategoryBadge label={card.category} />
         </div>
       </div>
-
-      {/* Content */}
       <div style={{ padding: '14px 16px 16px' }}>
         <div style={{
           display: 'flex', alignItems: 'center',
@@ -88,7 +80,6 @@ function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
             {card.timeAgo}
           </span>
         </div>
-
         <h2 style={{
           fontSize: 18, fontWeight: 700, lineHeight: 1.35, color: '#111827',
           margin: '0 0 8px',
@@ -97,7 +88,6 @@ function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
         }}>
           {card.headline}
         </h2>
-
         <p style={{
           fontSize: 14, lineHeight: 1.6, color: '#6b7280', margin: 0,
           fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -113,8 +103,6 @@ function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
   );
 }
 
-// ── Main Page ────────────────────────────────────────────────────────────────
-
 const DiscoverPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'foryou' | 'bangladesh'>('foryou');
@@ -128,7 +116,6 @@ const DiscoverPage: React.FC = () => {
     setLoading(true);
     setError('');
     setCards([]);
-
     const limit = activeTab === 'bangladesh' ? 10 : 20;
     fetch(`/api/discover?tab=${activeTab}&limit=${limit}`)
       .then(res => res.json())
@@ -146,15 +133,11 @@ const DiscoverPage: React.FC = () => {
         setCards([]);
         setError('Could not load news. Please try again.');
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [activeTab]);
 
   return (
-    // Root: fixed viewport, no body scroll
     <div style={{
       height: '100dvh',
       overflow: 'hidden',
@@ -164,7 +147,7 @@ const DiscoverPage: React.FC = () => {
       flexDirection: 'column',
     }}>
 
-      {/* ── Header (never scrolls away) ── */}
+      {/* ── Header ── */}
       <div style={{
         flexShrink: 0,
         background: 'rgba(245,245,247,0.97)',
@@ -174,7 +157,6 @@ const DiscoverPage: React.FC = () => {
         zIndex: 50,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Left: back + title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button
               onClick={() => navigate(-1)}
@@ -197,8 +179,6 @@ const DiscoverPage: React.FC = () => {
               Discover
             </span>
           </div>
-
-          {/* Heart button */}
           <button
             onClick={() => setLoved(v => !v)}
             style={{
@@ -219,8 +199,6 @@ const DiscoverPage: React.FC = () => {
             )}
           </button>
         </div>
-
-        {/* ── Tabs ── */}
         <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingLeft: 2 }}>
           {(['foryou', 'bangladesh'] as const).map(tab => {
             const isActive = activeTab === tab;
@@ -250,76 +228,100 @@ const DiscoverPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Feed scroll area (only this scrolls) ── */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehaviorY: 'contain',
-        scrollSnapType: 'y mandatory',
-        scrollBehavior: 'smooth',
-        padding: '0 16px',
-      }}>
+      {/* ── Feed area (with peek overlays) ── */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
 
-        {/* Loading */}
-        {loading && (
-          <div style={{
-            minHeight: `calc(100dvh - ${HEADER_H}px)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#9ca3af', fontSize: 15,
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-          }}>
-            Loading news…
-          </div>
-        )}
+        {/* Top fade overlay — hints at previous card */}
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0,
+          height: 32,
+          background: 'linear-gradient(to bottom, #f5f5f7 0%, transparent 100%)',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }} />
 
-        {/* Error */}
-        {!loading && error && (
-          <div style={{
-            minHeight: `calc(100dvh - ${HEADER_H}px)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#9ca3af', fontSize: 15,
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-          }}>
-            {error}
-          </div>
-        )}
+        {/* Bottom fade overlay — hints at next card */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0, left: 0, right: 0,
+          height: 32,
+          background: 'linear-gradient(to top, #f5f5f7 0%, transparent 100%)',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }} />
 
-        {/* Empty */}
-        {!loading && !error && cards.length === 0 && (
-          <div style={{
-            minHeight: `calc(100dvh - ${HEADER_H}px)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#9ca3af', fontSize: 15,
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-          }}>
-            No news available right now.
-          </div>
-        )}
+        {/* Scroll container */}
+        <div style={{
+          height: '100%',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorY: 'contain',
+          scrollSnapType: 'y mandatory',
+          scrollBehavior: 'smooth',
+          padding: '0 16px',
+        }}>
 
-        {/* Cards — each one snaps to center */}
-        {!loading && !error && cards.map(card => (
-          <div
-            key={card.id}
-            style={{
+          {/* Loading */}
+          {loading && (
+            <div style={{
               minHeight: `calc(100dvh - ${HEADER_H}px)`,
-              scrollSnapAlign: 'center',
-              scrollSnapStop: 'always',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxSizing: 'border-box',
-              padding: '12px 0',
-            }}
-          >
-            <div style={{ width: '100%' }}>
-              <Card
-                card={card}
-                onClick={() => navigate(`/discover/${card.id}`)}
-              />
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#9ca3af', fontSize: 15,
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}>
+              Loading news…
             </div>
-          </div>
-        ))}
+          )}
+
+          {/* Error */}
+          {!loading && error && (
+            <div style={{
+              minHeight: `calc(100dvh - ${HEADER_H}px)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#9ca3af', fontSize: 15,
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Empty */}
+          {!loading && !error && cards.length === 0 && (
+            <div style={{
+              minHeight: `calc(100dvh - ${HEADER_H}px)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#9ca3af', fontSize: 15,
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}>
+              No news available right now.
+            </div>
+          )}
+
+          {/* Cards — center snap */}
+          {!loading && !error && cards.map(card => (
+            <div
+              key={card.id}
+              style={{
+                minHeight: `calc(100dvh - ${HEADER_H}px)`,
+                scrollSnapAlign: 'center',
+                scrollSnapStop: 'always',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxSizing: 'border-box',
+                padding: '14px 0',
+              }}
+            >
+              <div style={{ width: '100%' }}>
+                <Card
+                  card={card}
+                  onClick={() => navigate(`/discover/${card.id}`)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
