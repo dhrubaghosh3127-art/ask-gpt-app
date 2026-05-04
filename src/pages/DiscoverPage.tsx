@@ -1,4 +1,4 @@
-                import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -13,6 +13,9 @@ interface NewsCard {
   summary: string;
   category: string;
 }
+
+// ── Header height constant (used for snap item min-height) ───────────────────
+const HEADER_H = 126;
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -41,9 +44,9 @@ function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
         background: '#fff',
         borderRadius: 26,
         overflow: 'hidden',
-        marginBottom: 16,
         boxShadow: '0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)',
         cursor: 'pointer',
+        width: '100%',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
@@ -62,10 +65,8 @@ function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
       {/* Content */}
       <div style={{ padding: '14px 16px 16px' }}>
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 10,
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', marginBottom: 10,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <img
@@ -129,7 +130,6 @@ const DiscoverPage: React.FC = () => {
     setCards([]);
 
     const limit = activeTab === 'bangladesh' ? 10 : 20;
-
     fetch(`/api/discover?tab=${activeTab}&limit=${limit}`)
       .then(res => res.json())
       .then(data => {
@@ -154,21 +154,24 @@ const DiscoverPage: React.FC = () => {
   }, [activeTab]);
 
   return (
+    // Root: fixed viewport, no body scroll
     <div style={{
-      minHeight: '100vh',
+      height: '100dvh',
+      overflow: 'hidden',
       background: '#f5f5f7',
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
 
-      {/* ── Header ── */}
+      {/* ── Header (never scrolls away) ── */}
       <div style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        background: 'rgba(245,245,247,0.92)',
+        flexShrink: 0,
+        background: 'rgba(245,245,247,0.97)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         padding: '12px 16px 10px',
+        zIndex: 50,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Left: back + title */}
@@ -202,7 +205,7 @@ const DiscoverPage: React.FC = () => {
               width: 44, height: 44, borderRadius: '50%', background: '#fff',
               border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', boxShadow: '0 1px 6px rgba(0,0,0,0.08)',
-              WebkitTapHighlightColor: 'transparent', transition: 'transform 0.15s ease',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             {loved ? (
@@ -247,38 +250,75 @@ const DiscoverPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Feed ── */}
-      <div style={{ padding: '16px 16px 32px' }}>
+      {/* ── Feed scroll area (only this scrolls) ── */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehaviorY: 'contain',
+        scrollSnapType: 'y mandatory',
+        scrollBehavior: 'smooth',
+        padding: '0 16px',
+      }}>
+
+        {/* Loading */}
         {loading && (
           <div style={{
-            textAlign: 'center', padding: '48px 0', color: '#9ca3af',
-            fontSize: 15, fontFamily: 'system-ui, -apple-system, sans-serif',
+            minHeight: `calc(100dvh - ${HEADER_H}px)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#9ca3af', fontSize: 15,
+            fontFamily: 'system-ui, -apple-system, sans-serif',
           }}>
             Loading news…
           </div>
         )}
+
+        {/* Error */}
         {!loading && error && (
           <div style={{
-            textAlign: 'center', padding: '48px 0', color: '#9ca3af',
-            fontSize: 15, fontFamily: 'system-ui, -apple-system, sans-serif',
+            minHeight: `calc(100dvh - ${HEADER_H}px)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#9ca3af', fontSize: 15,
+            fontFamily: 'system-ui, -apple-system, sans-serif',
           }}>
             {error}
           </div>
         )}
+
+        {/* Empty */}
         {!loading && !error && cards.length === 0 && (
           <div style={{
-            textAlign: 'center', padding: '48px 0', color: '#9ca3af',
-            fontSize: 15, fontFamily: 'system-ui, -apple-system, sans-serif',
+            minHeight: `calc(100dvh - ${HEADER_H}px)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#9ca3af', fontSize: 15,
+            fontFamily: 'system-ui, -apple-system, sans-serif',
           }}>
             No news available right now.
           </div>
         )}
-        {!loading && cards.map(card => (
-          <Card
+
+        {/* Cards — each one snaps to center */}
+        {!loading && !error && cards.map(card => (
+          <div
             key={card.id}
-            card={card}
-            onClick={() => navigate(`/discover/${card.id}`)}
-          />
+            style={{
+              minHeight: `calc(100dvh - ${HEADER_H}px)`,
+              scrollSnapAlign: 'center',
+              scrollSnapStop: 'always',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxSizing: 'border-box',
+              padding: '12px 0',
+            }}
+          >
+            <div style={{ width: '100%' }}>
+              <Card
+                card={card}
+                onClick={() => navigate(`/discover/${card.id}`)}
+              />
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -286,4 +326,4 @@ const DiscoverPage: React.FC = () => {
 };
 
 export default DiscoverPage;
-          
+        
