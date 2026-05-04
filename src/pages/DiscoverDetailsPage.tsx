@@ -1,4 +1,4 @@
-   import React, { useState } from 'react';
+   import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -10,135 +10,10 @@ interface ArticleDetail {
   source: string;
   sourceAvatar: string;
   timeAgo: string;
-  sourceCount: number;
+  sourceCount?: number;
   language: 'en' | 'bn';
   bullets: string[];
 }
-
-// ── Full Demo Data ────────────────────────────────────────────────────────────
-
-const ARTICLES: ArticleDetail[] = [
-  {
-    id: 'fy1',
-    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad979?w=800&q=80',
-    headline: "OpenAI releases GPT-5 with real-time voice and vision — here's what changed",
-    source: 'MIT Tech Review',
-    sourceAvatar: 'https://i.pravatar.cc/40?img=11',
-    timeAgo: '2h ago',
-    sourceCount: 24,
-    language: 'en',
-    bullets: [
-      'OpenAI released GPT-5, its most capable model yet, with significant improvements in multimodal reasoning across voice, vision, and text.',
-      'The new model shows major gains in coding, mathematics, and complex instruction-following in over 50 languages.',
-      'Early benchmarks suggest GPT-5 outperforms all previous models on reasoning tasks, with analysts calling it a step toward general-purpose AI assistants.',
-    ],
-  },
-  {
-    id: 'fy2',
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80',
-    headline: "Google DeepMind's new AI can predict protein folding 10x faster than before",
-    source: 'The Verge',
-    sourceAvatar: 'https://i.pravatar.cc/40?img=22',
-    timeAgo: '4h ago',
-    sourceCount: 18,
-    language: 'en',
-    bullets: [
-      "Google DeepMind announced a major upgrade to its AlphaFold system, achieving protein structure predictions 10 times faster than its previous version.",
-      'The breakthrough is expected to dramatically accelerate drug discovery, potentially cutting years off timelines for developing medicines for cancer and rare diseases.',
-      'Researchers from over 30 institutions have already requested access to the new system for ongoing studies.',
-    ],
-  },
-  {
-    id: 'fy3',
-    image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
-    headline: 'Global markets rally as Fed signals pause in rate hikes through 2025',
-    source: 'Bloomberg',
-    sourceAvatar: 'https://i.pravatar.cc/40?img=33',
-    timeAgo: '6h ago',
-    sourceCount: 31,
-    language: 'en',
-    bullets: [
-      'The US Federal Reserve signaled it may pause interest rate hikes for the remainder of 2025, sending global markets sharply higher.',
-      "The S&P 500 reached its highest level this year, while bond yields fell as investors priced in a more accommodative monetary policy.",
-      'Economists warn that while the pause is welcome, inflation data in the coming months will be critical to the Fed\'s next decision.',
-    ],
-  },
-  {
-    id: 'fy4',
-    image: 'https://images.unsplash.com/photo-1618044733300-9472054094ee?w=800&q=80',
-    headline: "Apple's mixed-reality headset gets a $1,200 price cut — but is it enough?",
-    source: 'Wired',
-    sourceAvatar: 'https://i.pravatar.cc/40?img=44',
-    timeAgo: '8h ago',
-    sourceCount: 15,
-    language: 'en',
-    bullets: [
-      "Apple cut the Vision Pro's entry price by $1,200 and announced a lighter model, in a move analysts say is aimed at growing mainstream adoption.",
-      'Despite the price reduction, the headset remains significantly more expensive than competing products from Meta and Samsung.',
-      "A rumored 'Vision Air' model is expected to launch next year at a more accessible price point, potentially transforming the market.",
-    ],
-  },
-  {
-    id: 'bd1',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-    headline: 'Bangladesh secures $3.5B IMF deal to stabilize taka and boost forex reserves',
-    source: 'Prothom Alo',
-    sourceAvatar: 'https://i.pravatar.cc/40?img=55',
-    timeAgo: '1h ago',
-    sourceCount: 12,
-    language: 'bn',
-    bullets: [
-      'আন্তর্জাতিক মুদ্রা তহবিল (IMF) বাংলাদেশকে ৩.৫ বিলিয়ন ডলারের নতুন ঋণ সহায়তা অনুমোদন করেছে, যা টাকার স্থিতিশীলতা ও বৈদেশিক মুদ্রার রিজার্ভ বাড়াতে সাহায্য করবে।',
-      'চুক্তির শর্ত হিসেবে সরকারকে কর সংস্কার এবং জ্বালানি ভর্তুকি আগামী ২৪ মাসের মধ্যে কমাতে হবে।',
-      'অর্থনীতিবিদরা বলছেন, এই চুক্তি বাংলাদেশের অর্থনীতিতে আস্থা ফিরিয়ে আনতে এবং বিদেশি বিনিয়োগ আকর্ষণে গুরুত্বপূর্ণ ভূমিকা রাখবে।',
-    ],
-  },
-  {
-    id: 'bd2',
-    image: 'https://images.unsplash.com/photo-1604079628040-94301bb21b91?w=800&q=80',
-    headline: 'Dhaka startup raises $12M Series A to expand AI-powered healthcare across South Asia',
-    source: 'The Daily Star',
-    sourceAvatar: 'https://i.pravatar.cc/40?img=66',
-    timeAgo: '3h ago',
-    sourceCount: 9,
-    language: 'bn',
-    bullets: [
-      'ঢাকার একটি স্বাস্থ্যসেবা স্টার্টআপ MediAI সিঙ্গাপুরের একটি ভেঞ্চার ফার্মের নেতৃত্বে ১২ মিলিয়ন ডলারের সিরিজ-এ ফান্ডিং পেয়েছে।',
-      'বুয়েট গ্র্যাজুয়েটদের প্রতিষ্ঠিত এই কোম্পানিটি ২০২৬ সালের মধ্যে গ্রামীণ ক্লিনিকে AI-ভিত্তিক রোগ নির্ণয় সরঞ্জাম পৌঁছে দেওয়ার লক্ষ্য রাখে।',
-      'বিশেষজ্ঞরা বলছেন, এই ধরনের উদ্যোগ বাংলাদেশের স্বাস্থ্যসেবা খাতে বৈপ্লবিক পরিবর্তন আনতে পারে।',
-    ],
-  },
-  {
-    id: 'bd3',
-    image: 'https://images.unsplash.com/photo-1540747913346-19212a4b423e?w=800&q=80',
-    headline: 'Bangladesh cricket team qualifies for ICC Champions Trophy semifinals',
-    source: 'bdnews24',
-    sourceAvatar: 'https://i.pravatar.cc/40?img=77',
-    timeAgo: '5h ago',
-    sourceCount: 21,
-    language: 'bn',
-    bullets: [
-      'সাকিব আল হাসানের অসাধারণ সেঞ্চুরি এবং বোলিং দলের দুর্দান্ত পারফরম্যান্সে বাংলাদেশ দক্ষিণ আফ্রিকাকে ৬ উইকেটে হারিয়ে সেমিফাইনালে জায়গা নিশ্চিত করেছে।',
-      'এই জয়ের ফলে বাংলাদেশ আইসিসি চ্যাম্পিয়নস ট্রফির সেমিফাইনালে উঠে ইতিহাস সৃষ্টি করেছে।',
-      'ক্রিকেট বিশ্লেষকরা এই পারফরম্যান্সকে বাংলাদেশ দলের গত দশকের সেরা জয়গুলোর একটি বলে মন্তব্য করেছেন।',
-    ],
-  },
-  {
-    id: 'bd4',
-    image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80',
-    headline: 'Govt launches new digital ID system linked to NID for faster public services',
-    source: 'New Age BD',
-    sourceAvatar: 'https://i.pravatar.cc/40?img=88',
-    timeAgo: '7h ago',
-    sourceCount: 7,
-    language: 'bn',
-    bullets: [
-      'বাংলাদেশ সরকার জাতীয় পরিচয়পত্রের সাথে সংযুক্ত নতুন ই-কেওয়াইসি প্ল্যাটফর্ম চালু করেছে, যা ৩০টির বেশি সরকারি সেবা ডিজিটালি সহজলভ্য করবে।',
-      'নতুন সিস্টেমের মাধ্যমে জেলা-পর্যায়ের অফিসে সরাসরি উপস্থিত না হয়েও বেশিরভাগ সরকারি সেবা পাওয়া যাবে।',
-      'বিশেষজ্ঞরা বলছেন, এই উদ্যোগ ডিজিটাল বাংলাদেশ গড়ার পথে একটি গুরুত্বপূর্ণ পদক্ষেপ।',
-    ],
-  },
-];
 
 // ── Source Count Badge ────────────────────────────────────────────────────────
 
@@ -182,16 +57,55 @@ function SourceBadge({ count }: { count: number }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-
 const DiscoverDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [followUp, setFollowUp] = useState('');
+  const [article, setArticle] = useState<ArticleDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const article = ARTICLES.find(a => a.id === id);
+  useEffect(() => {
+    if (!id) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setNotFound(false);
+
+    fetch(`/api/discover-article?id=${encodeURIComponent(id)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.article) {
+          setArticle(data.article as ArticleDetail);
+        } else {
+          setNotFound(true);
+        }
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [id]);
+   if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#f5f5f7',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: '#9ca3af',
+        fontSize: 15,
+      }}>
+        Loading…
+      </div>
+    );
+         }
 
   // ── Not found ──
-  if (!article) {
+  if (notFound || !article) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -329,7 +243,7 @@ return (
           flexWrap: 'wrap' as const,
           gap: 10,
         }}>
-          <SourceBadge count={article.sourceCount} />
+          <SourceBadge count={article.sourceCount ?? 1} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
