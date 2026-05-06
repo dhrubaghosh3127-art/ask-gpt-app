@@ -121,13 +121,34 @@ function normalizeUrl(url: string): string {
 function isValidImageUrl(url: string): boolean {
   if (!url || typeof url !== 'string') return false;
   if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+
+  // Reject by extension
   if (/\.(svg|gif|ico)$/i.test(url)) return false;
+
+  // Reject tracking/pixel images
   if (/1x1|pixel|track|beacon|transparent/i.test(url)) return false;
+
+  // Reject small icon sizes
   if (/[_\-](1x1|16x16|32x32|64x64|80x80)/i.test(url)) return false;
+  if (/\/(16x16|32x32|64x64|80x80)\//i.test(url)) return false;
+
+  // Reject logos, favicons, icons, sprites, placeholders, avatars
   if (/logo|favicon|\/icon[/_\-]|sprite|placeholder|default[-_]?img|avatar|profile[-_]?img/i.test(url)) return false;
+
+  // Reject Google News attachment placeholder (not a real article image)
   if (/news\.google\.com\/api\/attachments/i.test(url)) return false;
+
+  // Reject Google branding / static logo images
+  if (/gstatic\.com\/images\/branding/i.test(url)) return false;
+  if (/google\.(com|co\.[a-z]+)\/images\/.*logo/i.test(url)) return false;
+  if (/\/googlelogo\//i.test(url)) return false;
+
+  // Reject encrypted thumbnail proxy (low quality)
   if (/encrypted-tbn\d\.gstatic\.com/i.test(url)) return false;
+
+  // Reject very small width query params
   if (/[?&](w|width)=(80|100|120|150)(&|$)/i.test(url)) return false;
+
   return true;
 }
 
@@ -158,10 +179,10 @@ function isGoogleNewsUrl(url: string): boolean {
   return /news\.google\.com/i.test(url);
 }
 
-async function resolveGoogleNewsUrl(url: string): Promise<string> {
+async function resolveGoogleNewsUrl(url: string): Promise<string | null> {
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
+    const timer = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(url, {
       method: 'HEAD',
       signal: controller.signal,
@@ -170,9 +191,11 @@ async function resolveGoogleNewsUrl(url: string): Promise<string> {
     });
     clearTimeout(timer);
     const final = res.url;
-    return final && !isGoogleNewsUrl(final) ? final : url;
+    // Return null if we couldn't escape Google News domain
+    if (!final || isGoogleNewsUrl(final)) return null;
+    return final;
   } catch {
-    return url;
+    return null;
   }
 }
 
@@ -389,67 +412,90 @@ export async function fetchDiscoverCardsFromSources(
         const items = (feed.items || []).slice(0, 4);
 
         for (const item of items) {
-          const rawTitle = item.title || '';
-          if (!rawTitle) continue;
+          try {
+            const rawTitle = item.title || '';
+            if (!rawTitle) continue;
 
-          const headline = normalizeTitle(rawTitle, source.label);
-          if (!headline) continue;
+            const headline = normalizeTitle(rawTitle, source.label);
+            if (!headline) continue;
 
-          const rawLink = item.link || '';
-          if (!rawLink) continue;
+            const rawLink = item.link || '';
+            if (!rawLink) continue;
 
-          // Step 1: Resolve Google News redirect → real publisher URL
-          const articleUrl = isGoogleNewsUrl(rawLink)
-            ? await resolveGoogleNewsUrl(rawLink)
-            : rawLink;
+            const isBangladesh = source.tab === 'bangladesh';
 
-          const publishedAt = item.isoDate || item.pubDate || '';
-          const language = source.language;
+            // Step 1: Resolve Google News redirect → real publisher URL
+            let articleUrl: string;
+            if (isGoogleNewsUrl(rawLink)) {
+              const resolved = await resolveGoogleNewsUrl(rawLink);
+              // Bangladesh: skip if we couldn't escape Google News domain
+              if (!resolved) {
+                if (isBangladesh) continue;
+                articleUrl = rawLink; // For You: keep original as best-effort
+              } else {
+                articleUrl = resolved;
+              }
+            } else {
+              articleUrl = rawLink;
+            }
 
-          // Language validation
-          if (language === 'bn') {
-            if (!hasBanglaText(headline) && !hasBanglaText(item.contentSnippet || '')) continue;
-          } else {
-            if (!isMostlyEnglish(headline)) continue;
+            const publishedAt = item.isoDate || item.pubDate || '';
+            const language = source.language;
+
+            // Language validation
+            if (language === 'bn') {
+              if (!hasBanglaText(headline) && !hasBanglaText(item.contentSnippet || '')) continue;
+            } else {
+              if (!isMostlyEnglish(headline)) continue;
+            }
+
+            // Step 2: Fetch og:image from real publisher article page
+            const ogImage = await fetchArticleMetaImage(articleUrl);
+
+            // Step 3: Pick image based on tab rules
+            let image: string | null = null;
+
+            if (isBangladesh) {
+              // Bangladesh: ONLY use og:image from real publisher page.
+              // No RSS image fallback. No Google News thumbnail.
+              image = ogImage && isValidImageUrl(ogImage) ? ogImage : null;
+            } else {
+              // For You: og:image wins, RSS image as fallback
+              const rssImage = extractImageFromItem(item);
+              image = pickBestImage([ogImage, rssImage]);
+            }
+
+            // Skip if no valid real image found
+            if (!image) continue;
+
+            const summary = buildSummary(item, language, headline);
+
+            // Spam filter
+            if (isSpam(headline, summary, articleUrl, language)) continue;
+
+            const bullets = buildBullets(item, language, headline, source.label.split('—')[0].trim());
+            const score = calcScore(source, publishedAt, true, summary.length > 20);
+
+            allCards.push({
+              id: makeId(articleUrl, tab),
+              tab,
+              image,
+              source: source.label.split('—')[0].trim(),
+              sourceAvatar: getSourceAvatar(source.label),
+              timeAgo: getTimeAgo(publishedAt || fetchedAt),
+              headline,
+              summary,
+              category: source.category,
+              articleUrl: normalizeUrl(articleUrl),
+              language,
+              bullets,
+              publishedAt: publishedAt || fetchedAt,
+              fetchedAt,
+              score,
+            });
+          } catch {
+            // Skip broken item silently — one bad item must not crash the source
           }
-
-          // Step 2: og:image from article page (best quality)
-          const ogImage = await fetchArticleMetaImage(articleUrl);
-
-          // Step 3: RSS image as fallback
-          const rssImage = extractImageFromItem(item);
-
-          // Step 4: Pick best — og:image wins
-          const image = pickBestImage([ogImage, rssImage]);
-
-          // Skip if no real quality image
-          if (!image) continue;
-
-          const summary = buildSummary(item, language, headline);
-
-          // Spam filter
-          if (isSpam(headline, summary, articleUrl, language)) continue;
-
-          const bullets = buildBullets(item, language, headline, source.label.split('—')[0].trim());
-          const score = calcScore(source, publishedAt, true, summary.length > 20);
-
-          allCards.push({
-            id: makeId(articleUrl, tab),
-            tab,
-            image,
-            source: source.label.split('—')[0].trim(),
-            sourceAvatar: getSourceAvatar(source.label),
-            timeAgo: getTimeAgo(publishedAt || fetchedAt),
-            headline,
-            summary,
-            category: source.category,
-            articleUrl: normalizeUrl(articleUrl),
-            language,
-            bullets,
-            publishedAt: publishedAt || fetchedAt,
-            fetchedAt,
-            score,
-          });
         }
       } catch {
         // Skip broken source silently
@@ -463,4 +509,3 @@ export async function fetchDiscoverCardsFromSources(
     .sort((a, b) => b.score - a.score || new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, limit);
 }
-  
