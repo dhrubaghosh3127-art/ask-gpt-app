@@ -1,4 +1,4 @@
-// ASK-GPT Discover — Firestore Cache Manager
+// ASK-GPT Discover — Firestore Rolling Cache Manager
 // api/_lib/discoverCache.ts
 
 import { db } from './firebaseAdmin.js';
@@ -15,23 +15,35 @@ export type DiscoverCacheResult = {
   cacheAgeMs: number | null;
 };
 
-type CacheDocument = {
+type FeedMeta = {
   tab: DiscoverTab;
-  cards: DiscoverCard[];
   updatedAt: string;
   updatedAtMs: number;
+  lastRefreshAt: string;
+  lastRefreshAtMs: number;
+  lastBatchId: string;
   cardCount: number;
   sourceLimit: number;
   limit: number;
   version: number;
 };
 
+// A cached card includes all DiscoverCard fields + cache metadata
+type CachedCard = DiscoverCard & {
+  cachedAt: string;
+  cachedAtMs: number;
+  batchId: string;
+};
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const COLLECTION = 'discoverFeeds';
-const DEFAULT_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_CARDS_TO_SAVE = 50;
-const CACHE_VERSION = 1;
+const CARDS_SUB = 'cards';
+const DEFAULT_MAX_AGE_MS = 15 * 60 * 1000;         // 15 minutes
+const CACHE_RETENTION_MS = 24 * 60 * 60 * 1000;    // 24 hours
+const MAX_CACHED_CARDS_PER_TAB = 3000;              // Emergency safety cap
+const FIRESTORE_BATCH_CHUNK = 400;                  // Max ops per batch
+const CACHE_VERSION = 2;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -40,7 +52,16 @@ function getFeedDocId(tab: DiscoverTab): string {
 }
 
 function isCacheFresh(updatedAtMs: number, maxAgeMs: number): boolean {
+  if (maxAgeMs === 0) return false; // maxAgeMs: 0 forces refresh
   return Date.now() - updatedAtMs <= maxAgeMs;
+}
+
+function makeBatchId(): string {
+  return `batch_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function normalizeHeadline(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]/g, '').slice(0, 60);
 }
 
 function isValidCard(card: unknown): card is DiscoverCard {
@@ -55,73 +76,153 @@ function isValidCard(card: unknown): card is DiscoverCard {
   );
 }
 
-function sanitizeCards(raw: unknown): DiscoverCard[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.filter(isValidCard) as DiscoverCard[];
+function emptyResult(): DiscoverCacheResult {
+  return { cards: [], fromCache: false, stale: false, refreshed: false, cacheAgeMs: null };
 }
 
-function uniqueCards(cards: DiscoverCard[]): DiscoverCard[] {
-  const seenIds = new Set<string>();
-  const seenUrls = new Set<string>();
-  return cards.filter(card => {
-    if (seenIds.has(card.id) || seenUrls.has(card.articleUrl)) return false;
-    seenIds.add(card.id);
-    seenUrls.add(card.articleUrl);
-    return true;
-  });
+// ── Chunk array helper ────────────────────────────────────────────────────────
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
 }
 
-// ── Firestore read/write ──────────────────────────────────────────────────────
+// ── Read feed meta document ───────────────────────────────────────────────────
 
-async function readCache(tab: DiscoverTab): Promise<CacheDocument | null> {
+async function readFeedMeta(tab: DiscoverTab): Promise<FeedMeta | null> {
   try {
-    const docRef = db.collection(COLLECTION).doc(getFeedDocId(tab));
-    const snap = await docRef.get();
+    const snap = await db.collection(COLLECTION).doc(getFeedDocId(tab)).get();
     if (!snap.exists) return null;
-    const data = snap.data() as CacheDocument | undefined;
-    if (!data || !Array.isArray(data.cards)) return null;
-    return data;
+    return snap.data() as FeedMeta;
   } catch {
     return null;
   }
 }
 
-async function saveCache(
-  tab: DiscoverTab,
-  cards: DiscoverCard[],
-  limit: number,
-  sourceLimit: number,
-): Promise<void> {
+// ── Write feed meta document ──────────────────────────────────────────────────
+
+async function writeFeedMeta(tab: DiscoverTab, meta: FeedMeta): Promise<void> {
   try {
-    const unique = uniqueCards(sanitizeCards(cards));
-    const toSave = unique.slice(0, Math.min(Math.max(limit, 30), MAX_CARDS_TO_SAVE));
-    const now = Date.now();
-    const doc: CacheDocument = {
-      tab,
-      cards: toSave,
-      updatedAt: new Date(now).toISOString(),
-      updatedAtMs: now,
-      cardCount: toSave.length,
-      sourceLimit,
-      limit,
-      version: CACHE_VERSION,
-    };
-    await db.collection(COLLECTION).doc(getFeedDocId(tab)).set(doc);
+    await db.collection(COLLECTION).doc(getFeedDocId(tab)).set(meta);
+  } catch { /* non-fatal */ }
+}
+
+// ── Read all cached cards from subcollection ──────────────────────────────────
+
+async function readCachedCards(tab: DiscoverTab, limitCount = 500): Promise<CachedCard[]> {
+  try {
+    const snap = await db
+      .collection(COLLECTION)
+      .doc(getFeedDocId(tab))
+      .collection(CARDS_SUB)
+      .orderBy('cachedAtMs', 'desc')
+      .limit(limitCount)
+      .get();
+    return snap.docs
+      .map(d => d.data() as CachedCard)
+      .filter(c => isValidCard(c));
   } catch {
-    // Save failure is non-fatal — continue serving data
+    return [];
   }
 }
 
-// ── Empty safe result ─────────────────────────────────────────────────────────
+// ── Write new cards to subcollection (batched) ────────────────────────────────
 
-function emptyResult(): DiscoverCacheResult {
-  return {
-    cards: [],
-    fromCache: false,
-    stale: false,
-    refreshed: false,
-    cacheAgeMs: null,
-  };
+async function writeCachedCards(
+  tab: DiscoverTab,
+  newCards: DiscoverCard[],
+  batchId: string,
+  existingIds: Set<string>,
+  existingUrls: Set<string>,
+  existingHeadlines: Set<string>,
+): Promise<number> {
+  const feedDocRef = db.collection(COLLECTION).doc(getFeedDocId(tab));
+  const cardsRef = feedDocRef.collection(CARDS_SUB);
+  const now = Date.now();
+  const nowIso = new Date(now).toISOString();
+
+  // Filter out duplicates
+  const toWrite: CachedCard[] = [];
+  for (const card of newCards) {
+    if (!isValidCard(card)) continue;
+    if (existingIds.has(card.id)) continue;
+    if (existingUrls.has(card.articleUrl)) continue;
+    if (existingHeadlines.has(normalizeHeadline(card.headline))) continue;
+    toWrite.push({
+      ...card,
+      cachedAt: nowIso,
+      cachedAtMs: now,
+      batchId,
+    });
+    existingIds.add(card.id);
+    existingUrls.add(card.articleUrl);
+    existingHeadlines.add(normalizeHeadline(card.headline));
+  }
+
+  if (toWrite.length === 0) return 0;
+
+  // Write in chunks of FIRESTORE_BATCH_CHUNK
+  const chunks = chunkArray(toWrite, FIRESTORE_BATCH_CHUNK);
+  for (const chunk of chunks) {
+    try {
+      const batch = db.batch();
+      for (const card of chunk) {
+        const docRef = cardsRef.doc(card.id);
+        batch.set(docRef, card);
+      }
+      await batch.commit();
+    } catch { /* non-fatal — continue other chunks */ }
+  }
+
+  return toWrite.length;
+}
+
+// ── Cleanup expired cards (older than 24h by cachedAtMs) ─────────────────────
+
+async function cleanupExpiredCards(tab: DiscoverTab): Promise<void> {
+  try {
+    const cutoffMs = Date.now() - CACHE_RETENTION_MS;
+    const feedDocRef = db.collection(COLLECTION).doc(getFeedDocId(tab));
+    const snap = await feedDocRef
+      .collection(CARDS_SUB)
+      .where('cachedAtMs', '<', cutoffMs)
+      .limit(FIRESTORE_BATCH_CHUNK)
+      .get();
+
+    if (snap.empty) return;
+
+    const chunks = chunkArray(snap.docs, FIRESTORE_BATCH_CHUNK);
+    for (const chunk of chunks) {
+      try {
+        const batch = db.batch();
+        for (const doc of chunk) batch.delete(doc.ref);
+        await batch.commit();
+      } catch { /* non-fatal */ }
+    }
+  } catch { /* non-fatal */ }
+}
+
+// ── Emergency cap: delete oldest cards if over MAX_CACHED_CARDS_PER_TAB ──────
+
+async function applyEmergencyCap(tab: DiscoverTab, totalCount: number): Promise<void> {
+  if (totalCount <= MAX_CACHED_CARDS_PER_TAB) return;
+  try {
+    const overflow = totalCount - MAX_CACHED_CARDS_PER_TAB;
+    const feedDocRef = db.collection(COLLECTION).doc(getFeedDocId(tab));
+    const snap = await feedDocRef
+      .collection(CARDS_SUB)
+      .orderBy('cachedAtMs', 'asc')
+      .limit(Math.min(overflow, FIRESTORE_BATCH_CHUNK))
+      .get();
+
+    if (snap.empty) return;
+    const batch = db.batch();
+    for (const doc of snap.docs) batch.delete(doc.ref);
+    await batch.commit();
+  } catch { /* non-fatal */ }
 }
 
 // ── Main exported function ────────────────────────────────────────────────────
@@ -134,41 +235,73 @@ export async function getDiscoverFeedWithCache(params: {
 }): Promise<DiscoverCacheResult> {
   const { tab, limit, maxAgeMs = DEFAULT_MAX_AGE_MS, sourceLimit } = params;
 
-  // 1. Read existing cache
-  const cached = await readCache(tab);
+  // 1. Read meta
+  const meta = await readFeedMeta(tab);
   const now = Date.now();
-  const cacheAgeMs = cached ? now - cached.updatedAtMs : null;
-  const fresh = cached ? isCacheFresh(cached.updatedAtMs, maxAgeMs) : false;
+  const cacheAgeMs = meta ? now - meta.updatedAtMs : null;
+  const fresh = meta ? isCacheFresh(meta.updatedAtMs, maxAgeMs) : false;
 
-  // 2. Return fresh cache immediately
-  if (cached && fresh) {
-    const cards = sanitizeCards(cached.cards).slice(0, limit);
-    return {
-      cards,
-      fromCache: true,
-      stale: false,
-      refreshed: false,
-      cacheAgeMs,
-    };
+  // 2. Fresh cache — return from subcollection
+  if (meta && fresh) {
+    const cached = await readCachedCards(tab, limit);
+    if (cached.length > 0) {
+      const sorted = cached
+        .sort((a, b) => b.cachedAtMs - a.cachedAtMs || b.score - a.score)
+        .slice(0, limit);
+      return { cards: sorted, fromCache: true, stale: false, refreshed: false, cacheAgeMs };
+    }
+    // Meta says fresh but no cards — fall through to refresh
   }
 
-  // 3. Cache is stale or missing — fetch fresh from RSS
+  // 3. Stale or missing — fetch fresh RSS cards
   try {
     const allSources = getDiscoverSources(tab);
     const sources = sourceLimit ? allSources.slice(0, sourceLimit) : allSources;
-    const freshCards = await fetchDiscoverCardsFromSources(sources, tab, Math.max(limit, MAX_CARDS_TO_SAVE));
+    const freshCards = await fetchDiscoverCardsFromSources(sources, tab, 200);
 
     if (freshCards.length > 0) {
-      // 4. Save fresh cards to Firestore
-      await saveCache(tab, freshCards, limit, sources.length);
+      const batchId = makeBatchId();
 
-      return {
-        cards: freshCards.slice(0, limit),
-        fromCache: false,
-        stale: false,
-        refreshed: true,
-        cacheAgeMs: null,
-      };
+      // Read existing IDs/URLs/headlines for deduplication
+      const existing = await readCachedCards(tab, MAX_CACHED_CARDS_PER_TAB);
+      const existingIds = new Set(existing.map(c => c.id));
+      const existingUrls = new Set(existing.map(c => c.articleUrl));
+      const existingHeadlines = new Set(existing.map(c => normalizeHeadline(c.headline)));
+
+      // Write new cards into subcollection (non-destructive merge)
+      const written = await writeCachedCards(
+        tab, freshCards, batchId, existingIds, existingUrls, existingHeadlines
+      );
+
+      // Cleanup expired cards (>24h by cachedAtMs) — fire and forget
+      cleanupExpiredCards(tab).catch(() => {});
+
+      // Apply emergency cap if needed
+      const newTotal = existing.length + written;
+      applyEmergencyCap(tab, newTotal).catch(() => {});
+
+      // Update meta document
+      const nowMs = Date.now();
+      await writeFeedMeta(tab, {
+        tab,
+        updatedAt: new Date(nowMs).toISOString(),
+        updatedAtMs: nowMs,
+        lastRefreshAt: new Date(nowMs).toISOString(),
+        lastRefreshAtMs: nowMs,
+        lastBatchId: batchId,
+        cardCount: newTotal,
+        sourceLimit: sources.length,
+        limit,
+        version: CACHE_VERSION,
+      });
+
+      // Return merged fresh cache from subcollection
+      const allCached = await readCachedCards(tab, limit);
+      const sorted = allCached
+        .sort((a, b) => b.cachedAtMs - a.cachedAtMs || b.score - a.score)
+        .slice(0, limit);
+
+      return { cards: sorted, fromCache: false, stale: false, refreshed: true, cacheAgeMs: null };
     }
 
     // Fresh fetch returned 0 cards — fall through to stale fallback
@@ -176,19 +309,16 @@ export async function getDiscoverFeedWithCache(params: {
     // Fetch failed — fall through to stale fallback
   }
 
-  // 5. Return stale cache as fallback if available
-  if (cached) {
-    const cards = sanitizeCards(cached.cards).slice(0, limit);
-    return {
-      cards,
-      fromCache: true,
-      stale: true,
-      refreshed: false,
-      cacheAgeMs,
-    };
+  // 4. Stale fallback — return existing cached cards
+  const staleCards = await readCachedCards(tab, limit);
+  if (staleCards.length > 0) {
+    const sorted = staleCards
+      .sort((a, b) => b.cachedAtMs - a.cachedAtMs || b.score - a.score)
+      .slice(0, limit);
+    return { cards: sorted, fromCache: true, stale: true, refreshed: false, cacheAgeMs };
   }
 
-  // 6. Nothing available — return safe empty result
+  // 5. Nothing available
   return emptyResult();
 }
 
@@ -201,15 +331,21 @@ export async function getCachedDiscoverCardById(id: string): Promise<DiscoverCar
 
   for (const tab of tabs) {
     try {
-      const cached = await readCache(tab);
-      if (!cached) continue;
-      const cards = sanitizeCards(cached.cards);
-      const match = cards.find(c => c.id === id);
-      if (match) return match;
+      const docRef = db
+        .collection(COLLECTION)
+        .doc(getFeedDocId(tab))
+        .collection(CARDS_SUB)
+        .doc(id);
+      const snap = await docRef.get();
+      if (snap.exists) {
+        const data = snap.data();
+        if (data && isValidCard(data)) return data as DiscoverCard;
+      }
     } catch {
       continue;
     }
   }
 
   return null;
-}
+                          }
+  
