@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+      import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface NewsCard {
@@ -13,6 +13,7 @@ interface NewsCard {
 }
 
 const HEADER_H = 126;
+const PAGE_SIZE = 5;
 
 function CategoryBadge({ label }: { label: string }) {
   return (
@@ -110,19 +111,70 @@ const DiscoverPage: React.FC = () => {
   const [cards, setCards] = useState<NewsCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+const loadingMoreLockRef = useRef(false);
+  // Always-fresh ref so scroll handler never goes stale
+  const stateRef = useRef({ cards, loading, loadingMore, hasMore, nextCursor, activeTab });
+  useEffect(() => {
+    stateRef.current = { cards, loading, loadingMore, hasMore, nextCursor, activeTab };
+  });
+
+  // ── Load more (background, silent) ───────────────────────────────────────
+
+  const loadMore = useCallback(async () => {
+  const { loading: l, loadingMore: lm, hasMore: hm, nextCursor: nc, activeTab: tab } = stateRef.current;
+  if (loadingMoreLockRef.current || l || lm || !hm || !nc) return;
+
+  loadingMoreLockRef.current = true;
+  setLoadingMore(true);
+    try {
+      const res = await fetch(
+        `/api/discover?tab=${tab}&limit=${PAGE_SIZE}&cursor=${encodeURIComponent(nc)}`
+      );
+      const data = await res.json();
+      if (stateRef.current.activeTab !== tab) return;
+      if (data.ok && Array.isArray(data.cards)) {
+        setCards(prev => {
+          const existingIds = new Set(prev.map((c: NewsCard) => c.id));
+          const fresh = (data.cards as NewsCard[]).filter(c => !existingIds.has(c.id));
+          return [...prev, ...fresh];
+        });
+        setNextCursor(data.nextCursor ?? null);
+        setHasMore(data.hasMore === true);
+      }
+    } catch {
+      // Silent fail — keep existing cards, no error shown
+    } finally {
+      setLoadingMore(false);
+    }
+  }, []);
+
+  // ── Initial load on tab change ────────────────────────────────────────────
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError('');
     setCards([]);
-    const limit = activeTab === 'bangladesh' ? 10 : 20;
-    fetch(`/api/discover?tab=${activeTab}&limit=${limit}`)
+    setNextCursor(null);
+    setHasMore(true);
+    loadingMoreLockRef.current = false;
+setLoadingMore(false);
+
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+
+    fetch(`/api/discover?tab=${activeTab}&limit=${PAGE_SIZE}`)
       .then(res => res.json())
       .then(data => {
         if (cancelled) return;
         if (data.ok && Array.isArray(data.cards)) {
           setCards(data.cards);
+          setNextCursor(data.nextCursor ?? null);
+          setHasMore(data.hasMore === true);
         } else {
           setCards([]);
           setError('Could not load news. Please try again.');
@@ -134,8 +186,27 @@ const DiscoverPage: React.FC = () => {
         setError('Could not load news. Please try again.');
       })
       .finally(() => { if (!cancelled) setLoading(false); });
+
     return () => { cancelled = true; };
   }, [activeTab]);
+
+  // ── Scroll trigger ────────────────────────────────────────────────────────
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { cards: c, loading: l, loadingMore: lm, hasMore: hm } = stateRef.current;
+    if (l || lm || !hm || c.length === 0) return;
+
+    const itemHeight = el.clientHeight;
+    if (itemHeight === 0) return;
+    const currentIndex = Math.round(el.scrollTop / itemHeight);
+
+    // When only 3 cards remain ahead, silently load next page
+    if (c.length - currentIndex <= 3) {
+      loadMore();
+    }
+  }, [loadMore]);
 
   return (
     <div style={{
@@ -228,41 +299,33 @@ const DiscoverPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Feed area (with peek overlays) ── */}
+      {/* ── Feed area ── */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
 
-        {/* Top fade overlay — hints at previous card */}
         <div style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0,
-          height: 32,
+          position: 'absolute', top: 0, left: 0, right: 0, height: 32,
           background: 'linear-gradient(to bottom, #f5f5f7 0%, transparent 100%)',
-          zIndex: 10,
-          pointerEvents: 'none',
+          zIndex: 10, pointerEvents: 'none',
         }} />
-
-        {/* Bottom fade overlay — hints at next card */}
         <div style={{
-          position: 'absolute',
-          bottom: 0, left: 0, right: 0,
-          height: 32,
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 32,
           background: 'linear-gradient(to top, #f5f5f7 0%, transparent 100%)',
-          zIndex: 10,
-          pointerEvents: 'none',
+          zIndex: 10, pointerEvents: 'none',
         }} />
 
-        {/* Scroll container */}
-        <div style={{
-          height: '100%',
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehaviorY: 'contain',
-          scrollSnapType: 'y mandatory',
-          scrollBehavior: 'smooth',
-          padding: '0 16px',
-        }}>
-
-          {/* Loading */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          style={{
+            height: '100%',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorY: 'contain',
+            scrollSnapType: 'y mandatory',
+            scrollBehavior: 'smooth',
+            padding: '0 16px',
+          }}
+        >
           {loading && (
             <div style={{
               minHeight: `calc(100dvh - ${HEADER_H}px)`,
@@ -274,7 +337,6 @@ const DiscoverPage: React.FC = () => {
             </div>
           )}
 
-          {/* Error */}
           {!loading && error && (
             <div style={{
               minHeight: `calc(100dvh - ${HEADER_H}px)`,
@@ -286,7 +348,6 @@ const DiscoverPage: React.FC = () => {
             </div>
           )}
 
-          {/* Empty */}
           {!loading && !error && cards.length === 0 && (
             <div style={{
               minHeight: `calc(100dvh - ${HEADER_H}px)`,
@@ -298,7 +359,6 @@ const DiscoverPage: React.FC = () => {
             </div>
           )}
 
-          {/* Cards — center snap */}
           {!loading && !error && cards.map(card => (
             <div
               key={card.id}
@@ -321,6 +381,7 @@ const DiscoverPage: React.FC = () => {
               </div>
             </div>
           ))}
+
         </div>
       </div>
     </div>
@@ -328,4 +389,3 @@ const DiscoverPage: React.FC = () => {
 };
 
 export default DiscoverPage;
-        
