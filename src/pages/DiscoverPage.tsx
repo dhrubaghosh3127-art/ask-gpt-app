@@ -15,6 +15,18 @@ interface NewsCard {
 const HEADER_H = 126;
 const PAGE_SIZE = 5;
 
+const SKELETON_CSS = `
+@keyframes askgpt-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.askgpt-skeleton {
+  background: linear-gradient(90deg, #ebebeb 25%, #f5f5f5 50%, #ebebeb 75%);
+  background-size: 800px 100%;
+  animation: askgpt-shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+`;
 function CategoryBadge({ label }: { label: string }) {
   return (
     <span style={{
@@ -103,7 +115,39 @@ function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
     </div>
   );
 }
+function SkeletonCard() {
+  return (
+    <div style={{
+      background: '#fff',
+      borderRadius: 26,
+      overflow: 'hidden',
+      boxShadow: '0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)',
+      width: '100%',
+    }}>
+      {/* Image skeleton */}
+      <div className="askgpt-skeleton" style={{ width: '100%', height: 220 }} />
 
+      {/* Content skeleton */}
+      <div style={{ padding: '14px 16px 16px' }}>
+        {/* Source row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div className="askgpt-skeleton" style={{ width: 22, height: 22, borderRadius: '50%' }} />
+            <div className="askgpt-skeleton" style={{ width: 80, height: 12 }} />
+          </div>
+          <div className="askgpt-skeleton" style={{ width: 48, height: 12 }} />
+        </div>
+        {/* Headline */}
+        <div className="askgpt-skeleton" style={{ width: '92%', height: 20, marginBottom: 8 }} />
+        <div className="askgpt-skeleton" style={{ width: '75%', height: 20, marginBottom: 14 }} />
+        {/* Summary lines */}
+        <div className="askgpt-skeleton" style={{ width: '100%', height: 13, marginBottom: 6 }} />
+        <div className="askgpt-skeleton" style={{ width: '88%', height: 13, marginBottom: 6 }} />
+        <div className="askgpt-skeleton" style={{ width: '60%', height: 13 }} />
+      </div>
+    </div>
+  );
+}
 const DiscoverPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'foryou' | 'bangladesh'>('foryou');
@@ -117,6 +161,16 @@ const DiscoverPage: React.FC = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 const loadingMoreLockRef = useRef(false);
+      
+useEffect(() => {
+  const id = 'askgpt-skeleton-style';
+  if (!document.getElementById(id)) {
+    const el = document.createElement('style');
+    el.id = id;
+    el.textContent = SKELETON_CSS;
+    document.head.appendChild(el);
+  }
+}, []);
   // Always-fresh ref so scroll handler never goes stale
   const stateRef = useRef({ cards, loading, loadingMore, hasMore, nextCursor, activeTab });
   useEffect(() => {
@@ -331,11 +385,13 @@ setLoadingMore(false);
           {loading && (
             <div style={{
               minHeight: `calc(100dvh - ${HEADER_H}px)`,
+              scrollSnapAlign: 'center',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#9ca3af', fontSize: 15,
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              boxSizing: 'border-box', padding: '14px 0',
             }}>
-              Loading news…
+              <div style={{ width: '100%' }}>
+                <SkeletonCard />
+              </div>
             </div>
           )}
 
@@ -382,8 +438,21 @@ setLoadingMore(false);
                 />
               </div>
             </div>
-          ))}
+          
+         ))}
 
+          {loadingMore && (
+            <div style={{
+              minHeight: `calc(100dvh - ${HEADER_H}px)`,
+              scrollSnapAlign: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxSizing: 'border-box', padding: '14px 0',
+            }}>
+              <div style={{ width: '100%' }}>
+                <SkeletonCard />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
