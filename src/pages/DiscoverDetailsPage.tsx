@@ -1,25 +1,6 @@
    import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-// ── Favicon helper ────────────────────────────────────────────────────────────
-
-function getFaviconUrl(articleUrl?: string, sourceAvatar?: string): string {
-  if (articleUrl) {
-    try {
-      const hostname = new URL(articleUrl).hostname;
-      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
-    } catch { /* invalid URL */ }
-  }
-  return sourceAvatar ?? '';
-}
-
-// ── Source Count Badge ────────────────────────────────────────────────────────
-
-<SourceBadge
-            count={article.sourceCount ?? 1}
-            sourceAvatar={article.sourceAvatar}
-            articleUrl={article.articleUrl}
-          />
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const DiscoverDetailsPage: React.FC = () => {
@@ -208,7 +189,11 @@ return (
           flexWrap: 'wrap' as const,
           gap: 10,
         }}>
-          <SourceBadge count={article.sourceCount ?? 1} />
+          <SourceBadge
+  count={article.sourceCount ?? 1}
+  sourceAvatar={article.sourceAvatar}
+  articleUrl={article.articleUrl}
+/>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
@@ -365,7 +350,7 @@ return (
           border: '1px solid #f3f4f6',
         }}>
           <img
-            src={article.sourceAvatar}
+            src={getFaviconUrl(article.articleUrl, article.sourceAvatar)}
             alt={article.source}
             style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }}
           />
