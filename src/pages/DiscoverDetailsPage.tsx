@@ -1,6 +1,60 @@
-   import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface ArticleDetail {
+  id: string;
+  image: string;
+  headline: string;
+  source: string;
+  sourceAvatar: string;
+  timeAgo: string;
+  sourceCount?: number;
+  language: 'en' | 'bn';
+  bullets: string[];
+}
+
+// ── Source Count Badge ────────────────────────────────────────────────────────
+
+function SourceBadge({ count }: { count: number }) {
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      background: '#f3f4f6',
+      borderRadius: 20,
+      padding: '5px 12px',
+      border: '1px solid #e5e7eb',
+    }}>
+      {/* Mini source icons */}
+      <div style={{ display: 'flex', gap: -4 }}>
+        {[11, 22, 33].map((n, i) => (
+          <img
+            key={n}
+            src={`https://i.pravatar.cc/16?img=${n}`}
+            style={{
+              width: 16, height: 16,
+              borderRadius: '50%',
+              border: '1.5px solid #fff',
+              marginLeft: i === 0 ? 0 : -5,
+            }}
+            alt=""
+          />
+        ))}
+      </div>
+      <span style={{
+        fontSize: 13,
+        fontWeight: 600,
+        color: '#374151',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      }}>
+        {count} sources
+      </span>
+    </div>
+  );
+}
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const DiscoverDetailsPage: React.FC = () => {
@@ -189,11 +243,7 @@ return (
           flexWrap: 'wrap' as const,
           gap: 10,
         }}>
-          <SourceBadge
-  count={article.sourceCount ?? 1}
-  sourceAvatar={article.sourceAvatar}
-  articleUrl={article.articleUrl}
-/>
+          <SourceBadge count={article.sourceCount ?? 1} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
@@ -208,42 +258,7 @@ return (
         {/* Divider */}
         <div style={{ height: 1, background: '#e5e7eb', marginBottom: 20 }} />
 
-        {/* Summary */}
-        <div style={{ marginBottom: 24 }}>
-          <span style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.07em',
-            textTransform: 'uppercase' as const,
-            color: '#0d9488',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-          }}>
-            Summary
-          </span>
-          <p style={{
-            fontSize: 17,
-            lineHeight: 1.7,
-            color: '#1f2937',
-            margin: '8px 0 0',
-            fontFamily: 'Georgia, "Times New Roman", serif',
-          }}>
-            {article.summary || article.bullets[0] || ''}
-          </p>
-        </div>
-         
-        {/* Key points */}
-        <span style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: '0.07em',
-          textTransform: 'uppercase' as const,
-          color: '#0d9488',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          display: 'block',
-          marginBottom: 14,
-        }}>
-          Key points
-        </span>
+        {/* Bullet summary */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {article.bullets.map((bullet, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -268,76 +283,6 @@ return (
           ))}
         </div>
 
-       {/* Sources */}
-        <div style={{ marginTop: 32, marginBottom: 4 }}>
-          <span style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.07em',
-            textTransform: 'uppercase' as const,
-            color: '#0d9488',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-          }}>
-            Sources
-          </span>
-          <div
-            onClick={() => {
-              if (article.articleUrl) {
-                window.open(article.articleUrl, '_blank', 'noopener,noreferrer');
-              }
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 12,
-              marginTop: 12,
-              padding: '14px',
-              background: '#fff',
-              borderRadius: 16,
-              border: '1px solid #e5e7eb',
-              cursor: article.articleUrl ? 'pointer' : 'default',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-            }}
-          >
-            <img
-              src={getFaviconUrl(article.articleUrl, article.sourceAvatar)}
-              alt={article.source}
-              style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain', flexShrink: 0 }}
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: '#374151',
-                margin: '0 0 4px',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-              }}>
-                {article.source}
-              </p>
-              <p style={{
-                fontSize: 13,
-                color: '#6b7280',
-                margin: 0,
-                lineHeight: 1.5,
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical' as const,
-              }}>
-                {article.summary || article.bullets[0] || article.headline}
-              </p>
-            </div>
-            {article.articleUrl && (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
-            )}
-          </div>
-        </div>
-         
         {/* Source credit */}
         <div style={{
           display: 'flex',
@@ -350,7 +295,7 @@ return (
           border: '1px solid #f3f4f6',
         }}>
           <img
-            src={getFaviconUrl(article.articleUrl, article.sourceAvatar)}
+            src={article.sourceAvatar}
             alt={article.source}
             style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }}
           />
