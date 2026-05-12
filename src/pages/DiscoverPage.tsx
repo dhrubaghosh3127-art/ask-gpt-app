@@ -149,8 +149,10 @@ const loadingMoreLockRef = useRef(false);
     } catch {
       // Silent fail — keep existing cards, no error shown
     } finally {
-      setLoadingMore(false);
+  loadingMoreLockRef.current = false;
+  setLoadingMore(false);
     }
+    
   }, []);
 
   // ── Initial load on tab change ────────────────────────────────────────────
