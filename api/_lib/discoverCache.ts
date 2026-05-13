@@ -2,7 +2,7 @@
 // api/_lib/discoverCache.ts
 
 import { db } from './firebaseAdmin.js';
-import { getDiscoverSources, type DiscoverTab } from './discoverSources.js';
+import { getDiscoverSources, type DiscoverTab, type DiscoverSource } from './discoverSources.js';
 import { fetchDiscoverCardsFromSources, type DiscoverCard } from './discoverRss.js';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -26,6 +26,15 @@ type FeedMeta = {
   sourceLimit: number;
   limit: number;
   version: number;
+  // Rotation fields
+  sourceCursor?: number;
+  lastSourceCursor?: number;
+  lastSourceIds?: string[];
+  lastSourceLabels?: string[];
+  lastSourceCount?: number;
+  totalSourceCount?: number;
+  lastFetchedCardCount?: number;
+  lastWrittenCardCount?: number;
 };
 
 // A cached card includes all DiscoverCard fields + cache metadata
@@ -89,6 +98,36 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   }
   return chunks;
 }
+// ── Rotating source picker ────────────────────────────────────────────────────
+
+function pickRotatingSources(
+  allSources: DiscoverSource[],
+  sourceLimit: number,
+  cursor: number,
+): { sources: DiscoverSource[]; startCursor: number; nextCursor: number } {
+  const total = allSources.length;
+  if (total === 0 || sourceLimit <= 0) {
+    return { sources: [], startCursor: 0, nextCursor: 0 };
+  }
+  // Clamp cursor to valid range
+  const start = cursor >= 0 && cursor < total ? cursor : 0;
+  const end = start + sourceLimit;
+
+  let sources: DiscoverSource[];
+  let nextCursor: number;
+
+  if (end <= total) {
+    // Normal slice
+    sources = allSources.slice(start, end);
+    nextCursor = end >= total ? 0 : end;
+  } else {
+    // Wrap around
+    sources = [...allSources.slice(start), ...allSources.slice(0, end - total)];
+    nextCursor = end - total;
+  }
+
+  return { sources, startCursor: start, nextCursor };
+      }
 
 // ── Read feed meta document ───────────────────────────────────────────────────
 
@@ -256,7 +295,10 @@ export async function getDiscoverFeedWithCache(params: {
   // 3. Stale or missing — fetch fresh RSS cards
   try {
     const allSources = getDiscoverSources(tab);
-    const sources = sourceLimit ? allSources.slice(0, sourceLimit) : allSources;
+    const batchSize = sourceLimit && sourceLimit > 0 ? sourceLimit : allSources.length;
+    const currentCursor = typeof meta?.sourceCursor === 'number' ? meta.sourceCursor : 0;
+    const rotation = pickRotatingSources(allSources, batchSize, currentCursor);
+    const sources = rotation.sources;
     const freshCards = await fetchDiscoverCardsFromSources(sources, tab, 200);
 
     if (freshCards.length > 0) {
@@ -280,7 +322,7 @@ export async function getDiscoverFeedWithCache(params: {
       const newTotal = existing.length + written;
       applyEmergencyCap(tab, newTotal).catch(() => {});
 
-      // Update meta document
+      // Update meta document (with rotation info)
       const nowMs = Date.now();
       await writeFeedMeta(tab, {
         tab,
@@ -293,6 +335,14 @@ export async function getDiscoverFeedWithCache(params: {
         sourceLimit: sources.length,
         limit,
         version: CACHE_VERSION,
+        sourceCursor: rotation.nextCursor,
+        lastSourceCursor: rotation.startCursor,
+        lastSourceIds: sources.map(s => s.id),
+        lastSourceLabels: sources.map(s => s.label),
+        lastSourceCount: sources.length,
+        totalSourceCount: allSources.length,
+        lastFetchedCardCount: freshCards.length,
+        lastWrittenCardCount: written,
       });
 
       // Return merged fresh cache from subcollection
@@ -304,7 +354,32 @@ export async function getDiscoverFeedWithCache(params: {
       return { cards: sorted, fromCache: false, stale: false, refreshed: true, cacheAgeMs: null };
     }
 
-    // Fresh fetch returned 0 cards — fall through to stale fallback
+    // Fresh fetch returned 0 cards — advance cursor anyway to avoid stuck rotation
+    try {
+      const nowMs = Date.now();
+      await writeFeedMeta(tab, {
+        tab,
+        updatedAt: meta?.updatedAt ?? new Date(nowMs).toISOString(),
+        updatedAtMs: meta?.updatedAtMs ?? nowMs,
+        lastRefreshAt: new Date(nowMs).toISOString(),
+        lastRefreshAtMs: nowMs,
+        lastBatchId: meta?.lastBatchId ?? '',
+        cardCount: meta?.cardCount ?? 0,
+        sourceLimit: sources.length,
+        limit,
+        version: CACHE_VERSION,
+        sourceCursor: rotation.nextCursor,
+        lastSourceCursor: rotation.startCursor,
+        lastSourceIds: sources.map(s => s.id),
+        lastSourceLabels: sources.map(s => s.label),
+        lastSourceCount: sources.length,
+        totalSourceCount: allSources.length,
+        lastFetchedCardCount: 0,
+        lastWrittenCardCount: 0,
+      });
+    } catch { /* non-fatal */ }
+
+    // Fall through to stale fallback
   } catch {
     // Fetch failed — fall through to stale fallback
   }
