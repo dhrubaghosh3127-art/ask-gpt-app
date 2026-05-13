@@ -295,7 +295,7 @@ export async function getDiscoverFeedWithCache(params: {
   // 3. Stale or missing — fetch fresh RSS cards
   try {
     const allSources = getDiscoverSources(tab);
-    const batchSize = sourceLimit && sourceLimit > 0 ? sourceLimit : allSources.length;
+    const batchSize = sourceLimit && sourceLimit > 0 ? sourceLimit : 10;
     const currentCursor = typeof meta?.sourceCursor === 'number' ? meta.sourceCursor : 0;
     const rotation = pickRotatingSources(allSources, batchSize, currentCursor);
     const sources = rotation.sources;
