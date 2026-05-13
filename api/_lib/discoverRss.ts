@@ -152,6 +152,56 @@ function isValidImageUrl(url: string): boolean {
   return true;
 }
 
+// ── Bangladesh strict image validation ───────────────────────────────────────
+
+const BD_URL_REJECT = [
+  /\/logos?[/_.\-]/i,
+  /\/favicon/i,
+  /\/icons?[/_.\-]/i,
+  /\/avatars?[/_.\-]/i,
+  /placeholder/i,
+  /\/default[._\-]/i,
+  /\/sprite/i,
+  /\/thumbs?[/_.\-]/i,
+  /thumbnail/i,
+  /\/profile[._\-]/i,
+  /\/banners?[/_.\-]/i,
+  /\/ads?\//i,
+  /[?&]ad=/i,
+  /1x1/i,
+  /\/pixel\./i,
+  /transparent/i,
+  /[?&]size=small/i,
+];
+
+function isHighQualityBangladeshImageUrl(
+  url: string,
+  width: number | null = null,
+  height: number | null = null,
+): boolean {
+  if (!isValidImageUrl(url)) return false;
+
+  // BD-specific URL pattern rejects
+  if (BD_URL_REJECT.some(p => p.test(url))) return false;
+
+  // No Google News thumbnails at all
+  if (/news\.google\.com/i.test(url)) return false;
+
+  // No encrypted proxy thumbnails (already caught by isValidImageUrl but explicit)
+  if (/encrypted-tbn\d?\.gstatic\.com/i.test(url)) return false;
+
+  // Reject small-width query params (broader threshold than base validator)
+  if (/[?&](w|width)=(80|100|120|150|200|250|300)(&|$)/i.test(url)) return false;
+
+  // Reject if og:image:width metadata confirms image is too narrow
+  if (width !== null && width < 600) return false;
+
+  // Reject if og:image:height metadata confirms image is too short
+  if (height !== null && height < 300) return false;
+
+  return true;
+  }
+
 function scoreImageUrl(url: string): number {
   let score = 50;
   const wMatch = url.match(/[?&](?:w|width)=(\d+)/i);
@@ -275,6 +325,86 @@ async function fetchArticleMetaImage(articleUrl: string): Promise<string | null>
     return null;
   }
 }
+
+// ── Bangladesh high-quality article image fetcher ─────────────────────────────
+
+async function fetchArticleHighQualityImage(articleUrl: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(articleUrl, {
+      signal: controller.signal,
+      headers: { 'User-Agent': BOT_UA, 'Accept': 'text/html' },
+      redirect: 'follow',
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+
+    const reader = res.body?.getReader();
+    if (!reader) return null;
+    let html = '';
+    let bytes = 0;
+    while (bytes < 40000) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      html += new TextDecoder().decode(value);
+      bytes += value?.length ?? 0;
+    }
+    reader.cancel().catch(() => {});
+
+    // Extract og:image:width and og:image:height when present
+    const ogWidth = (() => {
+      const m =
+        html.match(/<meta[^>]+property=["']og:image:width["'][^>]+content=["'](\d+)["']/i)?.[1] ??
+        html.match(/<meta[^>]+content=["'](\d+)["'][^>]+property=["']og:image:width["']/i)?.[1];
+      return m ? parseInt(m, 10) : null;
+    })();
+    const ogHeight = (() => {
+      const m =
+        html.match(/<meta[^>]+property=["']og:image:height["'][^>]+content=["'](\d+)["']/i)?.[1] ??
+        html.match(/<meta[^>]+content=["'](\d+)["'][^>]+property=["']og:image:height["']/i)?.[1];
+      return m ? parseInt(m, 10) : null;
+    })();
+
+    // Collect candidates (og:image gets dimension metadata; others get null)
+    const raw: Array<{ url: string; w: number | null; h: number | null }> = [];
+    const push = (u: string | undefined | null, w: number | null = null, h: number | null = null) => {
+      if (u) raw.push({ url: u, w, h });
+    };
+
+    push(
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1],
+      ogWidth, ogHeight,
+    );
+    push(
+      html.match(/<meta[^>]+property=["']og:image:secure_url["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image:secure_url["']/i)?.[1],
+      ogWidth, ogHeight,
+    );
+    push(
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i)?.[1],
+    );
+    push(
+      html.match(/<meta[^>]+name=["']twitter:image:src["'][^>]+content=["']([^"']+)["']/i)?.[1],
+    );
+    push(
+      html.match(/"image"\s*:\s*"(https[^"]+)"/)?.[1] ??
+      html.match(/"image"\s*:\s*\{\s*"url"\s*:\s*"(https[^"]+)"/)?.[1],
+    );
+
+    // Strict filter + score sort
+    const valid = raw
+      .filter(c => isHighQualityBangladeshImageUrl(c.url, c.w, c.h))
+      .sort((a, b) => scoreImageUrl(b.url) - scoreImageUrl(a.url));
+
+    return valid.length > 0 ? valid[0].url : null;
+  } catch {
+    return null;
+  }
+      }
 
 // ── RSS image extraction ──────────────────────────────────────────────────────
 
@@ -449,21 +579,19 @@ export async function fetchDiscoverCardsFromSources(
               if (!isMostlyEnglish(headline)) continue;
             }
 
-            // Step 2: Fetch og:image from real publisher article page
-            const ogImage = await fetchArticleMetaImage(articleUrl);
-
-            // Step 3: Pick image based on tab rules
+            // Step 2: Fetch image — strict path for Bangladesh, normal path for For You
             let image: string | null = null;
 
             if (isBangladesh) {
-              // Bangladesh: ONLY use og:image from real publisher page.
-              // No RSS image fallback. No Google News thumbnail.
-              image = ogImage && isValidImageUrl(ogImage) ? ogImage : null;
+              // Bangladesh: dedicated fetcher with dimension + URL pattern validation
+              // Fewer cards is better than low-quality cards
+              image = await fetchArticleHighQualityImage(articleUrl);
             } else {
-              // For You: og:image wins, RSS image as fallback
+              // For You: og:image wins, RSS image as fallback — unchanged
+              const ogImage = await fetchArticleMetaImage(articleUrl);
               const rssImage = extractImageFromItem(item);
               image = pickBestImage([ogImage, rssImage]);
-            }
+                }
 
             // Skip if no valid real image found
             if (!image) continue;
