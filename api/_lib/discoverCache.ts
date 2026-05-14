@@ -26,7 +26,7 @@ type FeedMeta = {
   sourceLimit: number;
   limit: number;
   version: number;
-// Rotation fields
+  // Rotation fields
   sourceCursor?: number;
   lastSourceCursor?: number;
   lastSourceIds?: string[];
@@ -35,10 +35,6 @@ type FeedMeta = {
   totalSourceCount?: number;
   lastFetchedCardCount?: number;
   lastWrittenCardCount?: number;
-  // Compact dedup index — avoids reading card subcollection for dedup
-  dedupeIds?: string[];
-  dedupeUrls?: string[];
-  dedupeHeadlines?: string[];
 };
 
 // A cached card includes all DiscoverCard fields + cache metadata
@@ -54,10 +50,7 @@ const COLLECTION = 'discoverFeeds';
 const CARDS_SUB = 'cards';
 const DEFAULT_MAX_AGE_MS = 15 * 60 * 1000;         // 15 minutes
 const CACHE_RETENTION_MS = 24 * 60 * 60 * 1000;    // 24 hours
-const PUBLIC_SNAPSHOT_COLLECTION = 'discoverPublicFeeds';
-const PUBLIC_SNAPSHOT_MAX_CARDS = 120;
-const MAX_CACHED_CARDS_PER_TAB = 800;
-const DEDUP_INDEX_MAX = 200;                        // Max keys to keep in meta dedup index
+const MAX_CACHED_CARDS_PER_TAB = 3000;              // Emergency safety cap
 const FIRESTORE_BATCH_CHUNK = 400;                  // Max ops per batch
 const CACHE_VERSION = 2;
 
@@ -105,67 +98,6 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   }
   return chunks;
 }
-
-// ── Public snapshot writer ────────────────────────────────────────────────────
-
-type CompactDiscoverCard = {
-  id: string; tab: string; image: string; source: string; sourceAvatar: string;
-  timeAgo: string; headline: string; summary: string; category: string;
-  articleUrl: string; language: string; publishedAt: string;
-};
-
-export async function writePublicDiscoverSnapshot(
-  tab: DiscoverTab,
-  sortedCards: DiscoverCard[],
-): Promise<void> {
-  try {
-    const cards: CompactDiscoverCard[] = sortedCards
-      .slice(0, PUBLIC_SNAPSHOT_MAX_CARDS)
-      .map(c => ({
-        id: c.id, tab: c.tab, image: c.image, source: c.source,
-        sourceAvatar: c.sourceAvatar, timeAgo: c.timeAgo, headline: c.headline,
-        summary: c.summary, category: c.category, articleUrl: c.articleUrl,
-        language: c.language, publishedAt: c.publishedAt,
-      }));
-    const now = Date.now();
-    await db.collection(PUBLIC_SNAPSHOT_COLLECTION).doc(getFeedDocId(tab)).set({
-      tab, updatedAt: new Date(now).toISOString(), updatedAtMs: now,
-      cardCount: cards.length, cards,
-    });
-  } catch { /* non-fatal */ }
-}
-
-// ── Read public snapshot (1 doc read, for user/stale fallback) ────────────────
-
-async function readPublicSnapshot(tab: DiscoverTab): Promise<DiscoverCard[] | null> {
-  try {
-    const snap = await db.collection(PUBLIC_SNAPSHOT_COLLECTION).doc(getFeedDocId(tab)).get();
-    if (!snap.exists) return null;
-    const data = snap.data() as { cards?: CompactDiscoverCard[] } | undefined;
-    return Array.isArray(data?.cards) ? (data!.cards as unknown as DiscoverCard[]) : null;
-  } catch {
-    return null;
-  }
-}
-
-// ── Build updated dedup index after new cards are written ─────────────────────
-
-function buildUpdatedDedupIndex(
-  newCards: DiscoverCard[],
-  prevIds: string[],
-  prevUrls: string[],
-  prevHeadlines: string[],
-): { dedupeIds: string[]; dedupeUrls: string[]; dedupeHeadlines: string[] } {
-  const ids = [...newCards.map(c => c.id), ...prevIds].slice(0, DEDUP_INDEX_MAX);
-  const urls = [...newCards.map(c => c.articleUrl), ...prevUrls].slice(0, DEDUP_INDEX_MAX);
-  const headlines = [...newCards.map(c => normalizeHeadline(c.headline)), ...prevHeadlines].slice(0, DEDUP_INDEX_MAX);
-  return {
-    dedupeIds: [...new Set(ids)].slice(0, DEDUP_INDEX_MAX),
-    dedupeUrls: [...new Set(urls)].slice(0, DEDUP_INDEX_MAX),
-    dedupeHeadlines: [...new Set(headlines)].slice(0, DEDUP_INDEX_MAX),
-  };
-      }
-
 // ── Rotating source picker ────────────────────────────────────────────────────
 
 function pickRotatingSources(
@@ -348,16 +280,16 @@ export async function getDiscoverFeedWithCache(params: {
   const cacheAgeMs = meta ? now - meta.updatedAtMs : null;
   const fresh = meta ? isCacheFresh(meta.updatedAtMs, maxAgeMs) : false;
 
- // 2. Fresh cache — read public snapshot (1 doc read, not N card reads)
+  // 2. Fresh cache — return from subcollection
   if (meta && fresh) {
-    const snapshotCards = await readPublicSnapshot(tab);
-    if (snapshotCards && snapshotCards.length > 0) {
-      return {
-        cards: snapshotCards.slice(0, limit),
-        fromCache: true, stale: false, refreshed: false, cacheAgeMs,
-      };
+    const cached = await readCachedCards(tab, limit);
+    if (cached.length > 0) {
+      const sorted = cached
+        .sort((a, b) => b.cachedAtMs - a.cachedAtMs || b.score - a.score)
+        .slice(0, limit);
+      return { cards: sorted, fromCache: true, stale: false, refreshed: false, cacheAgeMs };
     }
-    // Snapshot missing — fall through to refresh
+    // Meta says fresh but no cards — fall through to refresh
   }
 
   // 3. Stale or missing — fetch fresh RSS cards
@@ -372,10 +304,11 @@ export async function getDiscoverFeedWithCache(params: {
     if (freshCards.length > 0) {
       const batchId = makeBatchId();
 
-// Dedup from compact meta index — zero subcollection reads
-      const existingIds = new Set<string>(meta?.dedupeIds ?? []);
-      const existingUrls = new Set<string>(meta?.dedupeUrls ?? []);
-      const existingHeadlines = new Set<string>(meta?.dedupeHeadlines ?? []);
+      // Read existing IDs/URLs/headlines for deduplication
+      const existing = await readCachedCards(tab, MAX_CACHED_CARDS_PER_TAB);
+      const existingIds = new Set(existing.map(c => c.id));
+      const existingUrls = new Set(existing.map(c => c.articleUrl));
+      const existingHeadlines = new Set(existing.map(c => normalizeHeadline(c.headline)));
 
       // Write new cards into subcollection (non-destructive merge)
       const written = await writeCachedCards(
@@ -385,8 +318,8 @@ export async function getDiscoverFeedWithCache(params: {
       // Cleanup expired cards (>24h by cachedAtMs) — fire and forget
       cleanupExpiredCards(tab).catch(() => {});
 
-  // Apply emergency cap using meta cardCount estimate
-      const newTotal = (meta?.cardCount ?? 0) + written;
+      // Apply emergency cap if needed
+      const newTotal = existing.length + written;
       applyEmergencyCap(tab, newTotal).catch(() => {});
 
       // Update meta document (with rotation info)
@@ -410,30 +343,15 @@ export async function getDiscoverFeedWithCache(params: {
         totalSourceCount: allSources.length,
         lastFetchedCardCount: freshCards.length,
         lastWrittenCardCount: written,
-        // Update compact dedup index from newly written cards
-        ...buildUpdatedDedupIndex(
-          freshCards,
-          meta?.dedupeIds ?? [],
-          meta?.dedupeUrls ?? [],
-          meta?.dedupeHeadlines ?? [],
-        ),
       });
 
-      // Build return cards from freshCards (no extra subcollection read)
-      // Also update public snapshot with fresh + any existing snapshot cards
-      const existingSnapshot = await readPublicSnapshot(tab);
-      const existingSnapshotCards = existingSnapshot ?? [];
-      const mergedIds = new Set(freshCards.map(c => c.id));
-      const merged = [
-        ...freshCards,
-        ...existingSnapshotCards.filter(c => !mergedIds.has(c.id)),
-      ];
-      writePublicDiscoverSnapshot(tab, merged).catch(() => {});
+      // Return merged fresh cache from subcollection
+      const allCached = await readCachedCards(tab, limit);
+      const sorted = allCached
+        .sort((a, b) => b.cachedAtMs - a.cachedAtMs || b.score - a.score)
+        .slice(0, limit);
 
-      return {
-        cards: freshCards.slice(0, limit),
-        fromCache: false, stale: false, refreshed: true, cacheAgeMs: null,
-      };
+      return { cards: sorted, fromCache: false, stale: false, refreshed: true, cacheAgeMs: null };
     }
 
     // Fresh fetch returned 0 cards — advance cursor anyway to avoid stuck rotation
@@ -466,14 +384,14 @@ export async function getDiscoverFeedWithCache(params: {
     // Fetch failed — fall through to stale fallback
   }
 
-// 4. Stale fallback — read public snapshot (1 doc read)
-  const snapshotFallback = await readPublicSnapshot(tab);
-  if (snapshotFallback && snapshotFallback.length > 0) {
-    return {
-      cards: snapshotFallback.slice(0, limit),
-      fromCache: true, stale: true, refreshed: false, cacheAgeMs,
-    };
-      }
+  // 4. Stale fallback — return existing cached cards
+  const staleCards = await readCachedCards(tab, limit);
+  if (staleCards.length > 0) {
+    const sorted = staleCards
+      .sort((a, b) => b.cachedAtMs - a.cachedAtMs || b.score - a.score)
+      .slice(0, limit);
+    return { cards: sorted, fromCache: true, stale: true, refreshed: false, cacheAgeMs };
+  }
 
   // 5. Nothing available
   return emptyResult();
@@ -505,4 +423,5 @@ export async function getCachedDiscoverCardById(id: string): Promise<DiscoverCar
 
   return null;
                           }
+
   
