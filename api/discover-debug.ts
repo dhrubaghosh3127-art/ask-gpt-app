@@ -1,18 +1,14 @@
 // ASK-GPT Discover — Debug Status API
 // api/discover-debug.ts
 
-import { db } from './_lib/firebaseAdmin.js';
+import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 
 type DiscoverTab = 'foryou' | 'bangladesh';
 
-const COLLECTION = 'discoverFeeds';
-const CARDS_SUB = 'cards';
+const CARDS_TABLE = 'discover_cards';
+const META_TABLE = 'discover_feed_meta';
 const SAMPLE_LIMIT = 10;
 const RECENT_SCAN_LIMIT = 80;
-
-function getFeedDocId(tab: DiscoverTab): string {
-  return tab === 'foryou' ? 'feed_foryou' : 'feed_bangladesh';
-}
 
 function minutesAgo(ms?: number | null): number | null {
   if (!ms || typeof ms !== 'number') return null;
@@ -35,42 +31,54 @@ function isBadLine(text: unknown): boolean {
   );
 }
 
-async function safeCount(cardsRef: any): Promise<number | null> {
-  try {
-    if (typeof cardsRef.count === 'function') {
-      const countSnap = await cardsRef.count().get();
-      return countSnap.data().count;
-    }
-  } catch {
-    // fallback below
-  }
+async function safeCount(tab: DiscoverTab): Promise<number | null> {
+  const { count, error } = await supabaseAdmin
+    .from(CARDS_TABLE)
+    .select('id', { count: 'exact', head: true })
+    .eq('tab', tab);
 
-  try {
-    const snap = await cardsRef.limit(5000).get();
-    return snap.size;
-  } catch {
-    return null;
-  }
+  if (error) return null;
+  return count ?? null;
 }
 
 async function inspectTab(tab: DiscoverTab) {
-  const feedDocId = getFeedDocId(tab);
-  const feedRef = db.collection(COLLECTION).doc(feedDocId);
-  const cardsRef = feedRef.collection(CARDS_SUB);
+  const feedDocId = tab === 'foryou' ? 'feed_foryou' : 'feed_bangladesh';
 
-  const metaSnap = await feedRef.get();
-  const meta = metaSnap.exists ? (metaSnap.data() || {}) : null;
+  const { data: metaRow, error: metaError } = await supabaseAdmin
+    .from(META_TABLE)
+    .select('*')
+    .eq('tab', tab)
+    .maybeSingle();
 
-  const actualCardCount = await safeCount(cardsRef);
+  const meta = metaError ? null : metaRow;
 
-  const recentSnap = await cardsRef
-    .orderBy('cachedAtMs', 'desc')
-    .limit(RECENT_SCAN_LIMIT)
-    .get();
+  const actualCardCount = await safeCount(tab);
 
-  const recentDocs = recentSnap.docs.map((doc: any) => ({
-    docId: doc.id,
-    ...(doc.data() || {}),
+  const { data: rows, error: cardsError } = await supabaseAdmin
+    .from(CARDS_TABLE)
+    .select('*')
+    .eq('tab', tab)
+    .order('cached_at_ms', { ascending: false })
+    .limit(RECENT_SCAN_LIMIT);
+
+  if (cardsError) throw new Error(cardsError.message);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recentDocs = (rows ?? []).map((row: any) => ({
+    docId:       row.id,
+    id:          row.id,
+    headline:    row.headline    ?? null,
+    source:      row.source      ?? null,
+    category:    row.category    ?? null,
+    language:    row.language    ?? null,
+    cachedAt:    row.cached_at   ?? null,
+    cachedAtMs:  row.cached_at_ms ?? null,
+    publishedAt: row.published_at ?? null,
+    image:       row.image        ?? null,
+    articleUrl:  row.article_url  ?? null,
+    summary:     row.summary      ?? null,
+    bullets:     Array.isArray(row.bullets) ? row.bullets : [],
+    batchId:     row.batch_id     ?? null,
   }));
 
   const sampleCards = recentDocs.slice(0, SAMPLE_LIMIT).map((card: any) => ({
@@ -113,19 +121,19 @@ async function inspectTab(tab: DiscoverTab) {
   return {
     tab,
     feedDocId,
-    metaExists: metaSnap.exists,
+    metaExists: Boolean(meta),
     meta: meta ? {
-      cardCount: meta.cardCount ?? null,
-      lastBatchId: meta.lastBatchId ?? null,
-      lastRefreshAt: meta.lastRefreshAt ?? null,
-      lastRefreshAtMs: meta.lastRefreshAtMs ?? null,
-      lastRefreshAgeMin: minutesAgo(meta.lastRefreshAtMs),
-      updatedAt: meta.updatedAt ?? null,
-      updatedAtMs: meta.updatedAtMs ?? null,
-      updatedAgeMin: minutesAgo(meta.updatedAtMs),
-      sourceLimit: meta.sourceLimit ?? null,
-      limit: meta.limit ?? null,
-      version: meta.version ?? null,
+      cardCount:         meta.card_count         ?? null,
+      lastBatchId:       meta.last_batch_id       ?? null,
+      lastRefreshAt:     meta.last_refresh_at     ?? null,
+      lastRefreshAtMs:   meta.last_refresh_at_ms  ?? null,
+      lastRefreshAgeMin: minutesAgo(meta.last_refresh_at_ms),
+      updatedAt:         meta.updated_at          ?? null,
+      updatedAtMs:       meta.updated_at_ms       ?? null,
+      updatedAgeMin:     minutesAgo(meta.updated_at_ms),
+      sourceLimit:       meta.source_limit        ?? null,
+      limit:             meta.limit_count         ?? null,
+      version:           meta.version             ?? null,
     } : null,
     actualCardCount,
     recentBatchCounts: batchCounts,
