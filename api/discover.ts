@@ -1,7 +1,7 @@
 // ASK-GPT Discover — Cache-Only Feed API
 // api/discover.ts
 
-import { db } from './_lib/firebaseAdmin.js';
+import { supabase } from './_lib/supabaseAdmin.js';
 import type { DiscoverTab } from './_lib/discoverSources.js';
 import type { DiscoverCard } from './_lib/discoverRss.js';
 
@@ -10,8 +10,8 @@ const MIN_LIMIT = 1;
 const MAX_LIMIT = 10;
 
 const COLLECTION: Record<DiscoverTab, string> = {
-  foryou: 'discoverFeeds/feed_foryou/cards',
-  bangladesh: 'discoverFeeds/feed_bangladesh/cards',
+  foryou: 'discover_foryou_cards',
+  bangladesh: 'discover_bangladesh_cards',
 };
 
 // ── Cursor encode / decode ────────────────────────────────────────────────────
@@ -86,30 +86,31 @@ export default async function handler(req: any, res: any): Promise<void> {
   const cursor: CursorData | null = rawCursor ? decodeCursor(rawCursor) : null;
 
   try {
-    const colRef = db.collection(COLLECTION[tab]);
+    const table = COLLECTION[tab];
 
     // Build query: newest cached cards first
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query: any = colRef
-      .orderBy('cachedAtMs', 'desc')
+    let queryBuilder: any = supabase
+      .from(table)
+      .select('*')
+      .order('cachedAtMs', { ascending: false })
       .limit(limit + 1); // fetch one extra to know if there are more
 
-    // Apply cursor (startAfter)
+    // Apply cursor (lt on cachedAtMs)
     if (cursor) {
-      const snapRef = colRef.doc(cursor.docId);
-      const snapDoc = await snapRef.get();
-      if (snapDoc.exists) {
-        query = colRef
-          .orderBy('cachedAtMs', 'desc')
-          .startAfter(snapDoc)
-          .limit(limit + 1);
-      }
-      // If snapshot doesn't exist, ignore cursor and return first page
+      queryBuilder = supabase
+        .from(table)
+        .select('*')
+        .order('cachedAtMs', { ascending: false })
+        .lt('cachedAtMs', cursor.cachedAtMs)
+        .limit(limit + 1);
+      // If cursor.cachedAtMs is invalid, returns first page automatically
     }
 
-    const snapshot = await query.get();
+    const { data: rows, error: queryError } = await queryBuilder;
+    if (queryError) throw new Error(queryError.message);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const docs = snapshot.docs as any[];
+    const docs = (rows ?? []) as any[];
 
     const hasMore = docs.length > limit;
     const pageDocs = hasMore ? docs.slice(0, limit) : docs;
@@ -117,7 +118,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     // Build cards — skip invalid
     const cards: DiscoverCard[] = [];
     for (const doc of pageDocs) {
-      const data = doc.data();
+      const data = doc;
       if (isValidCard(data)) {
         cards.push(data as DiscoverCard);
       }
@@ -127,9 +128,8 @@ export default async function handler(req: any, res: any): Promise<void> {
     let nextCursor: string | null = null;
     if (hasMore && pageDocs.length > 0) {
       const lastDoc = pageDocs[pageDocs.length - 1];
-      const lastData = lastDoc.data();
       nextCursor = encodeCursor({
-        cachedAtMs: typeof lastData.cachedAtMs === 'number' ? lastData.cachedAtMs : 0,
+        cachedAtMs: typeof lastDoc.cachedAtMs === 'number' ? lastDoc.cachedAtMs : 0,
         docId: lastDoc.id,
       });
     }
@@ -175,4 +175,4 @@ export default async function handler(req: any, res: any): Promise<void> {
     });
   }
     }
-    
+
