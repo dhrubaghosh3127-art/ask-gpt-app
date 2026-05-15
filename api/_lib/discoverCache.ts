@@ -1,7 +1,7 @@
-// ASK-GPT Discover — Firestore Rolling Cache Manager
+// ASK-GPT Discover — Supabase Rolling Cache Manager
 // api/_lib/discoverCache.ts
 
-import { db } from './firebaseAdmin.js';
+import { supabase } from './supabaseAdmin.js';
 import { getDiscoverSources, type DiscoverTab, type DiscoverSource } from './discoverSources.js';
 import { fetchDiscoverCardsFromSources, type DiscoverCard } from './discoverRss.js';
 
@@ -46,19 +46,17 @@ type CachedCard = DiscoverCard & {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const COLLECTION = 'discoverFeeds';
-const CARDS_SUB = 'cards';
+const CARDS_TABLE = 'discover_cards';
+const META_TABLE  = 'discover_feed_meta';
 const DEFAULT_MAX_AGE_MS = 15 * 60 * 1000;         // 15 minutes
 const CACHE_RETENTION_MS = 24 * 60 * 60 * 1000;    // 24 hours
 const MAX_CACHED_CARDS_PER_TAB = 3000;              // Emergency safety cap
-const FIRESTORE_BATCH_CHUNK = 400;                  // Max ops per batch
+const SUPABASE_CHUNK = 100;                         // Rows per upsert batch
 const CACHE_VERSION = 2;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getFeedDocId(tab: DiscoverTab): string {
-  return tab === 'foryou' ? 'feed_foryou' : 'feed_bangladesh';
-}
+
 
 function isCacheFresh(updatedAtMs: number, maxAgeMs: number): boolean {
   if (maxAgeMs === 0) return false; // maxAgeMs: 0 forces refresh
@@ -133,9 +131,30 @@ function pickRotatingSources(
 
 async function readFeedMeta(tab: DiscoverTab): Promise<FeedMeta | null> {
   try {
-    const snap = await db.collection(COLLECTION).doc(getFeedDocId(tab)).get();
-    if (!snap.exists) return null;
-    return snap.data() as FeedMeta;
+    const { data, error } = await supabase
+      .from(META_TABLE).select('*').eq('tab', tab).maybeSingle();
+    if (error || !data) return null;
+    const r = data as Record<string, unknown>;
+    return {
+      tab:                  r.tab               as DiscoverTab,
+      updatedAt:            r.updated_at         as string,
+      updatedAtMs:          r.updated_at_ms      as number,
+      lastRefreshAt:        r.last_refresh_at    as string,
+      lastRefreshAtMs:      r.last_refresh_at_ms as number,
+      lastBatchId:          r.last_batch_id      as string,
+      cardCount:            r.card_count         as number,
+      sourceLimit:          r.source_limit       as number,
+      limit:                r.feed_limit         as number,
+      version:              r.version            as number,
+      sourceCursor:         r.source_cursor      as number,
+      lastSourceCursor:     r.last_source_cursor as number,
+      lastSourceIds:        (r.last_source_ids   as string[])  ?? [],
+      lastSourceLabels:     (r.last_source_labels as string[]) ?? [],
+      lastSourceCount:      r.last_source_count      as number,
+      totalSourceCount:     r.total_source_count     as number,
+      lastFetchedCardCount: r.last_fetched_card_count as number,
+      lastWrittenCardCount: r.last_written_card_count as number,
+    };
   } catch {
     return null;
   }
@@ -143,9 +162,28 @@ async function readFeedMeta(tab: DiscoverTab): Promise<FeedMeta | null> {
 
 // ── Write feed meta document ──────────────────────────────────────────────────
 
-async function writeFeedMeta(tab: DiscoverTab, meta: FeedMeta): Promise<void> {
+async function writeFeedMeta(_tab: DiscoverTab, meta: FeedMeta): Promise<void> {
   try {
-    await db.collection(COLLECTION).doc(getFeedDocId(tab)).set(meta);
+    await supabase.from(META_TABLE).upsert({
+      tab:                     meta.tab,
+      updated_at:              meta.updatedAt,
+      updated_at_ms:           meta.updatedAtMs,
+      last_refresh_at:         meta.lastRefreshAt,
+      last_refresh_at_ms:      meta.lastRefreshAtMs,
+      last_batch_id:           meta.lastBatchId,
+      card_count:              meta.cardCount,
+      source_limit:            meta.sourceLimit,
+      feed_limit:              meta.limit,
+      version:                 meta.version,
+      source_cursor:           meta.sourceCursor           ?? 0,
+      last_source_cursor:      meta.lastSourceCursor       ?? 0,
+      last_source_ids:         meta.lastSourceIds          ?? [],
+      last_source_labels:      meta.lastSourceLabels       ?? [],
+      last_source_count:       meta.lastSourceCount        ?? 0,
+      total_source_count:      meta.totalSourceCount       ?? 0,
+      last_fetched_card_count: meta.lastFetchedCardCount   ?? 0,
+      last_written_card_count: meta.lastWrittenCardCount   ?? 0,
+    }, { onConflict: 'tab' });
   } catch { /* non-fatal */ }
 }
 
@@ -153,48 +191,77 @@ async function writeFeedMeta(tab: DiscoverTab, meta: FeedMeta): Promise<void> {
 
 async function readCachedCards(tab: DiscoverTab, limitCount = 500): Promise<CachedCard[]> {
   try {
-    const snap = await db
-      .collection(COLLECTION)
-      .doc(getFeedDocId(tab))
-      .collection(CARDS_SUB)
-      .orderBy('cachedAtMs', 'desc')
-      .limit(limitCount)
-      .get();
-    return snap.docs
-      .map(d => d.data() as CachedCard)
-      .filter(c => isValidCard(c));
+    const { data, error } = await supabase
+      .from(CARDS_TABLE).select('*')
+      .eq('tab', tab)
+      .order('cached_at_ms', { ascending: false })
+      .limit(limitCount);
+    if (error || !data) return [];
+    return (data as Record<string, unknown>[]).map(r => ({
+      id:           r.id            as string,
+      tab:          r.tab           as 'foryou' | 'bangladesh',
+      image:        r.image         as string,
+      source:       r.source        as string,
+      sourceAvatar: r.source_avatar as string,
+      timeAgo:      r.time_ago      as string,
+      headline:     r.headline      as string,
+      summary:      r.summary       as string,
+      category:     r.category      as string,
+      articleUrl:   r.article_url   as string,
+      language:     r.language      as 'en' | 'bn',
+      bullets:      (r.bullets      as string[]) ?? [],
+      sources:      r.sources       as never,
+      publishedAt:  r.published_at  as string,
+      fetchedAt:    r.fetched_at    as string,
+      score:        r.score         as number,
+      cachedAt:     r.cached_at     as string,
+      cachedAtMs:   r.cached_at_ms  as number,
+      batchId:      r.batch_id      as string,
+    } as CachedCard)).filter(c => isValidCard(c));
   } catch {
     return [];
   }
-}
+      }
 
 // ── Write new cards to subcollection (batched) ────────────────────────────────
 
 async function writeCachedCards(
-  tab: DiscoverTab,
+  _tab: DiscoverTab,
   newCards: DiscoverCard[],
   batchId: string,
   existingIds: Set<string>,
   existingUrls: Set<string>,
   existingHeadlines: Set<string>,
 ): Promise<number> {
-  const feedDocRef = db.collection(COLLECTION).doc(getFeedDocId(tab));
-  const cardsRef = feedDocRef.collection(CARDS_SUB);
-  const now = Date.now();
+  const now    = Date.now();
   const nowIso = new Date(now).toISOString();
 
-  // Filter out duplicates
-  const toWrite: CachedCard[] = [];
+  const toWrite: Record<string, unknown>[] = [];
   for (const card of newCards) {
     if (!isValidCard(card)) continue;
     if (existingIds.has(card.id)) continue;
     if (existingUrls.has(card.articleUrl)) continue;
     if (existingHeadlines.has(normalizeHeadline(card.headline))) continue;
     toWrite.push({
-      ...card,
-      cachedAt: nowIso,
-      cachedAtMs: now,
-      batchId,
+      id:            card.id,
+      tab:           card.tab,
+      image:         card.image,
+      source:        card.source,
+      source_avatar: card.sourceAvatar,
+      time_ago:      card.timeAgo,
+      headline:      card.headline,
+      summary:       card.summary       ?? null,
+      category:      card.category      ?? null,
+      article_url:   card.articleUrl,
+      language:      card.language,
+      bullets:       card.bullets       ?? [],
+      sources:       (card as Record<string, unknown>).sources ?? null,
+      published_at:  card.publishedAt,
+      fetched_at:    card.fetchedAt,
+      score:         card.score,
+      cached_at:     nowIso,
+      cached_at_ms:  now,
+      batch_id:      batchId,
     });
     existingIds.add(card.id);
     existingUrls.add(card.articleUrl);
@@ -203,44 +270,23 @@ async function writeCachedCards(
 
   if (toWrite.length === 0) return 0;
 
-  // Write in chunks of FIRESTORE_BATCH_CHUNK
-  const chunks = chunkArray(toWrite, FIRESTORE_BATCH_CHUNK);
+  const chunks = chunkArray(toWrite, SUPABASE_CHUNK);
   for (const chunk of chunks) {
     try {
-      const batch = db.batch();
-      for (const card of chunk) {
-        const docRef = cardsRef.doc(card.id);
-        batch.set(docRef, card);
-      }
-      await batch.commit();
-    } catch { /* non-fatal — continue other chunks */ }
+      await supabase.from(CARDS_TABLE).upsert(chunk, { onConflict: 'id' });
+    } catch { /* non-fatal */ }
   }
 
   return toWrite.length;
-}
+      }
 
 // ── Cleanup expired cards (older than 24h by cachedAtMs) ─────────────────────
 
 async function cleanupExpiredCards(tab: DiscoverTab): Promise<void> {
   try {
     const cutoffMs = Date.now() - CACHE_RETENTION_MS;
-    const feedDocRef = db.collection(COLLECTION).doc(getFeedDocId(tab));
-    const snap = await feedDocRef
-      .collection(CARDS_SUB)
-      .where('cachedAtMs', '<', cutoffMs)
-      .limit(FIRESTORE_BATCH_CHUNK)
-      .get();
-
-    if (snap.empty) return;
-
-    const chunks = chunkArray(snap.docs, FIRESTORE_BATCH_CHUNK);
-    for (const chunk of chunks) {
-      try {
-        const batch = db.batch();
-        for (const doc of chunk) batch.delete(doc.ref);
-        await batch.commit();
-      } catch { /* non-fatal */ }
-    }
+    await supabase.from(CARDS_TABLE).delete()
+      .eq('tab', tab).lt('cached_at_ms', cutoffMs);
   } catch { /* non-fatal */ }
 }
 
@@ -250,17 +296,13 @@ async function applyEmergencyCap(tab: DiscoverTab, totalCount: number): Promise<
   if (totalCount <= MAX_CACHED_CARDS_PER_TAB) return;
   try {
     const overflow = totalCount - MAX_CACHED_CARDS_PER_TAB;
-    const feedDocRef = db.collection(COLLECTION).doc(getFeedDocId(tab));
-    const snap = await feedDocRef
-      .collection(CARDS_SUB)
-      .orderBy('cachedAtMs', 'asc')
-      .limit(Math.min(overflow, FIRESTORE_BATCH_CHUNK))
-      .get();
-
-    if (snap.empty) return;
-    const batch = db.batch();
-    for (const doc of snap.docs) batch.delete(doc.ref);
-    await batch.commit();
+    const { data } = await supabase
+      .from(CARDS_TABLE).select('id').eq('tab', tab)
+      .order('cached_at_ms', { ascending: true })
+      .limit(Math.min(overflow, 500));
+    if (!data || data.length === 0) return;
+    const ids = (data as { id: string }[]).map(r => r.id);
+    await supabase.from(CARDS_TABLE).delete().in('id', ids);
   } catch { /* non-fatal */ }
 }
 
@@ -401,26 +443,32 @@ export async function getDiscoverFeedWithCache(params: {
 
 export async function getCachedDiscoverCardById(id: string): Promise<DiscoverCard | null> {
   if (!id) return null;
-
-  const tabs: DiscoverTab[] = ['foryou', 'bangladesh'];
-
-  for (const tab of tabs) {
-    try {
-      const docRef = db
-        .collection(COLLECTION)
-        .doc(getFeedDocId(tab))
-        .collection(CARDS_SUB)
-        .doc(id);
-      const snap = await docRef.get();
-      if (snap.exists) {
-        const data = snap.data();
-        if (data && isValidCard(data)) return data as DiscoverCard;
-      }
-    } catch {
-      continue;
-    }
+  try {
+    const { data, error } = await supabase
+      .from(CARDS_TABLE).select('*').eq('id', id).limit(1).maybeSingle();
+    if (error || !data) return null;
+    const r = data as Record<string, unknown>;
+    const card: DiscoverCard = {
+      id:           r.id            as string,
+      tab:          r.tab           as 'foryou' | 'bangladesh',
+      image:        r.image         as string,
+      source:       r.source        as string,
+      sourceAvatar: r.source_avatar as string,
+      timeAgo:      r.time_ago      as string,
+      headline:     r.headline      as string,
+      summary:      r.summary       as string,
+      category:     r.category      as string,
+      articleUrl:   r.article_url   as string,
+      language:     r.language      as 'en' | 'bn',
+      bullets:      (r.bullets      as string[]) ?? [],
+      sources:      r.sources       as never,
+      publishedAt:  r.published_at  as string,
+      fetchedAt:    r.fetched_at    as string,
+      score:        r.score         as number,
+    };
+    return isValidCard(card) ? card : null;
+  } catch {
+    return null;
   }
-
-  return null;
-                          }
+}
   
