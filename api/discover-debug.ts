@@ -1,12 +1,11 @@
 // ASK-GPT Discover — Debug Status API
 // api/discover-debug.ts
 
-import { db } from './_lib/firebaseAdmin.js';
+import { supabase } from './_lib/supabaseAdmin.js';
 
 type DiscoverTab = 'foryou' | 'bangladesh';
 
-const COLLECTION = 'discoverFeeds';
-const CARDS_SUB = 'cards';
+const COLLECTION = 'discover_feed_meta';
 const SAMPLE_LIMIT = 10;
 const RECENT_SCAN_LIMIT = 80;
 
@@ -35,42 +34,50 @@ function isBadLine(text: unknown): boolean {
   );
 }
 
-async function safeCount(cardsRef: any): Promise<number | null> {
+async function safeCount(table: string): Promise<number | null> {
   try {
-    if (typeof cardsRef.count === 'function') {
-      const countSnap = await cardsRef.count().get();
-      return countSnap.data().count;
-    }
+    const { count, error } = await supabase
+      .from(table)
+      .select('*', { count: 'exact', head: true });
+    if (!error && count !== null) return count;
   } catch {
     // fallback below
   }
 
   try {
-    const snap = await cardsRef.limit(5000).get();
-    return snap.size;
+    const { data, error } = await supabase
+      .from(table)
+      .select('id')
+      .limit(5000);
+    if (!error && data) return data.length;
   } catch {
     return null;
   }
+  return null;
 }
 
 async function inspectTab(tab: DiscoverTab) {
   const feedDocId = getFeedDocId(tab);
-  const feedRef = db.collection(COLLECTION).doc(feedDocId);
-  const cardsRef = feedRef.collection(CARDS_SUB);
+  const cardsTable = tab === 'foryou' ? 'discover_foryou_cards' : 'discover_bangladesh_cards';
 
-  const metaSnap = await feedRef.get();
-  const meta = metaSnap.exists ? (metaSnap.data() || {}) : null;
+  const { data: metaRow } = await supabase
+    .from(COLLECTION)
+    .select('*')
+    .eq('feed_doc_id', feedDocId)
+    .single();
+  const meta = metaRow || null;
 
-  const actualCardCount = await safeCount(cardsRef);
+  const actualCardCount = await safeCount(cardsTable);
 
-  const recentSnap = await cardsRef
-    .orderBy('cachedAtMs', 'desc')
-    .limit(RECENT_SCAN_LIMIT)
-    .get();
+  const { data: recentRows } = await supabase
+    .from(cardsTable)
+    .select('*')
+    .order('cachedAtMs', { ascending: false })
+    .limit(RECENT_SCAN_LIMIT);
 
-  const recentDocs = recentSnap.docs.map((doc: any) => ({
-    docId: doc.id,
-    ...(doc.data() || {}),
+  const recentDocs = (recentRows ?? []).map((row: any) => ({
+    docId: row.id,
+    ...row,
   }));
 
   const sampleCards = recentDocs.slice(0, SAMPLE_LIMIT).map((card: any) => ({
@@ -113,7 +120,7 @@ async function inspectTab(tab: DiscoverTab) {
   return {
     tab,
     feedDocId,
-    metaExists: metaSnap.exists,
+    metaExists: meta !== null,
     meta: meta ? {
       cardCount: meta.cardCount ?? null,
       lastBatchId: meta.lastBatchId ?? null,
@@ -184,4 +191,5 @@ export default async function handler(req: any, res: any): Promise<void> {
       error: message,
     });
   }
-}
+    }
+      
