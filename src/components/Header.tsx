@@ -77,17 +77,19 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           align-items: center;
           justify-content: space-between;
           padding: 0 16px;
-          /* transparent by default */
-          background: transparent;
-          transition: background 0.2s ease, border-color 0.2s ease;
-          border-bottom: 1px solid transparent;
+          background: rgba(249,249,251,0.01);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+                backdrop-filter: blur(18px) saturate(160%);
+        transition: background 0.2s ease, border-color 0.2s ease,
+                    backdrop-filter 0.2s ease;
+        border-bottom: 1px solid transparent;
         }
 
         /* ChatGPT-style: pure frosted blur when stuck ────────────── */
         .H.stuck {
-          background: rgba(255,255,255,0.82);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-                  backdrop-filter: blur(24px) saturate(180%);
+          background: rgba(249,249,251,0.90);
+        -webkit-backdrop-filter: blur(28px) saturate(200%);
+                backdrop-filter: blur(28px) saturate(200%);
           border-bottom-color: rgba(0,0,0,0.07);
         }
 
