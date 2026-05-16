@@ -284,79 +284,78 @@ setLoadingMore(false);
         zIndex: 50,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Back */}
+
+          {/* ── Back ── */}
           <button
             onClick={() => navigate(-1)}
             style={{
               width: 40, height: 40, borderRadius: 13,
-              background: 'rgba(255,255,255,0.80)',
+              background: 'rgba(255,255,255,0.85)',
               border: '1px solid rgba(0,0,0,0.07)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.06)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 4px rgba(0,0,0,0.07)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flexShrink: 0,
+              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke="#1c1c2e" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+              stroke="#1c1c2e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 5l-7 7 7 7" />
             </svg>
           </button>
 
-          {/* Title + live dot */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{
-              fontSize: 22, fontWeight: 800, color: '#111827',
-              letterSpacing: '-0.04em',
-              fontFamily: "'Geist', system-ui, -apple-system, sans-serif",
-            }}>
-              Discover
-            </span>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              background: 'rgba(52,211,153,0.12)',
-              border: '1px solid rgba(52,211,153,0.25)',
-              borderRadius: 20, padding: '3px 8px 3px 6px',
-            }}>
+          {/* ── Title ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{
-                width: 6, height: 6, borderRadius: '50%',
-                background: '#10b981',
-                boxShadow: '0 0 6px rgba(16,185,129,0.8)',
-                display: 'inline-block', flexShrink: 0,
-              }} />
-              <span style={{
-                fontSize: 10.5, fontWeight: 700, letterSpacing: '0.04em',
-                color: '#059669', lineHeight: 1,
-                fontFamily: 'system-ui, sans-serif',
+                fontSize: 24,
+                fontWeight: 800,
+                letterSpacing: '-0.045em',
+                color: '#0f0f14',
+                fontFamily: "'Geist', 'SF Pro Display', -apple-system, sans-serif",
+                lineHeight: 1,
               }}>
-                LIVE
+                Discover
               </span>
+              {/* LIVE pill — tight, refined */}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.13) 0%, rgba(5,150,105,0.09) 100%)',
+                border: '1px solid rgba(16,185,129,0.28)',
+                borderRadius: 99,
+                padding: '3.5px 9px 3.5px 7px',
+                marginTop: 1,
+              }}>
+                <span style={{
+                  width: 5.5, height: 5.5, borderRadius: '50%',
+                  background: '#10b981',
+                  boxShadow: '0 0 7px rgba(16,185,129,0.9)',
+                  display: 'inline-block', flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: 10, fontWeight: 800,
+                  letterSpacing: '0.06em',
+                  color: '#059669',
+                  fontFamily: 'system-ui, sans-serif',
+                  lineHeight: 1,
+                }}>
+                  LIVE
+                </span>
+              </span>
+            </div>
+            {/* subtitle */}
+            <span style={{
+              fontSize: 11, fontWeight: 500,
+              color: '#9ca3af', letterSpacing: '0.01em',
+              fontFamily: 'system-ui, sans-serif',
+            }}>
+              Curated · Real-time
             </span>
           </div>
 
-          {/* Personalise button */}
-          <button
-            onClick={() => {/* future: open filter/preference sheet */}}
-            style={{
-              width: 40, height: 40, borderRadius: 13,
-              background: 'rgba(255,255,255,0.80)',
-              border: '1px solid rgba(0,0,0,0.07)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.06)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-            }}
-            aria-label="Personalise feed"
-          >
-            {/* tune / sliders icon — signals personalisation */}
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
-              stroke="#1c1c2e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6" />
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="18" x2="20" y2="18" />
-              <circle cx="9" cy="6" r="2" fill="#1c1c2e" stroke="none" />
-              <circle cx="15" cy="12" r="2" fill="#1c1c2e" stroke="none" />
-              <circle cx="9" cy="18" r="2" fill="#1c1c2e" stroke="none" />
-            </svg>
-          </button>
+          {/* ── Right spacer (same width as back btn to keep title centered) ── */}
+          <div style={{ width: 40, flexShrink: 0 }} />
+
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingLeft: 2 }}>
           {(['foryou', 'bangladesh'] as const).map(tab => {
