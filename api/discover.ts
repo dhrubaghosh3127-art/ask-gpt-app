@@ -86,31 +86,28 @@ export default async function handler(req: any, res: any): Promise<void> {
   const cursor: CursorData | null = rawCursor ? decodeCursor(rawCursor) : null;
 
   try {
-    const table = COLLECTION[tab];
-
-    // Build query: newest cached cards first
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let queryBuilder: any = supabase
-      .from(table)
+    let query: any = supabase
+      .from(COLLECTION[tab])
       .select('*')
       .order('cachedAtMs', { ascending: false })
       .limit(limit + 1); // fetch one extra to know if there are more
 
-    // Apply cursor (lt on cachedAtMs)
+    // Apply cursor (startAfter)
     if (cursor) {
-      queryBuilder = supabase
-        .from(table)
+      query = supabase
+        .from(COLLECTION[tab])
         .select('*')
         .order('cachedAtMs', { ascending: false })
         .lt('cachedAtMs', cursor.cachedAtMs)
         .limit(limit + 1);
-      // If cursor.cachedAtMs is invalid, returns first page automatically
+      // If snapshot doesn't exist, ignore cursor and return first page
     }
 
-    const { data: rows, error: queryError } = await queryBuilder;
+    const { data, error: queryError } = await query;
     if (queryError) throw new Error(queryError.message);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const docs = (rows ?? []) as any[];
+    const docs = (data ?? []) as any[];
 
     const hasMore = docs.length > limit;
     const pageDocs = hasMore ? docs.slice(0, limit) : docs;
@@ -128,8 +125,9 @@ export default async function handler(req: any, res: any): Promise<void> {
     let nextCursor: string | null = null;
     if (hasMore && pageDocs.length > 0) {
       const lastDoc = pageDocs[pageDocs.length - 1];
+      const lastData = lastDoc;
       nextCursor = encodeCursor({
-        cachedAtMs: typeof lastDoc.cachedAtMs === 'number' ? lastDoc.cachedAtMs : 0,
+        cachedAtMs: typeof lastData.cachedAtMs === 'number' ? lastData.cachedAtMs : 0,
         docId: lastDoc.id,
       });
     }
