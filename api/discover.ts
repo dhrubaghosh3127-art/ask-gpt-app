@@ -1,7 +1,7 @@
 // ASK-GPT Discover — Cache-Only Feed API
 // api/discover.ts
 
-import { supabase } from './_lib/supabaseAdmin.js';
+import { db } from './_lib/firebaseAdmin.js';
 import type { DiscoverTab } from './_lib/discoverSources.js';
 import type { DiscoverCard } from './_lib/discoverRss.js';
 
@@ -10,8 +10,8 @@ const MIN_LIMIT = 1;
 const MAX_LIMIT = 10;
 
 const COLLECTION: Record<DiscoverTab, string> = {
-  foryou: 'discover_foryou_cards',
-  bangladesh: 'discover_bangladesh_cards',
+  foryou: 'discoverFeeds/feed_foryou/cards',
+  bangladesh: 'discoverFeeds/feed_bangladesh/cards',
 };
 
 // ── Cursor encode / decode ────────────────────────────────────────────────────
@@ -86,28 +86,30 @@ export default async function handler(req: any, res: any): Promise<void> {
   const cursor: CursorData | null = rawCursor ? decodeCursor(rawCursor) : null;
 
   try {
+    const colRef = db.collection(COLLECTION[tab]);
+
+    // Build query: newest cached cards first
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query: any = supabase
-      .from(COLLECTION[tab])
-      .select('*')
-      .order('cachedAtMs', { ascending: false })
+    let query: any = colRef
+      .orderBy('cachedAtMs', 'desc')
       .limit(limit + 1); // fetch one extra to know if there are more
 
     // Apply cursor (startAfter)
     if (cursor) {
-      query = supabase
-        .from(COLLECTION[tab])
-        .select('*')
-        .order('cachedAtMs', { ascending: false })
-        .lt('cachedAtMs', cursor.cachedAtMs)
-        .limit(limit + 1);
+      const snapRef = colRef.doc(cursor.docId);
+      const snapDoc = await snapRef.get();
+      if (snapDoc.exists) {
+        query = colRef
+          .orderBy('cachedAtMs', 'desc')
+          .startAfter(snapDoc)
+          .limit(limit + 1);
+      }
       // If snapshot doesn't exist, ignore cursor and return first page
     }
 
-    const { data, error: queryError } = await query;
-    if (queryError) throw new Error(queryError.message);
+    const snapshot = await query.get();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const docs = (data ?? []) as any[];
+    const docs = snapshot.docs as any[];
 
     const hasMore = docs.length > limit;
     const pageDocs = hasMore ? docs.slice(0, limit) : docs;
@@ -115,7 +117,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     // Build cards — skip invalid
     const cards: DiscoverCard[] = [];
     for (const doc of pageDocs) {
-      const data = doc;
+      const data = doc.data();
       if (isValidCard(data)) {
         cards.push(data as DiscoverCard);
       }
@@ -125,7 +127,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     let nextCursor: string | null = null;
     if (hasMore && pageDocs.length > 0) {
       const lastDoc = pageDocs[pageDocs.length - 1];
-      const lastData = lastDoc;
+      const lastData = lastDoc.data();
       nextCursor = encodeCursor({
         cachedAtMs: typeof lastData.cachedAtMs === 'number' ? lastData.cachedAtMs : 0,
         docId: lastDoc.id,
@@ -172,5 +174,5 @@ export default async function handler(req: any, res: any): Promise<void> {
       nextCursor: null,
     });
   }
-    }
-
+        }
+      
