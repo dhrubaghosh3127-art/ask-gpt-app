@@ -284,46 +284,78 @@ setLoadingMore(false);
         zIndex: 50,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={() => navigate(-1)}
-              style={{
-                width: 44, height: 44, borderRadius: '50%', background: '#fff',
-                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxShadow: '0 1px 6px rgba(0,0,0,0.08)',
-                WebkitTapHighlightColor: 'transparent', flexShrink: 0,
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 5l-7 7 7 7" />
-              </svg>
-            </button>
+          {/* Back */}
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              width: 40, height: 40, borderRadius: 13,
+              background: 'rgba(255,255,255,0.80)',
+              border: '1px solid rgba(0,0,0,0.07)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.06)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flexShrink: 0,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="#1c1c2e" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+          </button>
+
+          {/* Title + live dot */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <span style={{
-              fontSize: 26, fontWeight: 800, color: '#111827',
-              letterSpacing: '-0.03em',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontSize: 22, fontWeight: 800, color: '#111827',
+              letterSpacing: '-0.04em',
+              fontFamily: "'Geist', system-ui, -apple-system, sans-serif",
             }}>
               Discover
             </span>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              background: 'rgba(52,211,153,0.12)',
+              border: '1px solid rgba(52,211,153,0.25)',
+              borderRadius: 20, padding: '3px 8px 3px 6px',
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: '#10b981',
+                boxShadow: '0 0 6px rgba(16,185,129,0.8)',
+                display: 'inline-block', flexShrink: 0,
+              }} />
+              <span style={{
+                fontSize: 10.5, fontWeight: 700, letterSpacing: '0.04em',
+                color: '#059669', lineHeight: 1,
+                fontFamily: 'system-ui, sans-serif',
+              }}>
+                LIVE
+              </span>
+            </span>
           </div>
+
+          {/* Personalise button */}
           <button
-            onClick={() => setLoved(v => !v)}
+            onClick={() => {/* future: open filter/preference sheet */}}
             style={{
-              width: 44, height: 44, borderRadius: '50%', background: '#fff',
-              border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', boxShadow: '0 1px 6px rgba(0,0,0,0.08)',
-              WebkitTapHighlightColor: 'transparent',
+              width: 40, height: 40, borderRadius: 13,
+              background: 'rgba(255,255,255,0.80)',
+              border: '1px solid rgba(0,0,0,0.07)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.06)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
             }}
+            aria-label="Personalise feed"
           >
-            {loved ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            )}
+            {/* tune / sliders icon — signals personalisation */}
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+              stroke="#1c1c2e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="18" x2="20" y2="18" />
+              <circle cx="9" cy="6" r="2" fill="#1c1c2e" stroke="none" />
+              <circle cx="15" cy="12" r="2" fill="#1c1c2e" stroke="none" />
+              <circle cx="9" cy="18" r="2" fill="#1c1c2e" stroke="none" />
+            </svg>
           </button>
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingLeft: 2 }}>
