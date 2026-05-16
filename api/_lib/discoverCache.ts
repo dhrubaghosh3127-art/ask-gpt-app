@@ -1,7 +1,7 @@
 // ASK-GPT Discover — Supabase Rolling Cache Manager
 // api/_lib/discoverCache.ts
 
-import { supabase } from './supabaseAdmin.js';
+import { supabaseAdmin } from './supabaseAdmin.js';
 import { getDiscoverSources, type DiscoverTab, type DiscoverSource } from './discoverSources.js';
 import { fetchDiscoverCardsFromSources, type DiscoverCard } from './discoverRss.js';
 
@@ -46,18 +46,20 @@ type CachedCard = DiscoverCard & {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CARDS_TABLE = 'discover_cards';
-const META_TABLE = 'discover_feed_meta';
-const DEFAULT_MAX_AGE_MS = 15 * 60 * 1000;         // 15 minutes
-const CACHE_RETENTION_MS = 24 * 60 * 60 * 1000;    // 24 hours
-const MAX_CACHED_CARDS_PER_TAB = 3000;              // Emergency safety cap
-const SUPABASE_CHUNK = 100;                         // Max rows per upsert batch
-const CACHE_VERSION = 2;
+const DEFAULT_MAX_AGE_MS   = 15 * 60 * 1000;       // 15 minutes
+const CACHE_RETENTION_MS   = 24 * 60 * 60 * 1000;  // 24 hours
+const MAX_CACHED_CARDS_PER_TAB = 3000;
+const SUPABASE_CHUNK       = 100;                   // rows per upsert batch
+const CACHE_VERSION        = 2;
+const CARDS_TABLE          = 'discover_cards';
+const META_TABLE           = 'discover_feed_meta';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+
+
 function isCacheFresh(updatedAtMs: number, maxAgeMs: number): boolean {
-  if (maxAgeMs === 0) return false;
+  if (maxAgeMs === 0) return false; // maxAgeMs: 0 forces refresh
   return Date.now() - updatedAtMs <= maxAgeMs;
 }
 
@@ -95,6 +97,102 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return chunks;
 }
 
+// ── Supabase row ↔ TypeScript mappers ─────────────────────────────────────────
+
+function cardToRow(card: CachedCard): Record<string, unknown> {
+  return {
+    id:            card.id,
+    tab:           card.tab,
+    image:         card.image,
+    source:        card.source,
+    source_avatar: card.sourceAvatar,
+    time_ago:      card.timeAgo,
+    headline:      card.headline,
+    summary:       card.summary ?? null,
+    category:      card.category ?? null,
+    article_url:   card.articleUrl,
+    language:      card.language,
+    bullets:       card.bullets ?? [],
+    sources:       (card as Record<string, unknown>).sources ?? null,
+    published_at:  card.publishedAt,
+    fetched_at:    card.fetchedAt,
+    score:         card.score,
+    cached_at:     card.cachedAt,
+    cached_at_ms:  card.cachedAtMs,
+    batch_id:      card.batchId,
+  };
+}
+
+function rowToCard(row: Record<string, unknown>): CachedCard {
+  return {
+    id:           row.id            as string,
+    tab:          row.tab           as 'foryou' | 'bangladesh',
+    image:        row.image         as string,
+    source:       row.source        as string,
+    sourceAvatar: row.source_avatar as string,
+    timeAgo:      row.time_ago      as string,
+    headline:     row.headline      as string,
+    summary:      row.summary       as string,
+    category:     row.category      as string,
+    articleUrl:   row.article_url   as string,
+    language:     row.language      as 'en' | 'bn',
+    bullets:      (row.bullets      as string[]) ?? [],
+    sources:      row.sources       as never,
+    publishedAt:  row.published_at  as string,
+    fetchedAt:    row.fetched_at    as string,
+    score:        row.score         as number,
+    cachedAt:     row.cached_at     as string,
+    cachedAtMs:   row.cached_at_ms  as number,
+    batchId:      row.batch_id      as string,
+  };
+}
+
+function metaToRow(meta: FeedMeta): Record<string, unknown> {
+  return {
+    tab:                     meta.tab,
+    updated_at:              meta.updatedAt,
+    updated_at_ms:           meta.updatedAtMs,
+    last_refresh_at:         meta.lastRefreshAt,
+    last_refresh_at_ms:      meta.lastRefreshAtMs,
+    last_batch_id:           meta.lastBatchId,
+    card_count:              meta.cardCount,
+    source_limit:            meta.sourceLimit,
+    limit_count:             meta.limit,
+    version:                 meta.version,
+    source_cursor:           meta.sourceCursor           ?? 0,
+    last_source_cursor:      meta.lastSourceCursor       ?? 0,
+    last_source_ids:         meta.lastSourceIds          ?? [],
+    last_source_labels:      meta.lastSourceLabels       ?? [],
+    last_source_count:       meta.lastSourceCount        ?? 0,
+    total_source_count:      meta.totalSourceCount       ?? 0,
+    last_fetched_card_count: meta.lastFetchedCardCount   ?? 0,
+    last_written_card_count: meta.lastWrittenCardCount   ?? 0,
+  };
+}
+
+function rowToMeta(row: Record<string, unknown>): FeedMeta {
+  return {
+    tab:                  row.tab                     as DiscoverTab,
+    updatedAt:            row.updated_at              as string,
+    updatedAtMs:          row.updated_at_ms           as number,
+    lastRefreshAt:        row.last_refresh_at         as string,
+    lastRefreshAtMs:      row.last_refresh_at_ms      as number,
+    lastBatchId:          row.last_batch_id           as string,
+    cardCount:            row.card_count              as number,
+    sourceLimit:          row.source_limit            as number,
+    limit:                row.limit_count             as number,
+    version:              row.version                 as number,
+    sourceCursor:         row.source_cursor           as number,
+    lastSourceCursor:     row.last_source_cursor      as number,
+    lastSourceIds:        (row.last_source_ids        as string[]) ?? [],
+    lastSourceLabels:     (row.last_source_labels     as string[]) ?? [],
+    lastSourceCount:      row.last_source_count       as number,
+    totalSourceCount:     row.total_source_count      as number,
+    lastFetchedCardCount: row.last_fetched_card_count as number,
+    lastWrittenCardCount: row.last_written_card_count as number,
+  };
+    }
+
 // ── Rotating source picker ────────────────────────────────────────────────────
 
 function pickRotatingSources(
@@ -106,6 +204,7 @@ function pickRotatingSources(
   if (total === 0 || sourceLimit <= 0) {
     return { sources: [], startCursor: 0, nextCursor: 0 };
   }
+  // Clamp cursor to valid range
   const start = cursor >= 0 && cursor < total ? cursor : 0;
   const end = start + sourceLimit;
 
@@ -113,129 +212,30 @@ function pickRotatingSources(
   let nextCursor: number;
 
   if (end <= total) {
+    // Normal slice
     sources = allSources.slice(start, end);
     nextCursor = end >= total ? 0 : end;
   } else {
+    // Wrap around
     sources = [...allSources.slice(start), ...allSources.slice(0, end - total)];
     nextCursor = end - total;
   }
 
   return { sources, startCursor: start, nextCursor };
-}
-
-// ── Row mappers ───────────────────────────────────────────────────────────────
-
-// DB row (snake_case) → FeedMeta (camelCase)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToFeedMeta(row: Record<string, any>): FeedMeta {
-  return {
-    tab: row.tab,
-    updatedAt: row.updated_at ?? '',
-    updatedAtMs: row.updated_at_ms ?? 0,
-    lastRefreshAt: row.last_refresh_at ?? '',
-    lastRefreshAtMs: row.last_refresh_at_ms ?? 0,
-    lastBatchId: row.last_batch_id ?? '',
-    cardCount: row.card_count ?? 0,
-    sourceLimit: row.source_limit ?? 0,
-    limit: row.limit_count ?? 20,
-    version: row.version ?? CACHE_VERSION,
-    sourceCursor: row.source_cursor ?? undefined,
-    lastSourceCursor: row.last_source_cursor ?? undefined,
-    lastSourceIds: row.last_source_ids ?? undefined,
-    lastSourceLabels: row.last_source_labels ?? undefined,
-    lastSourceCount: row.last_source_count ?? undefined,
-    totalSourceCount: row.total_source_count ?? undefined,
-    lastFetchedCardCount: row.last_fetched_card_count ?? undefined,
-    lastWrittenCardCount: row.last_written_card_count ?? undefined,
-  };
-}
-
-// FeedMeta (camelCase) → DB row (snake_case)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function feedMetaToRow(meta: FeedMeta): Record<string, any> {
-  return {
-    tab: meta.tab,
-    updated_at: meta.updatedAt,
-    updated_at_ms: meta.updatedAtMs,
-    last_refresh_at: meta.lastRefreshAt,
-    last_refresh_at_ms: meta.lastRefreshAtMs,
-    last_batch_id: meta.lastBatchId,
-    card_count: meta.cardCount,
-    source_limit: meta.sourceLimit,
-    limit_count: meta.limit,
-    version: meta.version,
-    source_cursor: meta.sourceCursor ?? null,
-    last_source_cursor: meta.lastSourceCursor ?? null,
-    last_source_ids: meta.lastSourceIds ?? null,
-    last_source_labels: meta.lastSourceLabels ?? null,
-    last_source_count: meta.lastSourceCount ?? null,
-    total_source_count: meta.totalSourceCount ?? null,
-    last_fetched_card_count: meta.lastFetchedCardCount ?? null,
-    last_written_card_count: meta.lastWrittenCardCount ?? null,
-  };
-}
-
-// DB row (snake_case) → CachedCard (camelCase)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToCachedCard(row: Record<string, any>): CachedCard {
-  return {
-    id: row.id,
-    tab: row.tab,
-    image: row.image,
-    source: row.source,
-    sourceAvatar: row.source_avatar ?? '',
-    timeAgo: row.time_ago ?? '',
-    headline: row.headline,
-    summary: row.summary ?? '',
-    category: row.category ?? '',
-    articleUrl: row.article_url,
-    language: row.language ?? 'en',
-    bullets: Array.isArray(row.bullets) ? row.bullets : [],
-    publishedAt: row.published_at ?? '',
-    fetchedAt: row.fetched_at ?? '',
-    score: row.score ?? 0,
-    cachedAt: row.cached_at ?? '',
-    cachedAtMs: row.cached_at_ms ?? 0,
-    batchId: row.batch_id ?? '',
-  };
-}
-
-// CachedCard (camelCase) → DB row (snake_case)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function cachedCardToRow(card: CachedCard): Record<string, any> {
-  return {
-    id: card.id,
-    tab: card.tab,
-    image: card.image,
-    source: card.source,
-    source_avatar: card.sourceAvatar,
-    time_ago: card.timeAgo,
-    headline: card.headline,
-    summary: card.summary,
-    category: card.category,
-    article_url: card.articleUrl,
-    language: card.language,
-    bullets: card.bullets,
-    published_at: card.publishedAt,
-    fetched_at: card.fetchedAt,
-    score: card.score,
-    cached_at: card.cachedAt,
-    cached_at_ms: card.cachedAtMs,
-    batch_id: card.batchId,
-  };
-}
+      }
 
 // ── Read feed meta ────────────────────────────────────────────────────────────
 
 async function readFeedMeta(tab: DiscoverTab): Promise<FeedMeta | null> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from(META_TABLE)
       .select('*')
       .eq('tab', tab)
-      .single();
+      .limit(1)
+      .maybeSingle();
     if (error || !data) return null;
-    return rowToFeedMeta(data as Record<string, unknown>);
+    return rowToMeta(data as Record<string, unknown>);
   } catch {
     return null;
   }
@@ -243,19 +243,18 @@ async function readFeedMeta(tab: DiscoverTab): Promise<FeedMeta | null> {
 
 // ── Write feed meta ───────────────────────────────────────────────────────────
 
-async function writeFeedMeta(tab: DiscoverTab, meta: FeedMeta): Promise<void> {
+async function writeFeedMeta(_tab: DiscoverTab, meta: FeedMeta): Promise<void> {
   try {
-    await supabase
+    await supabaseAdmin
       .from(META_TABLE)
-      .upsert(feedMetaToRow(meta), { onConflict: 'tab' });
+      .upsert(metaToRow(meta), { onConflict: 'tab' });
   } catch { /* non-fatal */ }
-}
-
+        }
 // ── Read cached cards ─────────────────────────────────────────────────────────
 
 async function readCachedCards(tab: DiscoverTab, limitCount = 500): Promise<CachedCard[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from(CARDS_TABLE)
       .select('*')
       .eq('tab', tab)
@@ -263,39 +262,34 @@ async function readCachedCards(tab: DiscoverTab, limitCount = 500): Promise<Cach
       .limit(limitCount);
     if (error || !data) return [];
     return (data as Record<string, unknown>[])
-      .map(rowToCachedCard)
+      .map(rowToCard)
       .filter(c => isValidCard(c));
   } catch {
     return [];
   }
 }
 
-// ── Write new cards (deduplicated) ────────────────────────────────────────────
+
+// ── Write new cards (deduped upsert) ─────────────────────────────────────────
 
 async function writeCachedCards(
-  tab: DiscoverTab,
+  _tab: DiscoverTab,
   newCards: DiscoverCard[],
   batchId: string,
   existingIds: Set<string>,
   existingUrls: Set<string>,
   existingHeadlines: Set<string>,
 ): Promise<number> {
-  const now = Date.now();
+  const now    = Date.now();
   const nowIso = new Date(now).toISOString();
 
-  // Filter out duplicates
   const toWrite: CachedCard[] = [];
   for (const card of newCards) {
     if (!isValidCard(card)) continue;
     if (existingIds.has(card.id)) continue;
     if (existingUrls.has(card.articleUrl)) continue;
     if (existingHeadlines.has(normalizeHeadline(card.headline))) continue;
-    toWrite.push({
-      ...card,
-      cachedAt: nowIso,
-      cachedAtMs: now,
-      batchId,
-    });
+    toWrite.push({ ...card, cachedAt: nowIso, cachedAtMs: now, batchId });
     existingIds.add(card.id);
     existingUrls.add(card.articleUrl);
     existingHeadlines.add(normalizeHeadline(card.headline));
@@ -303,49 +297,51 @@ async function writeCachedCards(
 
   if (toWrite.length === 0) return 0;
 
-  // Upsert in chunks
   const chunks = chunkArray(toWrite, SUPABASE_CHUNK);
   for (const chunk of chunks) {
     try {
-      await supabase
+      await supabaseAdmin
         .from(CARDS_TABLE)
-        .upsert(chunk.map(cachedCardToRow), { onConflict: 'id' });
+        .upsert(chunk.map(cardToRow), { onConflict: 'id' });
     } catch { /* non-fatal — continue other chunks */ }
   }
 
   return toWrite.length;
-}
+  }
 
-// ── Cleanup expired cards (older than 24h by cachedAtMs) ─────────────────────
+// ── Cleanup expired cards (>24h) ──────────────────────────────────────────────
 
 async function cleanupExpiredCards(tab: DiscoverTab): Promise<void> {
   try {
     const cutoffMs = Date.now() - CACHE_RETENTION_MS;
-    await supabase
+    await supabaseAdmin
       .from(CARDS_TABLE)
       .delete()
       .eq('tab', tab)
       .lt('cached_at_ms', cutoffMs);
   } catch { /* non-fatal */ }
-}
+              }
 
-// ── Emergency cap: delete oldest cards if over MAX_CACHED_CARDS_PER_TAB ──────
+// ── Emergency cap: delete oldest if over MAX_CACHED_CARDS_PER_TAB ────────────
 
 async function applyEmergencyCap(tab: DiscoverTab, totalCount: number): Promise<void> {
   if (totalCount <= MAX_CACHED_CARDS_PER_TAB) return;
   try {
     const overflow = totalCount - MAX_CACHED_CARDS_PER_TAB;
-    const { data } = await supabase
+    const { data } = await supabaseAdmin
       .from(CARDS_TABLE)
       .select('id')
       .eq('tab', tab)
       .order('cached_at_ms', { ascending: true })
-      .limit(overflow);
+      .limit(Math.min(overflow, 500));
     if (!data || data.length === 0) return;
     const ids = (data as { id: string }[]).map(r => r.id);
-    await supabase.from(CARDS_TABLE).delete().in('id', ids);
+    await supabaseAdmin
+      .from(CARDS_TABLE)
+      .delete()
+      .in('id', ids);
   } catch { /* non-fatal */ }
-}
+             }
 
 // ── Main exported function ────────────────────────────────────────────────────
 
@@ -363,7 +359,7 @@ export async function getDiscoverFeedWithCache(params: {
   const cacheAgeMs = meta ? now - meta.updatedAtMs : null;
   const fresh = meta ? isCacheFresh(meta.updatedAtMs, maxAgeMs) : false;
 
-  // 2. Fresh cache — return from Supabase
+  // 2. Fresh cache — return from subcollection
   if (meta && fresh) {
     const cached = await readCachedCards(tab, limit);
     if (cached.length > 0) {
@@ -393,7 +389,7 @@ export async function getDiscoverFeedWithCache(params: {
       const existingUrls = new Set(existing.map(c => c.articleUrl));
       const existingHeadlines = new Set(existing.map(c => normalizeHeadline(c.headline)));
 
-      // Write new cards (non-destructive merge)
+      // Write new cards into subcollection (non-destructive merge)
       const written = await writeCachedCards(
         tab, freshCards, batchId, existingIds, existingUrls, existingHeadlines
       );
@@ -405,7 +401,7 @@ export async function getDiscoverFeedWithCache(params: {
       const newTotal = existing.length + written;
       applyEmergencyCap(tab, newTotal).catch(() => {});
 
-      // Update meta (with rotation info)
+      // Update meta document (with rotation info)
       const nowMs = Date.now();
       await writeFeedMeta(tab, {
         tab,
@@ -428,7 +424,7 @@ export async function getDiscoverFeedWithCache(params: {
         lastWrittenCardCount: written,
       });
 
-      // Return merged fresh cache
+      // Return merged fresh cache from subcollection
       const allCached = await readCachedCards(tab, limit);
       const sorted = allCached
         .sort((a, b) => b.cachedAtMs - a.cachedAtMs || b.score - a.score)
@@ -437,7 +433,7 @@ export async function getDiscoverFeedWithCache(params: {
       return { cards: sorted, fromCache: false, stale: false, refreshed: true, cacheAgeMs: null };
     }
 
-    // Fresh fetch returned 0 cards — advance cursor anyway
+    // Fresh fetch returned 0 cards — advance cursor anyway to avoid stuck rotation
     try {
       const nowMs = Date.now();
       await writeFeedMeta(tab, {
@@ -485,15 +481,17 @@ export async function getDiscoverFeedWithCache(params: {
 export async function getCachedDiscoverCardById(id: string): Promise<DiscoverCard | null> {
   if (!id) return null;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from(CARDS_TABLE)
       .select('*')
       .eq('id', id)
-      .single();
+      .limit(1)
+      .maybeSingle();
     if (error || !data) return null;
-    const card = rowToCachedCard(data as Record<string, unknown>);
+    const card = rowToCard(data as Record<string, unknown>);
     return isValidCard(card) ? card : null;
   } catch {
     return null;
   }
 }
+ 
