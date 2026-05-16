@@ -7,14 +7,30 @@ interface HeaderProps {
   setSelectedModel: (id: string) => void;
 }
 
+// ── Discover thumbnail images — rotates on each load ──────────────────────────
+const DISCOVER_IMAGES = [
+  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=200&auto=format&fit=crop&q=80', // news/world
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=200&auto=format&fit=crop&q=80', // tech matrix
+  'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=200&auto=format&fit=crop&q=80', // space earth
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80', // portrait
+];
+const discoverImg = DISCOVER_IMAGES[Math.floor(Date.now() / 86400000) % DISCOVER_IMAGES.length];
+
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelectedModel }) => {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    // Listen on the main scroll container — adjust selector if needed
+    const el = document.querySelector('main') ?? window;
+    const onScroll = () => {
+      const top = el === window
+        ? window.scrollY
+        : (el as Element).scrollTop;
+      setScrolled(top > 6);
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
@@ -22,212 +38,217 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Geist:wght@500;600&display=swap');
 
-        /* ── Shell ── */
-        .hdr {
+        /* ════════════════════════════════════════
+           HEADER SHELL
+        ════════════════════════════════════════ */
+        .H {
           position: fixed;
           inset-inline: 0;
           top: 0;
           z-index: 50;
-          height: 68px;
-          padding: 0 13px;
+          height: 64px;
           display: flex;
           align-items: center;
           justify-content: space-between;
+          padding: 0 14px;
           pointer-events: none;
+          /* key: isolate so backdrop-filter doesn't bleed */
           isolation: isolate;
         }
-        .hdr::before {
+
+        /* the frosted backdrop lives here */
+        .H::after {
           content: '';
           position: absolute;
           inset: 0;
-          background: rgba(249,249,251,0.0);
+          z-index: -1;
+          /* start fully transparent */
+          background: rgba(249, 249, 251, 0);
           backdrop-filter: blur(0px);
           -webkit-backdrop-filter: blur(0px);
           border-bottom: 1px solid transparent;
-          transition: background 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease;
-          z-index: -1;
-        }
-        .hdr.scrolled::before {
-          background: rgba(249,249,251,0.85);
-          backdrop-filter: blur(22px) saturate(160%);
-          -webkit-backdrop-filter: blur(22px) saturate(160%);
-          border-bottom-color: rgba(0,0,0,0.07);
-        }
-
-        /* ── Glass surface shared ── */
-        .glass-btn {
-          background: rgba(255,255,255,0.88);
-          border: 1px solid rgba(255,255,255,0.95);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.9),
-            0 0 0 0.5px rgba(0,0,0,0.055),
-            0 1px 2px rgba(0,0,0,0.055),
-            0 4px 14px rgba(0,0,0,0.065);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
           transition:
-            transform 0.14s cubic-bezier(0.34,1.56,0.64,1),
-            box-shadow 0.14s ease,
-            background 0.12s ease;
-          -webkit-tap-highlight-color: transparent;
-          cursor: pointer;
-          border-radius: 14px;
+            background        0.25s ease,
+            backdrop-filter   0.25s ease,
+            -webkit-backdrop-filter 0.25s ease,
+            border-color      0.25s ease;
         }
-        .glass-btn:active {
-          transform: scale(0.89) !important;
-          box-shadow: 0 0 0 0.5px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.07) !important;
-          background: rgba(238,238,244,0.97) !important;
+        /* scrolled → solid frosted strip — ChatGPT / Claude style */
+        .H.scrolled::after {
+          background: rgba(249, 249, 251, 0.88);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          border-bottom-color: rgba(0, 0, 0, 0.07);
         }
 
-        /* ── Menu button ── */
-        .hdr-menu {
+        /* ════════════════════════════════════════
+           SHARED GLASS CARD
+        ════════════════════════════════════════ */
+        .G {
+          background: rgba(255, 255, 255, 0.86);
+          border: 1px solid rgba(255, 255, 255, 0.92);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.85),
+            0 0 0 0.5px rgba(0,0,0,0.055),
+            0 1px 3px rgba(0,0,0,0.06),
+            0 4px 12px rgba(0,0,0,0.07);
+          backdrop-filter: blur(10px) saturate(140%);
+          -webkit-backdrop-filter: blur(10px) saturate(140%);
+          -webkit-tap-highlight-color: transparent;
+          transition:
+            transform     0.13s cubic-bezier(0.34,1.4,0.64,1),
+            box-shadow    0.13s ease,
+            background    0.1s  ease;
+        }
+        .G:active {
+          transform: scale(0.90) !important;
+          box-shadow:
+            0 0 0 0.5px rgba(0,0,0,0.05),
+            0 1px 3px rgba(0,0,0,0.07) !important;
+          background: rgba(236, 236, 241, 0.96) !important;
+        }
+
+        /* ════════════════════════════════════════
+           MENU BUTTON
+        ════════════════════════════════════════ */
+        .M {
           pointer-events: auto;
           width: 44px;
           height: 44px;
+          border-radius: 14px;
+          border: none;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           justify-content: center;
           gap: 5.5px;
           padding: 0 12px;
-          border: none;
+          cursor: pointer;
         }
-        .hdr-bar {
-          height: 1.75px;
+        .Mb {
+          height: 1.7px;
           border-radius: 99px;
-          background: #18181b;
+          background: #1a1a2e;
         }
-        .hdr-bar:nth-child(1) { width: 20px; }
-        .hdr-bar:nth-child(2) { width: 14px; }
-        .hdr-bar:nth-child(3) { width: 18px; }
+        .Mb:nth-child(1) { width: 20px; }
+        .Mb:nth-child(2) { width: 13px; }
+        .Mb:nth-child(3) { width: 17px; }
 
-        /* ── History button ── */
-        .hdr-history {
+        /* ════════════════════════════════════════
+           HISTORY PILL
+        ════════════════════════════════════════ */
+        .Hp {
           pointer-events: auto;
           display: flex;
           align-items: center;
           gap: 5px;
-          padding: 0 14px 0 11px;
           height: 40px;
+          padding: 0 15px 0 11px;
           border-radius: 50px !important;
           border: none;
+          cursor: pointer;
         }
-        .hdr-history-text {
+        .Ht {
           font-family: 'Geist', -apple-system, 'SF Pro Display', sans-serif;
           font-size: 14.5px;
           font-weight: 600;
           letter-spacing: -0.03em;
-          color: #18181b;
+          color: #111;
           line-height: 1;
         }
-        .hdr-clock { color: #9ca3af; display: flex; align-items: center; }
-        .hdr-chev  { color: #c4c4cf; display: flex; align-items: center; margin-top: 0.5px; }
+        .Hc { color: #9ca3af; display: flex; align-items: center; }
+        .Hv { color: #c0c0cc; display: flex; align-items: center; margin-top: 0.5px; }
 
-        /* ── Discover button — hero piece ── */
-        .hdr-discover {
+        /* ════════════════════════════════════════
+           DISCOVER — Perplexity style thumbnail
+        ════════════════════════════════════════ */
+        .D {
           pointer-events: auto;
           position: relative;
-          width: 44px;
-          height: 44px;
-          border-radius: 14px;
+          width: 46px;
+          height: 46px;
+          border-radius: 15px;
           border: none;
           padding: 0;
           overflow: hidden;
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
+          /* layered shadow: subtle depth + thin ring */
           box-shadow:
-            0 0 0 0.5px rgba(109,40,217,0.25),
-            0 2px 5px rgba(0,0,0,0.12),
-            0 8px 24px rgba(109,40,217,0.28);
+            0 0 0 1px rgba(0,0,0,0.10),
+            0 1px 3px rgba(0,0,0,0.12),
+            0 6px 20px rgba(0,0,0,0.13);
           transition:
-            transform 0.14s cubic-bezier(0.34,1.56,0.64,1),
-            box-shadow 0.14s ease;
+            transform  0.13s cubic-bezier(0.34,1.4,0.64,1),
+            box-shadow 0.13s ease;
         }
-        .hdr-discover:active {
+        .D:active {
           transform: scale(0.88);
-          box-shadow: 0 0 0 0.5px rgba(109,40,217,0.15), 0 1px 4px rgba(0,0,0,0.10);
+          box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.10);
         }
-        .disc-grad {
+        /* the actual photo */
+        .Di {
           position: absolute;
           inset: 0;
-          background: linear-gradient(148deg,
-            #8b5cf6 0%,
-            #a855f7 30%,
-            #c084fc 58%,
-            #e879f9 85%,
-            #f472b6 100%
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+        }
+        /* very subtle dark vignette — photo still shows beautifully */
+        .Dov {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            160deg,
+            rgba(0,0,0,0.04) 0%,
+            rgba(0,0,0,0.18) 100%
           );
         }
-        /* animated shimmer */
-        @keyframes shimmer {
-          0%   { transform: translateX(-100%) rotate(20deg); }
-          100% { transform: translateX(200%)  rotate(20deg); }
-        }
-        .disc-shimmer {
-          position: absolute;
-          inset: 0;
-          overflow: hidden;
-        }
-        .disc-shimmer::after {
-          content: '';
-          position: absolute;
-          top: -40%;
-          left: -60%;
-          width: 40%;
-          height: 180%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
-          animation: shimmer 3s ease-in-out infinite;
-        }
-        /* icon */
-        .disc-icon {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        /* NEW chip */
-        .disc-chip {
+        /* bottom-left "Discover" micro label */
+        .Dl {
           position: absolute;
           bottom: 5px;
-          right: 5px;
-          background: rgba(255,255,255,0.20);
-          border: 0.5px solid rgba(255,255,255,0.35);
+          left: 5px;
+          display: flex;
+          align-items: center;
+          gap: 2.5px;
+          background: rgba(0,0,0,0.38);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
           border-radius: 5px;
-          padding: 1.5px 4px;
-          font-family: 'Geist', -apple-system, sans-serif;
+          padding: 2px 5px 2px 4px;
+          border: 0.5px solid rgba(255,255,255,0.14);
+        }
+        .Dl-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #4ade80; /* green live dot */
+          flex-shrink: 0;
+        }
+        .Dl-text {
+          font-family: -apple-system, 'SF Pro Text', sans-serif;
           font-size: 7.5px;
           font-weight: 700;
-          letter-spacing: 0.05em;
-          color: rgba(255,255,255,0.95);
-          line-height: 1.5;
-        }
-        /* soft pulse ring */
-        @keyframes disc-pulse {
-          0%,100% { opacity: 0; transform: scale(0.7); }
-          50%      { opacity: 0.35; transform: scale(1.15); }
-        }
-        .disc-ring {
-          position: absolute;
-          inset: 3px;
-          border-radius: 11px;
-          border: 1px solid rgba(255,255,255,0.45);
-          animation: disc-pulse 3s ease-in-out infinite;
+          letter-spacing: 0.04em;
+          color: rgba(255,255,255,0.93);
+          line-height: 1;
         }
       `}</style>
 
-      <header className={`hdr${scrolled ? ' scrolled' : ''}`}>
+      <header className={`H${scrolled ? ' scrolled' : ''}`}>
 
         {/* ── Left: Menu ── */}
         <button
           type="button"
           onClick={toggleSidebar}
           aria-label="Menu"
-          className="hdr-menu glass-btn"
+          className="M G"
         >
-          <span className="hdr-bar" />
-          <span className="hdr-bar" />
-          <span className="hdr-bar" />
+          <span className="Mb" />
+          <span className="Mb" />
+          <span className="Mb" />
         </button>
 
         {/* ── Center: History ── */}
@@ -235,51 +256,48 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
           type="button"
           onClick={() => navigate('/history')}
           aria-label="Chat history"
-          className="hdr-history glass-btn"
+          className="Hp G"
         >
-          <span className="hdr-clock">
+          <span className="Hc">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.3"
+              stroke="currentColor" strokeWidth="2.2"
               strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" />
               <polyline points="12 7 12 12 15 14" />
             </svg>
           </span>
-          <span className="hdr-history-text">History</span>
-          <span className="hdr-chev">
+          <span className="Ht">History</span>
+          <span className="Hv">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.7"
+              stroke="currentColor" strokeWidth="2.6"
               strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </span>
         </button>
 
-        {/* ── Right: Discover ── */}
+        {/* ── Right: Discover (Perplexity thumbnail style) ── */}
         <button
           type="button"
           onClick={() => navigate('/discover')}
           aria-label="Discover"
-          className="hdr-discover"
+          className="D"
         >
-          <div className="disc-grad" />
-          <div className="disc-shimmer" />
-          <div className="disc-ring" />
-          <div className="disc-icon">
-            {/* compass needle icon */}
-            <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9.5"
-                stroke="rgba(255,255,255,0.30)" strokeWidth="1.2" />
-              <polygon
-                points="12,4.5 14.2,11.5 12,13.5 9.8,11.5"
-                fill="white" opacity="0.95" />
-              <polygon
-                points="12,19.5 14.2,12.5 12,10.5 9.8,12.5"
-                fill="rgba(255,255,255,0.40)" />
-              <circle cx="12" cy="12" r="1.3" fill="white" opacity="0.95" />
-            </svg>
+          {/* real photo — changes daily */}
+          <img
+            className="Di"
+            src={discoverImg}
+            alt="Discover"
+            draggable={false}
+            loading="eager"
+          />
+          {/* vignette */}
+          <div className="Dov" />
+          {/* live label */}
+          <div className="Dl">
+            <div className="Dl-dot" />
+            <span className="Dl-text">LIVE</span>
           </div>
-          <div className="disc-chip">DISC</div>
         </button>
 
       </header>
@@ -288,4 +306,4 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, selectedModel, setSelect
 };
 
 export default Header;
-        
+  
