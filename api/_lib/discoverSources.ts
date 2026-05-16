@@ -2279,17 +2279,6 @@ export const DISCOVER_SOURCES: DiscoverSource[] = [
     trustScore: 84,
   },
   {
-    id: 'bd_health_channeli',
-    tab: 'bangladesh',
-    label: 'চ্যানেল আই',
-    feedUrl: 'https://www.channelionline.com/feed/',
-    language: 'bn',
-    region: 'bangladesh',
-    category: 'স্বাস্থ্য',
-    priority: 63,
-    trustScore: 84,
-  },
-  {
     id: 'bd_education_jagonews_education',
     tab: 'bangladesh',
     label: 'শিক্ষা খবর',
