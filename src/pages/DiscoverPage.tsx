@@ -423,10 +423,10 @@ setLoadingMore(false);
         >
           {loading && (
             <div style={{
-              426: height: `calc(100dvh - ${HEADER_H}px - 64px)`,
-427: scrollSnapAlign: 'start',
-428: display: 'flex', alignItems: 'center', justifyContent: 'center',
-429: boxSizing: 'border-box', padding: '10px 0 0', marginBottom: 10,
+              minHeight: `calc(100dvh - ${HEADER_H}px)`,
+              scrollSnapAlign: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxSizing: 'border-box', padding: '14px 0',
             }}>
               <div style={{ width: '100%' }}>
                 <SkeletonCard />
@@ -460,14 +460,14 @@ setLoadingMore(false);
             <div
               key={card.id}
               style={{
-                463: height: `calc(100dvh - ${HEADER_H}px - 64px)`,
-464: scrollSnapAlign: 'start',
-465: scrollSnapStop: 'always',
-466: display: 'flex',
-467: alignItems: 'center',
-468: justifyContent: 'center',
-469: boxSizing: 'border-box',
-470: padding: '10px 0 0', marginBottom: 10,
+                minHeight: `calc(100dvh - ${HEADER_H}px)`,
+                scrollSnapAlign: 'center',
+                scrollSnapStop: 'always',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxSizing: 'border-box',
+                padding: '14px 0',
               }}
             >
               <div style={{ width: '100%' }}>
@@ -482,10 +482,10 @@ setLoadingMore(false);
 
           {loadingMore && (
             <div style={{
-              485: height: `calc(100dvh - ${HEADER_H}px - 64px)`,
-486: scrollSnapAlign: 'start',
-487: display: 'flex', alignItems: 'center', justifyContent: 'center',
-488: boxSizing: 'border-box', padding: '10px 0 0', marginBottom: 10,
+              minHeight: `calc(100dvh - ${HEADER_H}px)`,
+              scrollSnapAlign: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxSizing: 'border-box', padding: '14px 0',
             }}>
               <div style={{ width: '100%' }}>
                 <SkeletonCard />
