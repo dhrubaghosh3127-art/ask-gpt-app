@@ -1,17 +1,14 @@
 // ASK-GPT Discover — Debug Status API
 // api/discover-debug.ts
 
-import { supabase } from './_lib/supabaseAdmin.js';
+import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 
 type DiscoverTab = 'foryou' | 'bangladesh';
 
-const COLLECTION = 'discover_feed_meta';
+const CARDS_TABLE = 'discover_cards';
+const META_TABLE = 'discover_feed_meta';
 const SAMPLE_LIMIT = 10;
 const RECENT_SCAN_LIMIT = 80;
-
-function getFeedDocId(tab: DiscoverTab): string {
-  return tab === 'foryou' ? 'feed_foryou' : 'feed_bangladesh';
-}
 
 function minutesAgo(ms?: number | null): number | null {
   if (!ms || typeof ms !== 'number') return null;
@@ -34,50 +31,54 @@ function isBadLine(text: unknown): boolean {
   );
 }
 
-async function safeCount(table: string): Promise<number | null> {
-  try {
-    const { count, error } = await supabase
-      .from(table)
-      .select('*', { count: 'exact', head: true });
-    if (!error && count !== null) return count;
-  } catch {
-    // fallback below
-  }
+async function safeCount(tab: DiscoverTab): Promise<number | null> {
+  const { count, error } = await supabaseAdmin
+    .from(CARDS_TABLE)
+    .select('id', { count: 'exact', head: true })
+    .eq('tab', tab);
 
-  try {
-    const { data, error } = await supabase
-      .from(table)
-      .select('id')
-      .limit(5000);
-    if (!error && data) return data.length;
-  } catch {
-    return null;
-  }
-  return null;
+  if (error) return null;
+  return count ?? null;
 }
 
 async function inspectTab(tab: DiscoverTab) {
-  const feedDocId = getFeedDocId(tab);
-  const cardsTable = tab === 'foryou' ? 'discover_foryou_cards' : 'discover_bangladesh_cards';
+  const feedDocId = tab === 'foryou' ? 'feed_foryou' : 'feed_bangladesh';
 
-  const { data: metaRow } = await supabase
-    .from(COLLECTION)
+  const { data: metaRow, error: metaError } = await supabaseAdmin
+    .from(META_TABLE)
     .select('*')
-    .eq('feed_doc_id', feedDocId)
-    .single();
-  const meta = metaRow || null;
+    .eq('tab', tab)
+    .maybeSingle();
 
-  const actualCardCount = await safeCount(cardsTable);
+  const meta = metaError ? null : metaRow;
 
-  const { data: recentRows } = await supabase
-    .from(cardsTable)
+  const actualCardCount = await safeCount(tab);
+
+  const { data: rows, error: cardsError } = await supabaseAdmin
+    .from(CARDS_TABLE)
     .select('*')
-    .order('cachedAtMs', { ascending: false })
+    .eq('tab', tab)
+    .order('cached_at_ms', { ascending: false })
     .limit(RECENT_SCAN_LIMIT);
 
-  const recentDocs = (recentRows ?? []).map((row: any) => ({
-    docId: row.id,
-    ...row,
+  if (cardsError) throw new Error(cardsError.message);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recentDocs = (rows ?? []).map((row: any) => ({
+    docId:       row.id,
+    id:          row.id,
+    headline:    row.headline    ?? null,
+    source:      row.source      ?? null,
+    category:    row.category    ?? null,
+    language:    row.language    ?? null,
+    cachedAt:    row.cached_at   ?? null,
+    cachedAtMs:  row.cached_at_ms ?? null,
+    publishedAt: row.published_at ?? null,
+    image:       row.image        ?? null,
+    articleUrl:  row.article_url  ?? null,
+    summary:     row.summary      ?? null,
+    bullets:     Array.isArray(row.bullets) ? row.bullets : [],
+    batchId:     row.batch_id     ?? null,
   }));
 
   const sampleCards = recentDocs.slice(0, SAMPLE_LIMIT).map((card: any) => ({
@@ -120,19 +121,19 @@ async function inspectTab(tab: DiscoverTab) {
   return {
     tab,
     feedDocId,
-    metaExists: meta !== null,
+    metaExists: Boolean(meta),
     meta: meta ? {
-      cardCount: meta.cardCount ?? null,
-      lastBatchId: meta.lastBatchId ?? null,
-      lastRefreshAt: meta.lastRefreshAt ?? null,
-      lastRefreshAtMs: meta.lastRefreshAtMs ?? null,
-      lastRefreshAgeMin: minutesAgo(meta.lastRefreshAtMs),
-      updatedAt: meta.updatedAt ?? null,
-      updatedAtMs: meta.updatedAtMs ?? null,
-      updatedAgeMin: minutesAgo(meta.updatedAtMs),
-      sourceLimit: meta.sourceLimit ?? null,
-      limit: meta.limit ?? null,
-      version: meta.version ?? null,
+      cardCount:         meta.card_count         ?? null,
+      lastBatchId:       meta.last_batch_id       ?? null,
+      lastRefreshAt:     meta.last_refresh_at     ?? null,
+      lastRefreshAtMs:   meta.last_refresh_at_ms  ?? null,
+      lastRefreshAgeMin: minutesAgo(meta.last_refresh_at_ms),
+      updatedAt:         meta.updated_at          ?? null,
+      updatedAtMs:       meta.updated_at_ms       ?? null,
+      updatedAgeMin:     minutesAgo(meta.updated_at_ms),
+      sourceLimit:       meta.source_limit        ?? null,
+      limit:             meta.limit_count         ?? null,
+      version:           meta.version             ?? null,
     } : null,
     actualCardCount,
     recentBatchCounts: batchCounts,
@@ -191,5 +192,4 @@ export default async function handler(req: any, res: any): Promise<void> {
       error: message,
     });
   }
-    }
-      
+}
