@@ -90,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           background: rgba(249,249,251,0.90);
         -webkit-backdrop-filter: blur(28px) saturate(200%);
                 backdrop-filter: blur(28px) saturate(200%);
-          border-bottom-color: rgba(0,0,0,0.07);
+          border-bottom-color: transparent;
         }
 
         /* ══════════════════════════════════════════════
