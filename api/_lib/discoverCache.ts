@@ -394,8 +394,7 @@ export async function getDiscoverFeedWithCache(params: {
         tab, freshCards, batchId, existingIds, existingUrls, existingHeadlines
       );
 
-      // Cleanup expired cards (>24h by cachedAtMs) — fire and forget
-      cleanupExpiredCards(tab).catch(() => {});
+      
 
       // Apply emergency cap if needed
       const newTotal = existing.length + written;
