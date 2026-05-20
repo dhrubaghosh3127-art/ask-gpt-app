@@ -2035,17 +2035,6 @@ export const DISCOVER_SOURCES: DiscoverSource[] = [
     trustScore: 89,
   },
   {
-    id: 'bd_sports_bd_pratidin',
-    tab: 'bangladesh',
-    label: 'বাংলাদেশ প্রতিদিন',
-    feedUrl: 'https://www.bd-pratidin.com/rss.xml',
-    language: 'bn',
-    region: 'bangladesh',
-    category: 'খেলা',
-    priority: 85,
-    trustScore: 89,
-  },
-  {
     id: 'bd_entertainment_jugantor',
     tab: 'bangladesh',
     label: 'যুগান্তর',
