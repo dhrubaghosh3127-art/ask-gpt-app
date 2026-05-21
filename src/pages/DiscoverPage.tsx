@@ -567,7 +567,7 @@ setLoadingMore(false);
         ),
       },
     ].map(item => {
-      const color = item.active ? '#0d9488' : '#a0aec0';
+      const color = item.active ? '#0d9488' : '#52606d';
       return (
         <button
           key={item.id}
