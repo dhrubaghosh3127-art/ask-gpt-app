@@ -495,45 +495,110 @@ setLoadingMore(false);
           )}
         </div>
       </div>
-          {/* ── Telegram-style Bottom Navigation ── */}
+          {/* Premium Bottom Navigation */}
 <div style={{
-  flexShrink: 0, height: BOTTOM_NAV_H,
-  background: '#fff',
-  borderTop: '1px solid rgba(0,0,0,0.08)',
-  display: 'flex', alignItems: 'center',
-  justifyContent: 'space-around', zIndex: 50,
+  flexShrink: 0,
+  background: 'transparent',
+  padding: '6px 14px 14px',
+  zIndex: 50,
 }}>
-  {[
-    { id: 'home', label: 'Home', active: true, d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
-    { id: 'sources', label: 'Sources', active: false, d: 'M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10l6 6v8a2 2 0 0 1-2 2z M17 20v-8H7v8 M7 4v4h8' },
-    { id: 'notifications', label: 'Alerts', active: false, d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0' },
-    { id: 'settings', label: 'Settings', active: false, d: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z' },
-  ].map(item => (
-    <button
-      key={item.id}
-      onClick={() => item.id !== 'home' && navigate(`/${item.id}`)}
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: 3, background: 'none', border: 'none', cursor: 'pointer',
-        padding: '6px 12px', borderRadius: 10,
-        WebkitTapHighlightColor: 'transparent', minWidth: 56,
-      }}
-    >
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-        stroke={item.active ? '#0d9488' : '#9ca3af'}
-        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d={item.d} />
-      </svg>
-      <span style={{
-        fontSize: 10.5, fontWeight: 600,
-        color: item.active ? '#0d9488' : '#9ca3af',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        letterSpacing: '0.01em',
-      }}>
-        {item.label}
-      </span>
-    </button>
-  ))}
+  <div style={{
+    background: 'rgba(255,255,255,0.96)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    borderRadius: 26,
+    boxShadow: '0 8px 40px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
+    border: '1px solid rgba(230,230,235,0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    padding: '8px 4px',
+    height: 56,
+  }}>
+    {[
+      {
+        id: 'home', label: 'Home', active: true,
+        icon: (c: string) => (
+          <svg width="21" height="21" viewBox="0 0 24 24" fill={c === '#0d9488' ? 'rgba(13,148,136,0.15)' : 'none'}
+            stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        ),
+      },
+      {
+        id: 'sources', label: 'Sources', active: false,
+        icon: (c: string) => (
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+            stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 6h16M4 10h16M4 14h10" />
+            <circle cx="18" cy="17" r="3" />
+            <path d="M21 20l-1.5-1.5" />
+          </svg>
+        ),
+      },
+      {
+        id: 'personalized', label: 'For You', active: false,
+        icon: (c: string) => (
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+            stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
+          </svg>
+        ),
+      },
+      {
+        id: 'notifications', label: 'Alerts', active: false,
+        icon: (c: string) => (
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+            stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+        ),
+      },
+      {
+        id: 'settings', label: 'Settings', active: false,
+        icon: (c: string) => (
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+            stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        ),
+      },
+    ].map(item => {
+      const color = item.active ? '#0d9488' : '#a0aec0';
+      return (
+        <button
+          key={item.id}
+          onClick={() => item.id !== 'home' && navigate(`/${item.id}`)}
+          style={{
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', gap: 3,
+            background: item.active ? 'rgba(13,148,136,0.08)' : 'none',
+            border: 'none', cursor: 'pointer',
+            padding: '6px 12px',
+            borderRadius: 16,
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'background 0.18s ease',
+            minWidth: 52,
+          }}
+        >
+          {item.icon(color)}
+          <span style={{
+            fontSize: 10,
+            fontWeight: item.active ? 700 : 500,
+            color,
+            fontFamily: "'SF Pro Text', system-ui, -apple-system, sans-serif",
+            letterSpacing: '0.01em',
+            lineHeight: 1,
+          }}>
+            {item.label}
+          </span>
+        </button>
+      );
+    })}
+  </div>
 </div>
     </div>
   );
