@@ -571,7 +571,11 @@ setLoadingMore(false);
       return (
         <button
           key={item.id}
-          onClick={() => item.id !== 'home' && navigate(`/${item.id}`)}
+        onClick={() => {
+  if (item.id === 'home') return;
+  if (item.id === 'sources') { navigate('/discover-sources'); return; }
+  navigate(`/${item.id}`);
+}}
           style={{
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', gap: 3,
