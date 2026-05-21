@@ -12,7 +12,7 @@ interface NewsCard {
   category: string;
 }
 
-const HEADER_H = 126;
+const HEADER_H = 190;
 const PAGE_SIZE = 5;
 
 const SKELETON_CSS = `
@@ -45,6 +45,123 @@ function CategoryBadge({ label }: { label: string }) {
 }
 
 function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
+      function Card({ card, onClick }: { card: NewsCard; onClick: () => void }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: '#fff',
+        borderRadius: 16,
+        overflow: 'hidden',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.10), 0 4px 20px rgba(0,0,0,0.07)',
+        cursor: 'pointer',
+        width: '100%',
+        WebkitTapHighlightColor: 'transparent',
+      }}
+    >
+      {/* Image — 16:9 ratio */}
+      <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', overflow: 'hidden' }}>
+        <img
+          src={card.image}
+          alt={card.headline}
+          style={{
+            position: 'absolute', top: 0, left: 0,
+            width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+          }}
+        />
+        <div style={{ position: 'absolute', top: 12, left: 12 }}>
+          <CategoryBadge label={card.category} />
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: '13px 14px 16px' }}>
+        {/* Source row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: '50%', overflow: 'hidden',
+              flexShrink: 0, border: '2px solid #e4e6eb',
+            }}>
+              <img src={card.sourceAvatar} alt={card.source}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div>
+              <div style={{
+                fontSize: 13.5, fontWeight: 700, color: '#050505',
+                fontFamily: 'system-ui, -apple-system, sans-serif', lineHeight: 1.25,
+              }}>
+                {card.source}
+              </div>
+              <div style={{
+                fontSize: 11.5, color: '#65676b',
+                fontFamily: 'system-ui, -apple-system, sans-serif', lineHeight: 1.2, marginTop: 2,
+              }}>
+                {card.timeAgo}
+              </div>
+            </div>
+          </div>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#65676b">
+              <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Headline */}
+        <h2 style={{
+          fontSize: 17, fontWeight: 700, lineHeight: 1.4, color: '#050505',
+          margin: '0 0 7px',
+          fontFamily: "'SF Pro Display', -apple-system, 'Helvetica Neue', sans-serif",
+          letterSpacing: '-0.015em',
+        }}>
+          {card.headline}
+        </h2>
+
+        {/* Summary */}
+        <p style={{
+          fontSize: 14, lineHeight: 1.55, color: '#65676b', margin: 0,
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical' as const,
+          overflow: 'hidden',
+        }}>
+          {card.summary}
+        </p>
+
+        {/* Divider + reaction row */}
+        <div style={{ height: 1, background: '#e4e6eb', margin: '13px 0 11px' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 18 }}>
+            {[
+              { label: 'Like', icon: '👍' },
+              { label: 'Share', icon: '↗' },
+            ].map(({ label, icon }) => (
+              <div key={label} style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                fontSize: 13, fontWeight: 600, color: '#65676b',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              }}>
+                <span style={{ fontSize: 15 }}>{icon}</span>
+                {label}
+              </div>
+            ))}
+          </div>
+          <span style={{
+            fontSize: 12, color: '#65676b',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+          }}>
+            Read more →
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+              }
   return (
     <div
       onClick={onClick}
@@ -152,6 +269,8 @@ const DiscoverPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'foryou' | 'bangladesh'>('foryou');
   const [loved, setLoved] = useState(false);
+      const [loved, setLoved] = useState(false);
+  const [activeNavTab, setActiveNavTab] = useState<'home' | 'premium' | 'notifications' | 'settings'>('home');
   const [cards, setCards] = useState<NewsCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -492,6 +611,115 @@ setLoadingMore(false);
               </div>
             </div>
           )}
+              </div>
+
+      {/* ── Bottom Navigation Bar ── */}
+      <div style={{
+        flexShrink: 0,
+        background: '#ffffff',
+        borderTop: '1px solid #e4e6eb',
+        display: 'flex',
+        alignItems: 'stretch',
+        height: 64,
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        zIndex: 100,
+        boxShadow: '0 -1px 0 rgba(0,0,0,0.05)',
+      }}>
+        {([
+          {
+            key: 'home',
+            label: 'Home',
+            icon: (active: boolean) => (
+              <svg width="23" height="23" viewBox="0 0 24 24"
+                fill={active ? '#1877f2' : 'none'}
+                stroke={active ? '#1877f2' : '#65676b'}
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+            ),
+          },
+          {
+            key: 'premium',
+            label: 'Premium',
+            icon: (active: boolean) => (
+              <svg width="23" height="23" viewBox="0 0 24 24"
+                fill={active ? '#1877f2' : 'none'}
+                stroke={active ? '#1877f2' : '#65676b'}
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            ),
+          },
+          {
+            key: 'notifications',
+            label: 'Alerts',
+            icon: (active: boolean) => (
+              <svg width="23" height="23" viewBox="0 0 24 24"
+                fill={active ? '#1877f2' : 'none'}
+                stroke={active ? '#1877f2' : '#65676b'}
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            ),
+          },
+          {
+            key: 'settings',
+            label: 'Settings',
+            icon: (active: boolean) => (
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none"
+                stroke={active ? '#1877f2' : '#65676b'}
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            ),
+          },
+        ] as const).map(({ key, label, icon }) => {
+          const active = activeNavTab === (key as string);
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveNavTab(key as any)}
+              style={{
+                flex: 1,
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 4,
+                background: 'none', border: 'none',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+                position: 'relative',
+                padding: '6px 0 8px',
+              }}
+            >
+              {active && (
+                <div style={{
+                  position: 'absolute', top: 0, left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 36, height: 3,
+                  background: '#1877f2',
+                  borderRadius: '0 0 4px 4px',
+                }} />
+              )}
+              {icon(active)}
+              <span style={{
+                fontSize: 10.5,
+                fontWeight: active ? 700 : 500,
+                color: active ? '#1877f2' : '#65676b',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                lineHeight: 1,
+              }}>
+                {label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+    </div>
+  );
         </div>
       </div>
     </div>
