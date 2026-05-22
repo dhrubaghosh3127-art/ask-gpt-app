@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DISCOVER_SOURCES } from '../_api/lib/discoverSources';
+import { DISCOVER_SOURCES } from '../../api/_lib/discoverSources';
 
 const BOTTOM_NAV_H = 76;
 
