@@ -16,27 +16,7 @@ function initials(label: string): string {
   if (w.length >= 2) return (w[0][0] + w[1][0]).toUpperCase();
   return label.slice(0, 2).toUpperCase();
 }
-function getDomain(feedUrl: string): string {
-  try {
-    return new URL(feedUrl).hostname
-      .replace(/^(feeds\.|rss\.|bangla\.|bengali\.|m\.|www\.)/, '');
-  } catch { return ''; }
-}
 
-const SourceLogo: React.FC<{ feedUrl: string; label: string; color: string }> = ({ feedUrl, label, color }) => {
-  const [err, setErr] = React.useState(false);
-  const domain = getDomain(feedUrl);
-  if (!err && domain) return (
-    <div style={{ width: 46, height: 46, borderRadius: 14, overflow: 'hidden', background: '#f8f9fa', border: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <img src={`https://logo.clearbit.com/${domain}`} alt={label} onError={() => setErr(true)} style={{ width: 32, height: 32, objectFit: 'contain' }} />
-    </div>
-  );
-  return (
-    <div style={{ width: 46, height: 46, borderRadius: 14, background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${color}44` }}>
-      <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', letterSpacing: '0.02em' }}>{initials(label)}</span>
-    </div>
-  );
-};
 const DiscoverSourcesPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'foryou' | 'bangladesh'>('foryou');
@@ -211,7 +191,22 @@ const DiscoverSourcesPage: React.FC = () => {
                 borderBottom: idx < filtered.length - 1
                   ? '1px solid rgba(0,0,0,0.05)' : 'none',
               }}>
-                <SourceLogo feedUrl={source.feedUrl} label={source.label} color={color} />
+                {/* Avatar */}
+                <div style={{
+                  width: 46, height: 46, borderRadius: 14,
+                  background: color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: `0 2px 8px ${color}44`,
+                }}>
+                  <span style={{
+                    fontSize: 14, fontWeight: 800, color: '#fff',
+                    letterSpacing: '0.02em',
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                  }}>
+                    {abbr}
+                  </span>
+                </div>
 
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -250,7 +245,7 @@ const DiscoverSourcesPage: React.FC = () => {
                     whiteSpace: 'nowrap' as const,
                   }}
                 >
-                 {isSub ? '✓ Subscribed' : 'Subscribe'}
+                  {isSub ? '✓ Added' : '+ Add'}
                 </button>
               </div>
             );
