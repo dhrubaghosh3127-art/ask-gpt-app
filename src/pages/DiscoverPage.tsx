@@ -159,11 +159,7 @@ const DiscoverPage: React.FC = () => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-const [showPersonalize, setShowPersonalize] = useState(false);
-const [selectedTopics, setSelectedTopics] = useState<Set<string>>(() => {
-  try { return new Set(JSON.parse(localStorage.getItem('topics') || '[]')); }
-  catch { return new Set(); }
-});
+
 const toggleTopic = (t: string) => setSelectedTopics(p => {
   const n = new Set(p); n.has(t) ? n.delete(t) : n.add(t); return n;
 });
