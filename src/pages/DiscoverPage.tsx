@@ -159,7 +159,18 @@ const DiscoverPage: React.FC = () => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-
+const [showPersonalize, setShowPersonalize] = useState(false);
+const [selectedTopics, setSelectedTopics] = useState<Set<string>>(() => {
+  try { return new Set(JSON.parse(localStorage.getItem('topics') || '[]')); }
+  catch { return new Set(); }
+});
+const toggleTopic = (t: string) => setSelectedTopics(p => {
+  const n = new Set(p); n.has(t) ? n.delete(t) : n.add(t); return n;
+});
+const saveTopics = () => {
+  try { localStorage.setItem('topics', JSON.stringify([...selectedTopics])); } catch {}
+  setShowPersonalize(false);
+};
   const scrollRef = useRef<HTMLDivElement>(null);
 const loadingMoreLockRef = useRef(false);
       
@@ -538,7 +549,7 @@ setLoadingMore(false);
         ),
       },
       {
-        id: 'personalized', label: 'For You', active: false,
+        { id: 'personalized', label: 'Interests', active: false,
         icon: (c: string) => (
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
             stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -566,6 +577,123 @@ setLoadingMore(false);
           </svg>
         ),
       },
+      {/* ── Personalize Bottom Sheet ── */}
+{showPersonalize && (
+  <div
+    onClick={() => setShowPersonalize(false)}
+    style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.45)',
+      backdropFilter: 'blur(4px)',
+      WebkitBackdropFilter: 'blur(4px)',
+      zIndex: 100,
+      display: 'flex', alignItems: 'flex-end',
+    }}
+  >
+    <div
+      onClick={e => e.stopPropagation()}
+      style={{
+        width: '100%',
+        background: '#fff',
+        borderRadius: '28px 28px 0 0',
+        padding: '12px 20px 36px',
+        boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+      }}
+    >
+      {/* Handle */}
+      <div style={{
+        width: 40, height: 4, borderRadius: 2,
+        background: '#d1d1d6',
+        margin: '0 auto 20px',
+      }} />
+
+      {/* Title */}
+      <div style={{
+        fontSize: 22, fontWeight: 700, color: '#0a0a14',
+        letterSpacing: '-0.025em', marginBottom: 6, textAlign: 'center',
+        fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+      }}>
+        Personalize Your Feed
+      </div>
+      <div style={{
+        fontSize: 14, color: '#8e8e93', textAlign: 'center',
+        marginBottom: 24, fontWeight: 400,
+        fontFamily: 'system-ui, sans-serif',
+      }}>
+        Pick topics to see stories curated for you
+      </div>
+
+      {/* Topics Grid */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: 10, marginBottom: 24,
+      }}>
+        {[
+          { id: 'politics',      emoji: '🏛️', label: 'Politics' },
+          { id: 'technology',    emoji: '💻', label: 'Technology' },
+          { id: 'business',      emoji: '💼', label: 'Business' },
+          { id: 'sports',        emoji: '⚽', label: 'Sports' },
+          { id: 'science',       emoji: '🔬', label: 'Science' },
+          { id: 'health',        emoji: '❤️', label: 'Health' },
+          { id: 'entertainment', emoji: '🎬', label: 'Entertainment' },
+          { id: 'education',     emoji: '📚', label: 'Education' },
+          { id: 'world',         emoji: '🌍', label: 'World News' },
+          { id: 'culture',       emoji: '🎨', label: 'Arts & Culture' },
+        ].map(topic => {
+          const sel = selectedTopics.has(topic.id);
+          return (
+            <button
+              key={topic.id}
+              onClick={() => toggleTopic(topic.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '13px 16px', borderRadius: 16,
+                border: sel ? 'none' : '1.5px solid #e5e7eb',
+                background: sel ? 'rgba(13,148,136,0.1)' : '#f9f9f9',
+                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.15s ease',
+                boxShadow: sel ? 'inset 0 0 0 1.5px #0d9488' : 'none',
+              }}
+            >
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{topic.emoji}</span>
+              <span style={{
+                fontSize: 14, fontWeight: 600,
+                color: sel ? '#0d9488' : '#374151',
+                fontFamily: "'SF Pro Text', system-ui, sans-serif",
+              }}>
+                {topic.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Save */}
+      <button
+        onClick={saveTopics}
+        style={{
+          width: '100%', height: 54,
+          borderRadius: 18, border: 'none',
+          background: selectedTopics.size > 0
+            ? 'linear-gradient(135deg, #0d9488, #0891b2)'
+            : '#e5e7eb',
+          color: selectedTopics.size > 0 ? '#fff' : '#9ca3af',
+          fontSize: 16, fontWeight: 700, cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+          fontFamily: "'SF Pro Text', system-ui, sans-serif",
+          boxShadow: selectedTopics.size > 0
+            ? '0 4px 20px rgba(13,148,136,0.35)' : 'none',
+          transition: 'all 0.2s ease',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {selectedTopics.size > 0
+          ? `Save ${selectedTopics.size} Interest${selectedTopics.size > 1 ? 's' : ''}`
+          : 'Select at least one topic'}
+      </button>
+    </div>
+  </div>
+)}
     ].map(item => {
       const color = item.active ? '#0d9488' : '#52606d';
       return (
@@ -574,6 +702,7 @@ setLoadingMore(false);
         onClick={() => {
   if (item.id === 'home') return;
   if (item.id === 'sources') { navigate('/discover-sources'); return; }
+  if (item.id === 'personalized') { setShowPersonalize(true); return; }
   navigate(`/${item.id}`);
 }}
           style={{
