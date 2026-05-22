@@ -35,24 +35,27 @@ function avatarColor(id: string): string {
 const SourceLogo: React.FC<{ feedUrl: string; label: string; color: string }> = ({
   feedUrl, label, color,
 }) => {
-  const [err, setErr] = useState(false);
   const domain = getDomain(feedUrl);
-  const logoSrc = domain ? `https://logo.clearbit.com/${domain}` : '';
+  const sources = domain ? [
+    `https://www.google.com/s2/favicons?sz=128&domain_url=https://${domain}`,
+    `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+    `https://${domain}/favicon.ico`,
+  ] : [];
+  const [idx, setIdx] = React.useState(0);
 
-  if (!err && logoSrc) {
+  if (idx < sources.length) {
     return (
       <div style={{
-        width: 52, height: 52, borderRadius: 16, overflow: 'hidden',
-        background: '#f8f9fa',
-        border: '1px solid rgba(0,0,0,0.07)',
+        width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+        background: '#f5f5f7', border: '1px solid rgba(0,0,0,0.08)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
+        overflow: 'hidden',
       }}>
         <img
-          src={logoSrc}
+          src={sources[idx]}
           alt={label}
-          onError={() => setErr(true)}
-          style={{ width: 36, height: 36, objectFit: 'contain', display: 'block' }}
+          onError={() => setIdx(i => i + 1)}
+          style={{ width: 38, height: 38, objectFit: 'contain', borderRadius: 6 }}
         />
       </div>
     );
@@ -60,15 +63,15 @@ const SourceLogo: React.FC<{ feedUrl: string; label: string; color: string }> = 
 
   return (
     <div style={{
-      width: 52, height: 52, borderRadius: 16,
-      background: color, flexShrink: 0,
+      width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+      background: color,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       boxShadow: `0 3px 10px ${color}55`,
     }}>
       <span style={{
         fontSize: 15, fontWeight: 800, color: '#fff',
+        letterSpacing: '0.02em',
         fontFamily: "'SF Pro Display', -apple-system, sans-serif",
-        letterSpacing: '0.01em',
       }}>
         {initials(label)}
       </span>
