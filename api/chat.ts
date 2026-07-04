@@ -3,6 +3,15 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+
+// Must match ModelConfig.kt's CLAUDE_NORMAL_ID / CLAUDE_HARD_ID / CLAUDE_MOST_HARD_ID
+const CLAUDE_MODEL_IDS = new Set([
+  "claude-haiku-4-5-20251001",
+  "claude-sonnet-5",
+  "claude-fable-5",
+]);
+const isClaudeModel = (id?: string): boolean => !!id && CLAUDE_MODEL_IDS.has(id);
 const CAPABILITY_SYSTEM_PROMPT = `
 You are ASK-GPT inside an app with multiple built-in capabilities.
 
@@ -376,6 +385,144 @@ const sttRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions"
     modelId: "whisper-large-v3-turbo",
   });
                               }
+
+    // ── Claude (Anthropic) — separate branch: different endpoint, headers,
+    // request shape, and streaming format from Groq/OpenAI-compatible APIs.
+    // userKey → user's own Anthropic key. No userKey → ANTHROPIC_API_KEY (admin).
+    if (mode === "chat" && isClaudeModel(modelId)) {
+      const anthropicApiKey = hasUserKey
+        ? keyFromClient
+        : (process.env.ANTHROPIC_API_KEY || "");
+
+      if (!anthropicApiKey) {
+        return res.status(400).json({
+          error: hasUserKey
+            ? "Missing API key (userKey)"
+            : "Missing API key (ANTHROPIC_API_KEY)",
+        });
+      }
+
+      // Anthropic wants system content as a separate top-level `system`
+      // field — NOT as a role:"system" entry inside `messages`. Pull any
+      // such entries out; systemInstruction (if provided) takes priority.
+      const systemFromMessages = (messages || [])
+        .filter((m: any) => m?.role === "system")
+        .map((m: any) => extractTextFromContent(m?.content))
+        .filter(Boolean)
+        .join("\n\n");
+
+      const finalSystem =
+        (typeof systemInstruction === "string" && systemInstruction.trim()) ||
+        systemFromMessages ||
+        "You are Eliyen, a helpful AI assistant.";
+
+      const anthropicMessages = (messages || [])
+        .filter((m: any) => m?.role === "user" || m?.role === "assistant")
+        .map((m: any) => ({
+          role: m.role,
+          content: extractTextFromContent(m.content),
+        }));
+
+      const anthropicBody: Record<string, any> = {
+        model: modelId,
+        system: finalSystem,
+        messages: anthropicMessages,
+        max_tokens: 4096,
+        stream: Boolean(stream),
+      };
+
+      const anthropicRes = await fetch(ANTHROPIC_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": anthropicApiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify(anthropicBody),
+      });
+
+      if (stream) {
+        if (!anthropicRes.ok || !anthropicRes.body) {
+          const errText = await anthropicRes.text();
+          let errData: any = null;
+          try { errData = errText ? JSON.parse(errText) : null; } catch { errData = null; }
+          const errMsg =
+            errData?.error?.message ||
+            errData?.error ||
+            errText.slice(0, 250) ||
+            "Claude API Error";
+          return res.status(anthropicRes.status).json({ error: errMsg, data: errData });
+        }
+
+        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-transform");
+        res.setHeader("Connection", "keep-alive");
+
+        // Translate Anthropic's SSE events into the SAME OpenAI-style
+        // "data: {...}" chunk shape the Groq path already produces, so
+        // Android's existing StreamChunkDto parser needs zero changes.
+        const reader = anthropicRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+              if (!line.startsWith("data:")) continue;
+              const jsonStr = line.slice(5).trim();
+              if (!jsonStr) continue;
+
+              let evt: any = null;
+              try { evt = JSON.parse(jsonStr); } catch { continue; }
+
+              if (evt?.type === "content_block_delta" && evt?.delta?.type === "text_delta") {
+                const piece = evt.delta.text || "";
+                if (piece) {
+                  res.write(
+                    `data: ${JSON.stringify({ choices: [{ delta: { content: piece } }] })}\n\n`
+                  );
+                }
+              } else if (evt?.type === "message_stop") {
+                res.write("data: [DONE]\n\n");
+              }
+            }
+          }
+          res.end();
+          return;
+        } catch {
+          res.end();
+          return;
+        }
+      }
+
+      // Non-streaming
+      const rawBody = await anthropicRes.text();
+      let data: any = null;
+      try { data = rawBody ? JSON.parse(rawBody) : null; } catch { data = null; }
+
+      if (!anthropicRes.ok) {
+        const msg =
+          data?.error?.message || data?.error || rawBody?.slice(0, 250) || "Claude API Error";
+        return res.status(anthropicRes.status).json({ error: msg, data });
+      }
+
+      const textBlocks = Array.isArray(data?.content)
+        ? data.content.filter((b: any) => b?.type === "text").map((b: any) => b.text)
+        : [];
+      const cleaned = textBlocks.join("").trim() || "⚠️ Empty response from model";
+
+      return res.status(200).json({
+        text: `[claude | ${modelId}]\n${cleaned}`,
+      });
+    }
+
     // userKey থাকলে OpenRouter, না থাকলে Groq(admin)
     const apiUrl = GROQ_URL;
 const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
@@ -537,41 +684,4 @@ const debugPrefix = `[${provider} | ${finalModelId}]`;
 const msg0 = data?.choices?.[0]?.message;
 const content0 = msg0?.content;
 
-let raw = "";
-
-if (typeof content0 === "string") {
-  raw = content0;
-} else if (Array.isArray(content0)) {
-  raw = content0
-    .map((p: any) =>
-      typeof p === "string"
-        ? p
-        : typeof p?.text === "string"
-        ? p.text
-        : typeof p?.content === "string"
-        ? p.content
-        : ""
-    )
-    .join("");
-}
-
-if (!raw && typeof msg0?.reasoning === "string") {
-  raw = msg0.reasoning;
-}
-
-if (!raw && typeof data?.choices?.[0]?.text === "string") {
-  raw = data.choices[0].text;
-}
-
-if (!raw && typeof data?.output_text === "string") {
-  raw = data.output_text;
-}
-
-const cleaned =
-  raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim() ||
-  raw.trim() ||
-  "⚠️ Empty response from model";
-
-return res.status(200).json({
-  text: `${debugPrefix}\n${cleaned}`,
-});            
+    
