@@ -3,6 +3,16 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+
+// Must match ChatPage.tsx's ADMIN_THINK_ID / ADMIN_MOST_HARD_ID
+const CLAUDE_VISION_ID = "claude-haiku-4-5-20251001";
+const CLAUDE_MODEL_IDS = new Set([
+  CLAUDE_VISION_ID,
+  "claude-sonnet-5",
+  "claude-fable-5",
+]);
+const isClaudeModel = (id?: string): boolean => !!id && CLAUDE_MODEL_IDS.has(id);
 const CAPABILITY_SYSTEM_PROMPT = `
 You are ASK-GPT inside an app with multiple built-in capabilities.
 
@@ -194,11 +204,11 @@ return res.status(200).json({
     });
   }
 
-  const groqApiKey = process.env.GROQ_API_KEY || "";
+  const anthropicApiKey = process.env.ANTHROPIC_API_KEY || "";
 
-  if (!groqApiKey) {
+  if (!anthropicApiKey) {
     return res.status(400).json({
-      error: "Missing API key (GROQ_API_KEY)",
+      error: "Missing API key (ANTHROPIC_API_KEY)",
     });
   }
 
@@ -213,32 +223,36 @@ return res.status(200).json({
   }
 
   const actualMimeType = (mimeType || "image/jpeg").trim() || "image/jpeg";
-  const imageUrl = `data:${actualMimeType};base64,${cleanImageBase64}`;
 
   const visionPrompt =
     (prompt || "").trim() ||
     "Read the image carefully and return only the main text, question, or useful visible content from the image. Do not solve it unless the image itself asks for a direct answer.";
 
-  const visionRes = await fetch(GROQ_URL, {
+  const visionRes = await fetch(ANTHROPIC_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${groqApiKey}`,
+      "x-api-key": anthropicApiKey,
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      temperature: 0.1,
+      model: CLAUDE_VISION_ID,
+      max_tokens: 1024,
+      system:
+        "You only analyze the image and extract the useful visible text, question, or content. Keep it clean and concise. Do not add extra explanation unless necessary.",
       messages: [
-        {
-          role: "system",
-          content:
-            "You only analyze the image and extract the useful visible text, question, or content. Keep it clean and concise. Do not add extra explanation unless necessary.",
-        },
         {
           role: "user",
           content: [
             { type: "text", text: visionPrompt },
-            { type: "image_url", image_url: { url: imageUrl } },
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: actualMimeType,
+                data: cleanImageBase64,
+              },
+            },
           ],
         },
       ],
@@ -259,39 +273,23 @@ return res.status(200).json({
       error:
         visionData?.error?.message ||
         visionData?.error ||
-        visionData?.message ||
         visionRaw.slice(0, 250) ||
         "Image analysis failed",
       data: visionData,
     });
   }
 
-  const visionMsg = visionData?.choices?.[0]?.message;
-  const visionContent = visionMsg?.content;
+  const textBlocks = Array.isArray(visionData?.content)
+    ? visionData.content
+        .filter((b: any) => b?.type === "text")
+        .map((b: any) => b.text)
+    : [];
 
-  let extracted = "";
-
-  if (typeof visionContent === "string") {
-    extracted = visionContent;
-  } else if (Array.isArray(visionContent)) {
-    extracted = visionContent
-      .map((p: any) =>
-        typeof p === "string"
-          ? p
-          : typeof p?.text === "string"
-          ? p.text
-          : typeof p?.content === "string"
-          ? p.content
-          : ""
-      )
-      .join("");
-  }
-
-  extracted = extracted.trim();
+  const extracted = textBlocks.join("").trim();
 
   return res.status(200).json({
     text: extracted,
-    modelId: "meta-llama/llama-4-scout-17b-16e-instruct",
+    modelId: CLAUDE_VISION_ID,
   });
     }
     if (mode === "transcribe") {
@@ -376,6 +374,144 @@ const sttRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions"
     modelId: "whisper-large-v3-turbo",
   });
                               }
+
+    // ── Claude (Anthropic) — separate branch: different endpoint, headers,
+    // request shape, and streaming format from Groq/OpenAI-compatible APIs.
+    // Handles BOTH callers: web's plain fetch (no `stream` field → non-stream
+    // path) and Android's SSE stream (stream:true → translated to the same
+    // "data: {...}" chunk shape Groq produces, so no client-side changes
+    // are needed on either side for this to work).
+    if (mode === "chat" && isClaudeModel(modelId)) {
+      const anthropicApiKey = hasUserKey
+        ? keyFromClient
+        : (process.env.ANTHROPIC_API_KEY || "");
+
+      if (!anthropicApiKey) {
+        return res.status(400).json({
+          error: hasUserKey
+            ? "Missing API key (userKey)"
+            : "Missing API key (ANTHROPIC_API_KEY)",
+        });
+      }
+
+      // Anthropic wants system content as a separate top-level `system`
+      // field — NOT as a role:"system" entry inside `messages`. Pull any
+      // such entries out; systemInstruction (if provided) takes priority.
+      const systemFromMessages = (messages || [])
+        .filter((m: any) => m?.role === "system")
+        .map((m: any) => extractTextFromContent(m?.content))
+        .filter(Boolean)
+        .join("\n\n");
+
+      const finalSystem =
+        (typeof systemInstruction === "string" && systemInstruction.trim()) ||
+        systemFromMessages ||
+        "You are Eliyen, a helpful AI assistant.";
+
+      const anthropicMessages = (messages || [])
+        .filter((m: any) => m?.role === "user" || m?.role === "assistant")
+        .map((m: any) => ({
+          role: m.role,
+          content: extractTextFromContent(m.content),
+        }));
+
+      const anthropicBody: Record<string, any> = {
+        model: modelId,
+        system: finalSystem,
+        messages: anthropicMessages,
+        max_tokens: 4096,
+        stream: Boolean(stream),
+      };
+
+      const anthropicRes = await fetch(ANTHROPIC_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": anthropicApiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify(anthropicBody),
+      });
+
+      if (stream) {
+        if (!anthropicRes.ok || !anthropicRes.body) {
+          const errText = await anthropicRes.text();
+          let errData: any = null;
+          try { errData = errText ? JSON.parse(errText) : null; } catch { errData = null; }
+          const errMsg =
+            errData?.error?.message ||
+            errData?.error ||
+            errText.slice(0, 250) ||
+            "Claude API Error";
+          return res.status(anthropicRes.status).json({ error: errMsg, data: errData });
+        }
+
+        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-transform");
+        res.setHeader("Connection", "keep-alive");
+
+        const reader = anthropicRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+              if (!line.startsWith("data:")) continue;
+              const jsonStr = line.slice(5).trim();
+              if (!jsonStr) continue;
+
+              let evt: any = null;
+              try { evt = JSON.parse(jsonStr); } catch { continue; }
+
+              if (evt?.type === "content_block_delta" && evt?.delta?.type === "text_delta") {
+                const piece = evt.delta.text || "";
+                if (piece) {
+                  res.write(
+                    `data: ${JSON.stringify({ choices: [{ delta: { content: piece } }] })}\n\n`
+                  );
+                }
+              } else if (evt?.type === "message_stop") {
+                res.write("data: [DONE]\n\n");
+              }
+            }
+          }
+          res.end();
+          return;
+        } catch {
+          res.end();
+          return;
+        }
+      }
+
+      // Non-streaming — this is the path web's getGeminiResponse() uses
+      const rawBody = await anthropicRes.text();
+      let data: any = null;
+      try { data = rawBody ? JSON.parse(rawBody) : null; } catch { data = null; }
+
+      if (!anthropicRes.ok) {
+        const msg =
+          data?.error?.message || data?.error || rawBody?.slice(0, 250) || "Claude API Error";
+        return res.status(anthropicRes.status).json({ error: msg, data });
+      }
+
+      const textBlocks = Array.isArray(data?.content)
+        ? data.content.filter((b: any) => b?.type === "text").map((b: any) => b.text)
+        : [];
+      const cleaned = textBlocks.join("").trim() || "⚠️ Empty response from model";
+
+      return res.status(200).json({
+        text: `[claude | ${modelId}]\n${cleaned}`,
+      });
+    }
+
     // userKey থাকলে OpenRouter, না থাকলে Groq(admin)
     const apiUrl = GROQ_URL;
 const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
