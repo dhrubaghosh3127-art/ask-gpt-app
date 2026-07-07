@@ -99,27 +99,6 @@ async function executeWebSearch(query: string, apiKey: string): Promise<string> 
   }
 }
 
-// Writes a completed piece of text to the client as hand-crafted SSE chunks,
-// in the exact OpenAI-compatible delta format the app already parses —
-// used for the "no tool needed, already have the full answer" fast path so
-// the client's existing stream-reading code needs zero changes.
-function writeFakeStream(res: VercelResponse, reasoning: string, content: string) {
-  const send = (delta: Record<string, any>) => {
-    res.write(
-      `data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`
-    );
-  };
-  if (reasoning && reasoning.trim()) {
-    send({ reasoning: reasoning.trim() });
-  }
-  const chunkSize = 24;
-  for (let i = 0; i < content.length; i += chunkSize) {
-    send({ content: content.slice(i, i + chunkSize) });
-  }
-  res.write("data: [DONE]\n\n");
-  res.end();
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -359,44 +338,107 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ── Qwen path — custom web_search function tool, backend-orchestrated. ──
+    // The decision call is ALSO streamed now (not just the follow-up), so
+    // the client sees exactly what's really happening, live, moment to
+    // moment: real reasoning text while Qwen thinks, a live "Searching: X"
+    // status the instant a tool call is detected, then the real final
+    // answer streaming in — never silence, never anything fabricated.
     if (mode === "chat" && stream && isQwen) {
-      // Decision call — not streamed, so tool_calls can be inspected cleanly.
-      const decisionRes = await fetch(GROQ_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ ...baseRequest, stream: false }),
-      });
-      const decisionText = await decisionRes.text();
-      let decisionData: any = null;
-      try { decisionData = decisionText ? JSON.parse(decisionText) : null; } catch { decisionData = null; }
-
-      if (!decisionRes.ok || !decisionData) {
-        return res.status(decisionRes.status || 502).json({
-          error: decisionData?.error?.message || decisionText.slice(0, 250) || "API Error",
-        });
-      }
-
-      const decisionMsg = decisionData?.choices?.[0]?.message;
-      const toolCalls = decisionMsg?.tool_calls;
-
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
 
-      if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-        // Execute every requested search, then let Qwen compose the real
-        // final answer itself, streamed live — user never sees raw JSON.
+      const sendDelta = (delta: Record<string, any>) => {
+        res.write(`data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`);
+      };
+
+      const decisionUpstream = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ ...baseRequest, stream: true }),
+      });
+
+      if (!decisionUpstream.ok || !decisionUpstream.body) {
+        sendDelta({ content: "Something went wrong, please try again." });
+        res.write("data: [DONE]\n\n");
+        res.end();
+        return;
+      }
+
+      const reader  = decisionUpstream.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = "";
+
+      // Tool-call fragments arrive across multiple chunks, indexed —
+      // accumulate name/arguments per index until the stream tells us
+      // finish_reason === "tool_calls".
+      const toolCallAcc: Record<number, { id: string; name: string; args: string }> = {};
+      let sawToolCall = false;
+
+      readLoop: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split("\n");
+        sseBuffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (payload === "[DONE]") break readLoop;
+          if (!payload) continue;
+
+          let obj: any;
+          try { obj = JSON.parse(payload); } catch { continue; }
+          const delta = obj?.choices?.[0]?.delta;
+          if (!delta) continue;
+
+          // Real reasoning, live, exactly as Qwen produces it.
+          if (typeof delta.reasoning === "string" && delta.reasoning.length > 0) {
+            sendDelta({ reasoning: delta.reasoning });
+          }
+          // Real answer, live — this only happens when no tool is needed.
+          if (typeof delta.content === "string" && delta.content.length > 0) {
+            sendDelta({ content: delta.content });
+          }
+          // Tool call being requested — accumulate quietly, say nothing yet
+        
+        // until we have a usable query to show.
+          if (Array.isArray(delta.tool_calls)) {
+            sawToolCall = true;
+            for (const tc of delta.tool_calls) {
+              const idx = tc.index ?? 0;
+              if (!toolCallAcc[idx]) toolCallAcc[idx] = { id: "", name: "", args: "" };
+              if (tc.id) toolCallAcc[idx].id += tc.id;
+              if (tc.function?.name) toolCallAcc[idx].name += tc.function.name;
+              if (tc.function?.arguments) toolCallAcc[idx].args += tc.function.arguments;
+            }
+          }
+        }
+      }
+
+      if (sawToolCall && Object.keys(toolCallAcc).length > 0) {
+        const toolCallsForFollowUp = Object.entries(toolCallAcc).map(([idx, tc]) => ({
+          id: tc.id || `call_${idx}`,
+          type: "function",
+          function: { name: tc.name || "web_search", arguments: tc.args || "{}" },
+        }));
+
         const toolResultMessages: any[] = [];
-        for (const call of toolCalls) {
+        for (const call of toolCallsForFollowUp) {
           let query = "";
-          try { query = JSON.parse(call.function?.arguments || "{}")?.query || ""; } catch {}
+          try { query = JSON.parse(call.function.arguments || "{}")?.query || ""; } catch {}
+          // Live, honest status — shown the instant we know what's being
+          // searched, right before the actual (real) network delay happens.
+          sendDelta({ reasoning: `\n\n🔎 Searching: ${query || "the web"}...\n` });
           const resultText = await executeWebSearch(query || "latest information", apiKey);
           toolResultMessages.push({ role: "tool", tool_call_id: call.id, content: resultText });
         }
 
         const followUpMessages = [
           ...finalMessages,
-          { role: "assistant", content: decisionMsg?.content ?? null, tool_calls: toolCalls },
+          { role: "assistant", content: null, tool_calls: toolCallsForFollowUp },
           ...toolResultMessages,
         ];
 
@@ -415,34 +457,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
         if (!finalUpstream.ok || !finalUpstream.body) {
-          res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: "Search failed, please try again." } }] })}\n\n`);
+          sendDelta({ content: "Search failed, please try again." });
           res.write("data: [DONE]\n\n");
           res.end();
           return;
         }
 
-        const reader = finalUpstream.body.getReader();
-        const decoder = new TextDecoder();
+        const reader2  = finalUpstream.body.getReader();
+        const decoder2 = new TextDecoder();
         try {
           while (true) {
-            const { done, value } = await reader.read();
+            const { done, value } = await reader2.read();
             if (done) break;
-            res.write(decoder.decode(value, { stream: true }));
+            res.write(decoder2.decode(value, { stream: true }));
           }
         } catch {}
         res.end();
         return;
       }
 
-      // No tool needed — the decision call already IS the complete answer.
-      // Emit it as hand-crafted SSE chunks so the client's stream reader
-      // needs no changes, and only ONE API call was spent total.
-      let content = decisionMsg?.content;
-      if (Array.isArray(content)) {
-        content = content.map((p: any) => typeof p === "string" ? p : p?.text || p?.content || "").join("");
-      }
-      const reasoning = typeof decisionMsg?.reasoning === "string" ? decisionMsg.reasoning : "";
-      writeFakeStream(res, reasoning, (content || "").trim() || "⚠️ Empty response from model");
+      // No tool call — everything (reasoning + content) already streamed
+      // live above, in real time, as a single API call.
+      res.write("data: [DONE]\n\n");
+      res.end();
       return;
     }
 
