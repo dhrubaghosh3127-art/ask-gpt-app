@@ -47,6 +47,7 @@ if the app around you supports it. Inside this app you can:
 How you answer:
 - Keep answers direct and to the point. Don't pad simple questions with unnecessary explanation.
 - If a question depends on current/live/recent facts (news, prices, scores, weather, "today", anything that could have changed recently or is after your training), call the web_search tool to check first rather than guessing from memory.
+- You DO have real web search access through your tool. Never say "I can't browse the internet", "I don't have access to real-time data", "I can't open links", or anything similar — that is false. If you're unsure whether you can answer from memory, call the web_search tool instead of claiming you can't.
 - After a tool result comes back, always write your final answer yourself in plain natural language — never show raw JSON, XML, tool syntax, or code blocks of tool output to the user.
 - Write math in plain, ordinary notation people can read normally: x^2, 1/x, sqrt(x), (a+b), >=, <=. Never output raw LaTeX commands like \\frac, \\sqrt{}, \\ge, or \\[ ... \\].
 - Never mention internal model names, backend routing, or tool implementation details unless the user explicitly asks how the app works technically.
@@ -81,24 +82,61 @@ const WEB_SEARCH_TOOL = {
 type ParsedCall = { query: string } | null;
 
 function parseToolCallFromText(text: string): ParsedCall {
-  if (!text || !text.includes("<tool_call")) return null;
+  if (!text) return null;
 
+  // Official tagged format: <tool_call>{"name":...,"arguments":{...}}</tool_call>
   const wrapped = text.match(/<tool_call>([\s\S]*?)<\/tool_call>/i);
-  const innerText = wrapped ? wrapped[1].trim() : text;
-
-  try {
-    const obj = JSON.parse(innerText);
-    let args = obj?.arguments ?? obj;
-    if (typeof args === "string") { try { args = JSON.parse(args); } catch {} }
-    const query = args?.query || args?.q || "";
-    return { query: String(query || "") };
-  } catch {
-    return { query: "" };
+  if (wrapped) {
+    try {
+      const obj = JSON.parse(wrapped[1].trim());
+      let args = obj?.arguments ?? obj;
+      if (typeof args === "string") { try { args = JSON.parse(args); } catch {} }
+      return { query: String(args?.query || args?.q || "") };
+    } catch {
+      return { query: "" };
+    }
   }
+
+  // Defensive fallback: sometimes the tags are dropped entirely and a bare
+  // JSON object leaks into the content instead, e.g.
+  // {"name": "web_search", "arguments": {"query": "..."}}
+  const bareMatch = text.match(/\{[\s\S]*?"name"\s*:\s*"web_search"[\s\S]*?\}/i);
+  if (bareMatch) {
+    try {
+      const obj = JSON.parse(bareMatch[0]);
+      let args = obj?.arguments ?? obj;
+      if (typeof args === "string") { try { args = JSON.parse(args); } catch {} }
+      return { query: String(args?.query || args?.q || "") };
+    } catch {
+      return { query: "" };
+    }
+  }
+
+  return null;
+}
+
+// Detects when the model falsely claims it has no web/search access —
+// a known base-training habit that overrides the system prompt sometimes.
+// This is a signature of the MODEL's own output, not a guess about user
+// intent, so retrying with a forced tool call is a correction, not routing.
+function looksLikeFalseCapabilityDenial(text: string): boolean {
+  if (!text) return false;
+  const t = text.toLowerCase();
+  const denialPhrases = [
+    "can't browse", "cannot browse", "can't access the internet", "cannot access the internet",
+    "don't have access to real-time", "do not have access to real-time",
+    "can't open links", "cannot open links", "can't open web", "cannot open web",
+    "no internet access", "i am not able to browse", "i'm not able to browse",
+    "as an ai, i don't have", "as an ai i don't have",
+  ];
+  return denialPhrases.some((p) => t.includes(p));
 }
 
 function stripToolCallArtifacts(text: string): string {
-  return text.replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, "").trim();
+  return text
+    .replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, "")
+    .replace(/\{[\s\S]*?"name"\s*:\s*"web_search"[\s\S]*?\}/gi, "")
+    .trim();
 }
 
 async function executeWebSearch(query: string, apiKey: string): Promise<string> {
@@ -365,10 +403,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       decisionContent = decisionContent.map((p: any) => typeof p === "string" ? p : p?.text || p?.content || "").join("");
     }
     decisionContent = typeof decisionContent === "string" ? decisionContent : "";
-    const decisionReasoning = typeof decisionMsg?.reasoning === "string" ? decisionMsg.reasoning : "";
+    let decisionReasoning = typeof decisionMsg?.reasoning === "string" ? decisionMsg.reasoning : "";
 
+    
     // ── Detect tool-call intent — official structured field first, then
-    // the official <tool_call> JSON text format as a safety net only. ───────
+    // the official <tool_call> text format, then a bare-JSON safety net. ────
     let toolCalls: any[] = Array.isArray(decisionMsg?.tool_calls) ? decisionMsg.tool_calls : [];
     let toolWasRequested = toolCalls.length > 0;
 
@@ -382,6 +421,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           function: { name: "web_search", arguments: JSON.stringify({ query: textParsed.query }) },
         }];
       }
+    }
+
+    // ── Self-correction: the model sometimes falsely claims (from its own
+    // base training) that it has no web access, without ever calling the
+    // tool. This is a known failure signature in its OWN output — not a
+    // guess about user intent — so we force one retry with the tool
+    // required, giving it a genuine second chance to actually search.
+    // (tool_choice "required" isn't supported together with thinking mode,
+    // so this retry only applies when thinking is off — the default case.)
+    if (!toolWasRequested && !wantsThinking && looksLikeFalseCapabilityDenial(decisionContent)) {
+      const retryRequest: Record<string, any> = {
+        model: finalModelId,
+        messages: finalMessages,
+        temperature: 0.7,
+        stream: false,
+        max_completion_tokens: 1536,
+        reasoning_effort: "none",
+        reasoning_format: "hidden",
+        tools: [WEB_SEARCH_TOOL],
+        tool_choice: "required",
+      };
+      const retryRes = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify(retryRequest),
+      });
+      const retryText = await retryRes.text();
+      let retryData: any = null;
+      try { retryData = retryText ? JSON.parse(retryText) : null; } catch { retryData = null; }
+
+      if (retryRes.ok && retryData) {
+        const retryMsg = retryData?.choices?.[0]?.message;
+        const retryCalls = Array.isArray(retryMsg?.tool_calls) ? retryMsg.tool_calls : [];
+        if (retryCalls.length > 0) {
+          toolCalls = retryCalls;
+          toolWasRequested = true;
+          decisionContent = typeof retryMsg?.content === "string" ? retryMsg.content : "";
+          decisionReasoning = "";
+        }
+      }
+      // If the retry still didn't produce a tool call, fall through and
+      // answer with whatever the original (non-search) response was —
+      // better than blocking the user entirely.
     }
 
     // ── Case 1: no tool needed — the decision call IS the final answer ───────
@@ -408,8 +490,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // assistant (with tool_calls, + reasoning if thinking was on) → tool
     // (one message per call, matching tool_call_id) → model call again.
     // Supports parallel tool calls (multiple entries in toolCalls).
-       
-        const searchResults = await Promise.all(
+    const searchResults = await Promise.all(
       toolCalls.map(async (call: any) => {
         let query = "";
         try { query = JSON.parse(call.function?.arguments || "{}")?.query || ""; } catch {}
@@ -505,4 +586,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-    }
+      }
