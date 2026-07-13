@@ -6,28 +6,27 @@ export const config = { maxDuration: 30 };
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Final design:
+// Final design (fixed against official Qwen / OpenAI-compatible docs):
 //
 //   qwen/qwen3.6-27b → THE model for every message, always, for both
-//                      admin-key and user's-own-key paths (same path,
-//                      everywhere). Strong at math/code/reasoning.
+//                      admin-key and user's-own-key paths. Strong at
+//                      math/code/reasoning.
 //
 //   thinkingMode      → explicit flag from the client (a UI toggle the user
-//                      presses), default false. NOT auto-detected from
-//                      content — deterministic and free when off.
-//                        false → reasoning_effort "none"  (fast, cheap)
+//                      presses), default false. NOT auto-detected.
+//                        false → reasoning_effort "none"    (fast, cheap)
 //                        true  → reasoning_effort "default" (real thinking)
 //
-//   web search         → a custom `web_search` function tool, always
-//                      attached. Qwen decides for itself whether to call
-//                      it. Groq's hosting of this model sometimes returns
-//                      the tool-call request as literal text instead of a
-//                      structured field (a known quirk of this specific
-//                      model/host combination) — so this file detects BOTH
-//                      the structured form AND the raw-text forms, and
-//                      defensively strips any leftover tool-call markup
-//                      from whatever is shown to the user, so nothing raw
-//                      ever reaches the screen.
+//   web search         → a custom `web_search` function tool. Qwen decides
+//                      for itself whether to call it. The follow-up call
+//                      now uses the OFFICIAL documented conversation
+//                      structure:
+//                          assistant (with tool_calls) → tool (result)
+//                      Earlier versions skipped the assistant turn and used
+//                      a fake "user" message instead — that mismatch with
+//                      what the model expects was the root cause of
+//                      unreliable / fallback replies and occasional raw
+//                      tool-call text leaking into answers.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const QWEN_MODEL     = "qwen/qwen3.6-27b";
@@ -59,7 +58,7 @@ const WEB_SEARCH_TOOL = {
   function: {
     name: "web_search",
     description:
-      "Search the live web for current, recent, or real-time information — news, prices, scores, dates, facts that may have changed recently, or anything your own knowledge might be outdated on. Only call this when the question genuinely needs it.",
+      "Search the live web for current, recent, or real-time information — news, prices, scores, dates, facts that may have changed recently, or anything your own knowledge might be outdated on. Only call this when the question genuinely needs it. Can be called more than once in the same turn for independent lookups.",
     parameters: {
       type: "object",
       properties: {
@@ -73,50 +72,33 @@ const WEB_SEARCH_TOOL = {
   },
 };
 
-// ── Robust tool-call detection ──────────────────────────────────────────────
-// Handles the standard structured field AND the raw-text formats this
-// specific model/host combination is known to sometimes emit instead.
+// ── Tool-call text-fallback detection ───────────────────────────────────────
+// Only the OFFICIAL Qwen native format is recognized here:
+//   <tool_call>{"name": "web_search", "arguments": {"query": "..."}}</tool_call>
+// (per https://qwen.readthedocs.io/en/latest/getting_started/concepts.html).
+// This is a safety net only — with the structural fix below, Groq's own
+// structured `tool_calls` field should be used almost every time.
 type ParsedCall = { query: string } | null;
 
 function parseToolCallFromText(text: string): ParsedCall {
-  if (!text || (!text.includes("<tool_call") && !text.includes("<function="))) return null;
+  if (!text || !text.includes("<tool_call")) return null;
 
-  // Variant A: <tool_call>{"name":"web_search","arguments":{"query":"..."}}</tool_call>
   const wrapped = text.match(/<tool_call>([\s\S]*?)<\/tool_call>/i);
   const innerText = wrapped ? wrapped[1].trim() : text;
 
   try {
     const obj = JSON.parse(innerText);
-    let args = obj?.arguments ?? obj?.parameters ?? obj;
+    let args = obj?.arguments ?? obj;
     if (typeof args === "string") { try { args = JSON.parse(args); } catch {} }
     const query = args?.query || args?.q || "";
-    if (query) return { query: String(query) };
+    return { query: String(query || "") };
   } catch {
-    // not JSON — try the XML function/parameter variant below
+    return { query: "" };
   }
-
-  // Variant B: <function=web_search><parameter=query>...</parameter></function>
-  const paramMatch =
-    innerText.match(/<parameter=query>([\s\S]*?)<\/parameter>/i) ||
-    text.match(/<parameter=query>([\s\S]*?)<\/parameter>/i) ||
-    innerText.match(/<parameter=q>([\s\S]*?)<\/parameter>/i) ||
-    text.match(/<parameter=q>([\s\S]*?)<\/parameter>/i);
-
-  if (paramMatch) return { query: paramMatch[1].trim() };
-
-  // Detected intent (a function/tool_call tag exists) but couldn't extract a
-  // clean query — the caller falls back to searching using the user's own
-  // last message text instead of failing outright.
-  return { query: "" };
 }
 
 function stripToolCallArtifacts(text: string): string {
-  return text
-    .replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, "")
-    .replace(/<function=[\s\S]*?<\/function>/gi, "")
-    .replace(/<function=[a-zA-Z0-9_]+>/gi, "")
-    .replace(/<parameter=[\s\S]*?<\/parameter>/gi, "")
-    .trim();
+  return text.replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, "").trim();
 }
 
 async function executeWebSearch(query: string, apiKey: string): Promise<string> {
@@ -161,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       mode?: "chat" | "image" | "transcribe" | "vision";
       audioBase64?: string; imageBase64?: string; mimeType?: string;
       language?: string; stream?: boolean;
-      thinkingMode?: boolean; // explicit UI toggle — off by default, wired later
+      thinkingMode?: boolean;
     };
 
     if (mode === "chat" && !Array.isArray(messages)) {
@@ -308,7 +290,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CHAT MODE — Qwen 3.6 27B, always, with robust tool-call handling
+    // CHAT MODE — Qwen 3.6 27B, always, with correct tool-call handling
     // ═══════════════════════════════════════════════════════════════════════
 
     const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
@@ -385,36 +367,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     decisionContent = typeof decisionContent === "string" ? decisionContent : "";
     const decisionReasoning = typeof decisionMsg?.reasoning === "string" ? decisionMsg.reasoning : "";
 
-    // ── Detect a tool-call intent — structured field OR raw-text leak ────────
-    const structuredCalls = Array.isArray(decisionMsg?.tool_calls) ? decisionMsg.tool_calls : [];
-    let searchQuery = "";
-    let toolWasRequested = false;
+    // ── Detect tool-call intent — official structured field first, then
+    // the official <tool_call> JSON text format as a safety net only. ───────
+    let toolCalls: any[] = Array.isArray(decisionMsg?.tool_calls) ? decisionMsg.tool_calls : [];
+    let toolWasRequested = toolCalls.length > 0;
 
-    if (structuredCalls.length > 0) {
-      toolWasRequested = true;
-      try {
-        const parsedArgs = JSON.parse(structuredCalls[0]?.function?.arguments || "{}");
-        searchQuery = parsedArgs?.query || "";
-      } catch {}
-    } else {
+    if (!toolWasRequested) {
       const textParsed = parseToolCallFromText(decisionContent);
-      if (textParsed) {
+      if (textParsed && textParsed.query.trim()) {
         toolWasRequested = true;
-        searchQuery = textParsed.query;
+        toolCalls = [{
+          id: "call_textfallback_0",
+          type: "function",
+          function: { name: "web_search", arguments: JSON.stringify({ query: textParsed.query }) },
+        }];
       }
     }
 
-    // If a tool intent was detected but no usable query was extracted,
-    // fall back to searching using the user's own last message — reliable
-    // and always produces a sensible result instead of failing.
-    if (toolWasRequested && !searchQuery.trim()) {
-      const lastUser = [...messages].reverse().find((m: any) => m.role === "user");
-      searchQuery = (typeof lastUser?.content === "string" ? lastUser.content : "").slice(0, 200) || "latest information";
-    }
-
     // ── Case 1: no tool needed — the decision call IS the final answer ───────
-  
-      if (!toolWasRequested) {
+    if (!toolWasRequested) {
       const cleanContent = stripToolCallArtifacts(decisionContent).trim() || "⚠️ Empty response from model";
 
       if (mode === "chat" && stream) {
@@ -433,16 +404,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ text: cleanContent });
     }
 
-    // ── Case 2: tool needed — execute the real search, then let Qwen write
-    // the actual final answer (no tools attached this time, so it can't
-    // loop into another tool-call attempt). ──────────────────────────────────
-    const resultText = await executeWebSearch(searchQuery, apiKey);
+    // ── Case 2: tool needed — official conversation structure ────────────────
+    // assistant (with tool_calls, + reasoning if thinking was on) → tool
+    // (one message per call, matching tool_call_id) → model call again.
+    // Supports parallel tool calls (multiple entries in toolCalls).
+       
+        const searchResults = await Promise.all(
+      toolCalls.map(async (call: any) => {
+        let query = "";
+        try { query = JSON.parse(call.function?.arguments || "{}")?.query || ""; } catch {}
+        if (!query.trim()) {
+          const lastUser = [...messages].reverse().find((m: any) => m.role === "user");
+          query = (typeof lastUser?.content === "string" ? lastUser.content : "").slice(0, 200) || "latest information";
+        }
+        const resultText = await executeWebSearch(query, apiKey);
+        return { tool_call_id: call.id, content: resultText };
+      })
+    );
 
-    const followUpMessages = [
-      ...finalMessages,
-      { role: "user", content: `Here is live web search information for: "${searchQuery}"\n\n${resultText}\n\nUsing this, answer the original question naturally in your own words. Do not mention the search or show any raw data.` },
-    ];
+    const assistantToolTurn: Record<string, any> = {
+      role: "assistant",
+      content: decisionContent || null,
+      tool_calls: toolCalls,
+    };
+    if (wantsThinking && decisionReasoning.trim()) {
+      assistantToolTurn.reasoning = decisionReasoning.trim();
+    }
 
+    const toolResultMessages = searchResults.map((r) => ({
+      role: "tool",
+      tool_call_id: r.tool_call_id,
+      content: r.content,
+    }));
+
+    const followUpMessages = [...finalMessages, assistantToolTurn, ...toolResultMessages];
+
+    // No `tools`/`tool_choice` this round — per official docs, this ensures
+    // the model gives a final natural-language summary instead of trying
+    // to call another tool.
     const followUpRequest: Record<string, any> = {
       model: QWEN_MODEL,
       messages: followUpMessages,
@@ -506,4 +505,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-  }
+    }
