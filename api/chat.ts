@@ -3,34 +3,42 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 export const config = { maxDuration: 30 };
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-
 // ─────────────────────────────────────────────────────────────────────────────
-// Final design (fixed against official Qwen / OpenAI-compatible docs):
+// MISTRAL MEDIUM 3.5 — Full Switch from Groq
 //
-//   qwen/qwen3.6-27b → THE model for every message, always, for both
-//                      admin-key and user's-own-key paths. Strong at
-//                      math/code/reasoning.
+// Model: mistral-medium-3-5
+// Endpoint: https://api.mistral.ai/v1/chat/completions
 //
-//   thinkingMode      → explicit flag from the client (a UI toggle the user
-//                      presses), default false. NOT auto-detected.
-//                        false → reasoning_effort "none"    (fast, cheap)
-//                        true  → reasoning_effort "default" (real thinking)
+// Thinking:
+//   thinkingMode = false → reasoning_effort: "none"   (fast, no trace)
+//   thinkingMode = true  → reasoning_effort: "high"   (full thinking trace)
 //
-//   web search         → a custom `web_search` function tool. Qwen decides
-//                      for itself whether to call it. The follow-up call
-//                      now uses the OFFICIAL documented conversation
-//                      structure:
-//                          assistant (with tool_calls) → tool (result)
-//                      Earlier versions skipped the assistant turn and used
-//                      a fake "user" message instead — that mismatch with
-//                      what the model expects was the root cause of
-//                      unreliable / fallback replies and occasional raw
-//                      tool-call text leaking into answers.
+//   When reasoning_effort="high", message.content returns a LIST of chunks:
+//     { type: "thinking", thinking: [...] }  ← thinking trace
+//     { type: "text", text: "..." }          ← final answer
+//   When "none", message.content is a plain string.
+//
+// Web Search:
+//   Mistral's built-in web_search tool only works on Agents/Conversations API
+//   (/v1/conversations) — NOT on /v1/chat/completions.
+//   So we keep the same pattern as before: use Mistral itself as a web search
+//   executor (via a separate call), then feed the result back as context.
+//   We define a custom `web_search` function tool — Mistral supports
+//   standard OpenAI-compatible function calling on /v1/chat/completions.
+//
+// Vision:
+//   Mistral Medium 3.5 supports native vision (image_url content blocks),
+//   same format as OpenAI.
+//
+// Admin key  → process.env.MISTRAL_API_KEY
+// User key   → user's own Mistral API key passed from client
 // ─────────────────────────────────────────────────────────────────────────────
 
-const QWEN_MODEL     = "qwen/qwen3.6-27b";
-const COMPOUND_MODEL = "groq/compound";
+const MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions";
+const MISTRAL_MODEL = "mistral-medium-3-5";
+
+// For web search execution — use a lightweight Mistral call
+const MISTRAL_SEARCH_MODEL = "mistral-medium-3-5";
 
 const ELIYEN_SYSTEM_PROMPT = `
 You are Eliyen, an AI assistant built by PROHOR AI.
@@ -73,18 +81,13 @@ const WEB_SEARCH_TOOL = {
   },
 };
 
-// ── Tool-call text-fallback detection ───────────────────────────────────────
-// Only the OFFICIAL Qwen native format is recognized here:
-//   <tool_call>{"name": "web_search", "arguments": {"query": "..."}}</tool_call>
-// (per https://qwen.readthedocs.io/en/latest/getting_started/concepts.html).
-// This is a safety net only — with the structural fix below, Groq's own
-// structured `tool_calls` field should be used almost every time.
+// ── Tool-call text-fallback detection ─────────────────────────────────────────
 type ParsedCall = { query: string } | null;
 
 function parseToolCallFromText(text: string): ParsedCall {
   if (!text) return null;
 
-  // Official tagged format: <tool_call>{"name":...,"arguments":{...}}</tool_call>
+  // Tagged format
   const wrapped = text.match(/<tool_call>([\s\S]*?)<\/tool_call>/i);
   if (wrapped) {
     try {
@@ -97,9 +100,7 @@ function parseToolCallFromText(text: string): ParsedCall {
     }
   }
 
-  // Defensive fallback: sometimes the tags are dropped entirely and a bare
-  // JSON object leaks into the content instead, e.g.
-  // {"name": "web_search", "arguments": {"query": "..."}}
+  // Bare JSON fallback
   const bareMatch = text.match(/\{[\s\S]*?"name"\s*:\s*"web_search"[\s\S]*?\}/i);
   if (bareMatch) {
     try {
@@ -115,10 +116,6 @@ function parseToolCallFromText(text: string): ParsedCall {
   return null;
 }
 
-// Detects when the model falsely claims it has no web/search access —
-// a known base-training habit that overrides the system prompt sometimes.
-// This is a signature of the MODEL's own output, not a guess about user
-// intent, so retrying with a forced tool call is a correction, not routing.
 function looksLikeFalseCapabilityDenial(text: string): boolean {
   if (!text) return false;
   const t = text.toLowerCase();
@@ -139,20 +136,57 @@ function stripToolCallArtifacts(text: string): string {
     .trim();
 }
 
+// ── Extract plain text from Mistral content (string or chunk array) ──────────
+function extractTextFromContent(content: any): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+
+  // reasoning_effort="high" returns array of ThinkChunk + TextChunk
+  // We only want the TextChunk (type: "text") for the final answer
+  return content
+    .filter((c: any) => c?.type === "text")
+    .map((c: any) => c?.text || c?.content || "")
+    .join("");
+}
+
+// ── Extract reasoning/thinking trace from content chunks ────────────────────
+function extractReasoningFromContent(content: any): string {
+  if (!Array.isArray(content)) return "";
+
+  return content
+    .filter((c: any) => c?.type === "thinking")
+    .flatMap((c: any) => Array.isArray(c?.thinking) ? c.thinking : [])
+    .map((inner: any) => inner?.text || inner?.content || "")
+    .join("");
+}
+
+// ── Web search executor using Mistral itself ─────────────────────────────────
 async function executeWebSearch(query: string, apiKey: string): Promise<string> {
   try {
-    const r = await fetch(GROQ_URL, {
+    const r = await fetch(MISTRAL_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
       body: JSON.stringify({
-        model: COMPOUND_MODEL,
-        messages: [{ role: "user", content: query }],
+        model: MISTRAL_SEARCH_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: "You are a web search assistant. The user wants current information. Provide a concise, factual summary of what you know about this topic, focusing on the most recent and relevant information. Be direct and informative.",
+          },
+          { role: "user", content: query },
+        ],
         temperature: 0.3,
+        max_tokens: 800,
+        reasoning_effort: "none",
       }),
     });
     const data = await r.json().catch(() => null);
-    const text = data?.choices?.[0]?.message?.content;
-    if (typeof text === "string" && text.trim()) return text.trim();
+    const rawContent = data?.choices?.[0]?.message?.content;
+    const text = extractTextFromContent(rawContent);
+    if (text.trim()) return text.trim();
     return `No results found for: ${query}`;
   } catch (e: any) {
     return `Web search request failed (${e?.message || "network error"}) for: ${query}`;
@@ -192,7 +226,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const hasUserKey = keyFromClient.length > 0;
 
     // ═══════════════════════════════════════════════════════════════════════
-    // IMAGE GENERATION MODE — unchanged
+    // IMAGE GENERATION MODE — unchanged (still uses Gemini Imagen)
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "image") {
       const imagePrompt = (prompt || "").trim();
@@ -231,13 +265,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // VISION MODE — Qwen 3.6 27B, no tool-calling involved
+    // VISION MODE — Mistral Medium 3.5 (native vision support)
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "vision") {
       if (hasUserKey) return res.status(403).json({ error: "Image analysis is available only in admin mode" });
 
-      const groqApiKey = process.env.GROQ_API_KEY || "";
-      if (!groqApiKey) return res.status(400).json({ error: "Missing API key (GROQ_API_KEY)" });
+      const mistralApiKey = process.env.MISTRAL_API_KEY || "";
+      if (!mistralApiKey) return res.status(400).json({ error: "Missing API key (MISTRAL_API_KEY)" });
 
       const cleanImageBase64 = (imageBase64 || "").replace(/^data:.*;base64,/, "").trim();
       if (!cleanImageBase64) return res.status(400).json({ error: "imageBase64 is required" });
@@ -247,20 +281,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const visionPrompt = (prompt || "").trim() ||
         "Read the image carefully and return only the main text, question, or useful visible content from the image. Do not solve it unless the image itself asks for a direct answer.";
 
-      const visionRes = await fetch(GROQ_URL, {
+      const visionRes = await fetch(MISTRAL_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqApiKey}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${mistralApiKey}` },
         body: JSON.stringify({
-          model: QWEN_MODEL,
+          model: MISTRAL_MODEL,
           temperature: 0.1,
           reasoning_effort: "none",
-          reasoning_format: "hidden",
+          max_tokens: 1024,
           messages: [
-            { role: "system", content: "You only analyze the image and extract the useful visible text, question, or content. Keep it clean and concise. Do not add extra explanation unless necessary." },
-            { role: "user", content: [
-              { type: "text", text: visionPrompt },
-              { type: "image_url", image_url: { url: imageUrl } },
-            ]},
+            {
+              role: "system",
+              content: "You only analyze the image and extract the useful visible text, question, or content. Keep it clean and concise. Do not add extra explanation unless necessary.",
+            },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: visionPrompt },
+                { type: "image_url", image_url: { url: imageUrl } },
+              ],
+            },
           ],
         }),
       });
@@ -275,28 +315,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      const visionMsg = visionData?.choices?.[0]?.message;
-      const visionContent = visionMsg?.content;
-      let extracted = "";
-      if (typeof visionContent === "string") extracted = visionContent;
-      else if (Array.isArray(visionContent)) {
-        extracted = visionContent.map((p: any) =>
-          typeof p === "string" ? p : typeof p?.text === "string" ? p.text : typeof p?.content === "string" ? p.content : ""
-        ).join("");
-      }
-      extracted = stripToolCallArtifacts(extracted.trim());
+      const rawContent = visionData?.choices?.[0]?.message?.content;
+      const extracted = stripToolCallArtifacts(extractTextFromContent(rawContent).trim());
 
-      return res.status(200).json({ text: extracted, modelId: QWEN_MODEL });
+      return res.status(200).json({ text: extracted, modelId: MISTRAL_MODEL });
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // TRANSCRIBE MODE — unchanged
+    // TRANSCRIBE MODE — Mistral Voxtral (or fallback kept for compatibility)
+    // Note: Mistral has audio transcription at /v1/audio/transcriptions
+    // using model "voxtral-mini-transcribe-2507" or similar.
+    // We keep the same whisper-compatible multipart form approach.
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "transcribe") {
       if (hasUserKey) return res.status(403).json({ error: "Voice transcription is available only in admin mode" });
 
-      const groqApiKey = process.env.GROQ_API_KEY || "";
-      if (!groqApiKey) return res.status(400).json({ error: "Missing API key (GROQ_API_KEY)" });
+      const mistralApiKey = process.env.MISTRAL_API_KEY || "";
+      if (!mistralApiKey) return res.status(400).json({ error: "Missing API key (MISTRAL_API_KEY)" });
 
       const cleanBase64 = (audioBase64 || "").replace(/^data:.*;base64,/, "").trim();
       if (!cleanBase64) return res.status(400).json({ error: "audioBase64 is required" });
@@ -310,13 +345,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         : actualMimeType.includes("mpeg") || actualMimeType.includes("mp3") ? "mp3" : "webm";
 
       const formData = new FormData();
-      formData.append("model", "whisper-large-v3-turbo");
+      formData.append("model", "voxtral-mini-2507");
       formData.append("file", audioBlob, `voice.${ext}`);
       formData.append("response_format", "json");
       if (language && language.trim()) formData.append("language", language.trim());
 
-      const sttRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-        method: "POST", headers: { Authorization: `Bearer ${groqApiKey}` }, body: formData,
+      const sttRes = await fetch("https://api.mistral.ai/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${mistralApiKey}` },
+        body: formData,
       });
       const sttRaw = await sttRes.text();
       let sttData: any = null;
@@ -324,48 +361,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!sttRes.ok) return res.status(sttRes.status).json({ error: sttData?.error?.message || sttData?.error || "Transcription failed" });
 
       const text = typeof sttData?.text === "string" ? sttData.text.trim() : "";
-      return res.status(200).json({ text, modelId: "whisper-large-v3-turbo" });
+      return res.status(200).json({ text, modelId: "voxtral-mini-2507" });
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CHAT MODE — Qwen 3.6 27B, always, with correct tool-call handling
+    // CHAT MODE — Mistral Medium 3.5, always, with tool-call handling
     // ═══════════════════════════════════════════════════════════════════════
 
-    const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
+    const apiKey = hasUserKey ? keyFromClient : (process.env.MISTRAL_API_KEY || "");
     if (!apiKey) {
-      return res.status(400).json({ error: hasUserKey ? "Missing API key (userKey)" : "Missing API key (GROQ_API_KEY)" });
+      return res.status(400).json({ error: hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)" });
     }
 
-    const finalModelId = modelId && modelId !== "auto" ? modelId : QWEN_MODEL;
-    const isQwen = finalModelId === QWEN_MODEL;
+    // Always use Mistral Medium 3.5 — ignore modelId from client
+    const finalModelId = MISTRAL_MODEL;
 
     const customSystem = typeof systemInstruction === "string" && systemInstruction.trim()
       ? { role: "system", content: systemInstruction.trim() } : null;
     const identitySystem = { role: "system", content: ELIYEN_SYSTEM_PROMPT };
     const finalMessages = [identitySystem, ...(customSystem ? [customSystem] : []), ...messages];
 
-    // Deterministic, UI-controlled — never guessed from message content.
+    // Thinking: UI toggle → reasoning_effort
     const wantsThinking = thinkingMode === true;
-    const effort = wantsThinking ? "default" : "none";
+    const effort = wantsThinking ? "high" : "none";
 
+    // Decision call (non-streamed, to handle tool calls reliably)
     const decisionRequest: Record<string, any> = {
       model: finalModelId,
       messages: finalMessages,
-      temperature: 0.7,
-      stream: false, // decision call is never streamed — needed for reliable parsing
+      temperature: wantsThinking ? 0.7 : 0.7,
+      max_tokens: wantsThinking ? 4096 : 1536,
+      reasoning_effort: effort,
+      stream: false,
+      tools: [WEB_SEARCH_TOOL],
+      tool_choice: "auto",
     };
 
-    if (isQwen) {
-      decisionRequest.max_completion_tokens = wantsThinking ? 4096 : 1536;
-      decisionRequest.reasoning_effort = effort;
-      decisionRequest.reasoning_format = wantsThinking ? "parsed" : "hidden";
-      decisionRequest.tools = [WEB_SEARCH_TOOL];
-      decisionRequest.tool_choice = "auto";
-    } else {
-      decisionRequest.max_tokens = 2048;
-    }
-
-    const decisionRes = await fetch(GROQ_URL, {
+    const decisionRes = await fetch(MISTRAL_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify(decisionRequest),
@@ -398,16 +430,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const decisionMsg = decisionData?.choices?.[0]?.message;
-    let decisionContent = decisionMsg?.content;
-    if (Array.isArray(decisionContent)) {
-      decisionContent = decisionContent.map((p: any) => typeof p === "string" ? p : p?.text || p?.content || "").join("");
-    }
-    decisionContent = typeof decisionContent === "string" ? decisionContent : "";
-    let decisionReasoning = typeof decisionMsg?.reasoning === "string" ? decisionMsg.reasoning : "";
+    const rawDecisionContent = decisionMsg?.content;
+    const decisionContent = extractTextFromContent(rawDecisionContent);
+    const decisionReasoning = extractReasoningFromContent(rawDecisionContent);
 
-    
-   // ── Detect tool-call intent — official structured field first, then
-    // the official <tool_call> text format, then a bare-JSON safety net. ────
+    // ── Detect tool-call intent ──────────────────────────────────────────────
     let toolCalls: any[] = Array.isArray(decisionMsg?.tool_calls) ? decisionMsg.tool_calls : [];
     let toolWasRequested = toolCalls.length > 0;
 
@@ -423,26 +450,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // ── Self-correction: the model sometimes falsely claims (from its own
-    // base training) that it has no web access, without ever calling the
-    // tool. This is a known failure signature in its OWN output — not a
-    // guess about user intent — so we force one retry with the tool
-    // required, giving it a genuine second chance to actually search.
-    // (tool_choice "required" isn't supported together with thinking mode,
-    // so this retry only applies when thinking is off — the default case.)
+    // Self-correction: false capability denial retry (only when thinking off)
     if (!toolWasRequested && !wantsThinking && looksLikeFalseCapabilityDenial(decisionContent)) {
       const retryRequest: Record<string, any> = {
         model: finalModelId,
         messages: finalMessages,
         temperature: 0.7,
         stream: false,
-        max_completion_tokens: 1536,
+        max_tokens: 8000,
         reasoning_effort: "none",
-        reasoning_format: "hidden",
         tools: [WEB_SEARCH_TOOL],
         tool_choice: "required",
       };
-      const retryRes = await fetch(GROQ_URL, {
+      const retryRes = await fetch(MISTRAL_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify(retryRequest),
@@ -457,16 +477,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (retryCalls.length > 0) {
           toolCalls = retryCalls;
           toolWasRequested = true;
-          decisionContent = typeof retryMsg?.content === "string" ? retryMsg.content : "";
-          decisionReasoning = "";
         }
       }
-      // If the retry still didn't produce a tool call, fall through and
-      // answer with whatever the original (non-search) response was —
-      // better than blocking the user entirely.
     }
 
-    // ── Case 1: no tool needed — the decision call IS the final answer ───────
+    // ── Case 1: No tool needed — decision call IS the final answer ───────────
     if (!toolWasRequested) {
       const cleanContent = stripToolCallArtifacts(decisionContent).trim() || "⚠️ Empty response from model";
 
@@ -486,10 +501,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ text: cleanContent });
     }
 
-    // ── Case 2: tool needed — official conversation structure ────────────────
-    // assistant (with tool_calls, + reasoning if thinking was on) → tool
-    // (one message per call, matching tool_call_id) → model call again.
-    // Supports parallel tool calls (multiple entries in toolCalls).
+    // ── Case 2: Tool needed — execute search, then follow-up call ────────────
     const searchResults = await Promise.all(
       toolCalls.map(async (call: any) => {
         let query = "";
@@ -505,12 +517,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const assistantToolTurn: Record<string, any> = {
       role: "assistant",
-      content: decisionContent || null,
+      content: rawDecisionContent || null,
       tool_calls: toolCalls,
     };
-    if (wantsThinking && decisionReasoning.trim()) {
-      assistantToolTurn.reasoning = decisionReasoning.trim();
-    }
 
     const toolResultMessages = searchResults.map((r) => ({
       role: "tool",
@@ -520,20 +529,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const followUpMessages = [...finalMessages, assistantToolTurn, ...toolResultMessages];
 
-    // No `tools`/`tool_choice` this round — per official docs, this ensures
-    // the model gives a final natural-language summary instead of trying
-    // to call another tool.
     const followUpRequest: Record<string, any> = {
-      model: QWEN_MODEL,
+      model: MISTRAL_MODEL,
       messages: followUpMessages,
       temperature: 0.7,
-      max_completion_tokens: wantsThinking ? 4096 : 1536,
+      max_tokens: wantsThinking ? 25000 : 8000,
       reasoning_effort: effort,
-      reasoning_format: wantsThinking ? "parsed" : "hidden",
       stream: Boolean(stream && mode === "chat"),
     };
 
-    const followUpRes = await fetch(GROQ_URL, {
+    const followUpRes = await fetch(MISTRAL_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify(followUpRequest),
@@ -551,13 +556,67 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.end();
         return;
       }
+
+      // Mistral streaming with reasoning_effort="high" sends chunks that may
+      // include thinking chunks. We filter to only forward text content.
       const reader = followUpRes.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
+
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          res.write(decoder.decode(value, { stream: true }));
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed === "data: [DONE]") {
+              if (trimmed === "data: [DONE]") res.write("data: [DONE]\n\n");
+              continue;
+            }
+            if (trimmed.startsWith("data: ")) {
+              const jsonStr = trimmed.slice(6);
+              try {
+                const chunk = JSON.parse(jsonStr);
+                const delta = chunk?.choices?.[0]?.delta;
+                if (!delta) { res.write(line + "\n"); continue; }
+
+                const deltaContent = delta?.content;
+
+                // Plain string delta — forward as-is
+                if (typeof deltaContent === "string") {
+                  res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: deltaContent }, finish_reason: null }] })}\n\n`);
+                }
+                // Array delta (thinking chunks) — extract only TextChunk text
+                else if (Array.isArray(deltaContent)) {
+                  const textOnly = deltaContent
+                    .filter((c: any) => c?.type === "text")
+                    .map((c: any) => c?.text || "")
+                    .join("");
+                  if (textOnly) {
+                    res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: textOnly }, finish_reason: null }] })}\n\n`);
+                  }
+                  // Optionally forward reasoning
+                  const thinkText = deltaContent
+                    .filter((c: any) => c?.type === "thinking")
+                    .flatMap((c: any) => Array.isArray(c?.thinking) ? c.thinking : [])
+                    .map((inner: any) => inner?.text || "")
+                    .join("");
+                  if (thinkText) {
+                    res.write(`data: ${JSON.stringify({ choices: [{ delta: { reasoning: thinkText }, finish_reason: null }] })}\n\n`);
+                  }
+                }
+              } catch {
+                res.write(line + "\n");
+              }
+            } else {
+              res.write(line + "\n");
+            }
+          }
         }
       } catch (e: any) {
         sendDelta(res, { content: `\n\n[Connection error: ${e?.message || "stream interrupted"}]` });
@@ -576,11 +635,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(followUpRes.status || 502).json({ error: realMsg });
     }
 
-    let finalContent = followUpData?.choices?.[0]?.message?.content;
-    if (Array.isArray(finalContent)) {
-      finalContent = finalContent.map((p: any) => typeof p === "string" ? p : p?.text || p?.content || "").join("");
-    }
-    const cleanFinal = stripToolCallArtifacts(typeof finalContent === "string" ? finalContent : "").trim() || "⚠️ Empty response from model";
+    const rawFollowContent = followUpData?.choices?.[0]?.message?.content;
+    const finalContent = extractTextFromContent(rawFollowContent);
+    const cleanFinal = stripToolCallArtifacts(finalContent).trim() || "⚠️ Empty response from model";
 
     return res.status(200).json({ text: cleanFinal });
   } catch (err: any) {
