@@ -151,10 +151,8 @@ const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
   const AUTO_FLASH_ID = "llama-3.3-70b-versatile";
 const AUTO_THINK_ID = "qwen/qwen3-32b";
 const AUTO_WEB_ID = "groq/compound";
-// Admin mode — Groq + Claude mix (user-key/AUTO_* path stays pure Groq for now)
-const ADMIN_DEFAULT_ID = "openai/gpt-oss-120b";
-const ADMIN_THINK_ID = "claude-sonnet-5";
-const ADMIN_MOST_HARD_ID = "claude-fable-5";
+const ADMIN_DEFAULT_ID = "llama-3.3-70b-versatile";
+const ADMIN_THINK_ID = "openai/gpt-oss-120b";
 const ADMIN_WEB_ID = "groq/compound";
 const shouldUseDeepSeek = (text: string) => {
   const t = (text || "").toLowerCase();
@@ -242,25 +240,6 @@ const shouldUseWebSearch = (text: string) => {
     hasUrl
   );
 };
-
-// Temporary word-based detector for the hardest tasks — routes to Fable.
-// Will be replaced by a proper classifier later; keep this simple for now.
-const shouldUseMostHard = (text: string) => {
-  const t = (text || "").toLowerCase();
-
-  const superlativeWords =
-    /\b(most difficult|most complex|most advanced|hardest possible|extremely hard|extremely difficult|extremely complex|super hard|super complex|phd level|expert level|research level|graduate level|highly advanced|state of the art|cutting edge|most challenging|top level|world class|genius level|ultra hard|ultra complex|deep research|comprehensive research)\b/i.test(
-      t
-    );
-
-  const banglaSuperlativeWords =
-    /(সবচেয়ে কঠিন|সবচেয়ে জটিল|অত্যন্ত কঠিন|অত্যন্ত জটিল|সর্বোচ্চ পর্যায়ের|গবেষণা পর্যায়ের|সবচেয়ে চ্যালেঞ্জিং)/i.test(
-      t
-    );
-
-  return superlativeWords || banglaSuperlativeWords;
-};
-
 const pickAutoModelId = (text: string) =>
   shouldUseWebSearch(text)
     ? AUTO_WEB_ID
@@ -490,8 +469,6 @@ setIsLoading(true);
   selectedModel === DEFAULT_MODEL_ID
     ? shouldUseWebSearch(content)
       ? ADMIN_WEB_ID
-      : shouldUseMostHard(content)
-      ? ADMIN_MOST_HARD_ID
       : shouldUseDeepSeek(content)
       ? ADMIN_THINK_ID
       : ADMIN_DEFAULT_ID
@@ -525,8 +502,6 @@ const routeModelId =
   images.length > 0 && !hasUserKey && selectedModel === DEFAULT_MODEL_ID
     ? shouldUseWebSearch(routeContent)
       ? ADMIN_WEB_ID
-      : shouldUseMostHard(routeContent)
-      ? ADMIN_MOST_HARD_ID
       : shouldUseDeepSeek(routeContent)
       ? ADMIN_THINK_ID
       : ADMIN_DEFAULT_ID
@@ -580,7 +555,6 @@ if (BRAIN_MODE === 'new' && ENABLE_AI_BRAIN_CLASSIFIER) {
 const isThinkingModel =
   finalModelId === AUTO_THINK_ID ||
   finalModelId === ADMIN_THINK_ID ||
-  finalModelId === ADMIN_MOST_HARD_ID ||
   finalModelId === ADMIN_WEB_ID;
 
 if (isThinkingModel) {
@@ -649,6 +623,7 @@ updateConversation([...updatedMessages, botMessage]);
     updateConversation(updated);
   };
 
+  
   const handleRegenerate = async () => {
     if (!conversation || conversation.messages.length < 2) return;
     const lastUserIndex = [...conversation.messages].reverse().findIndex(m => m.role === Role.USER);
@@ -668,8 +643,6 @@ const regenModelId =
     : selectedModel === DEFAULT_MODEL_ID
     ? shouldUseWebSearch(lastUserPrompt)
       ? ADMIN_WEB_ID
-      : shouldUseMostHard(lastUserPrompt)
-      ? ADMIN_MOST_HARD_ID
       : shouldUseDeepSeek(lastUserPrompt)
       ? ADMIN_THINK_ID
       : ADMIN_DEFAULT_ID
@@ -677,7 +650,6 @@ const regenModelId =
       const isThinkingModel =
   regenModelId === AUTO_THINK_ID ||
   regenModelId === ADMIN_THINK_ID ||
-  regenModelId === ADMIN_MOST_HARD_ID ||
   regenModelId === ADMIN_WEB_ID;
 
 if (isThinkingModel) {
