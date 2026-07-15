@@ -6,27 +6,36 @@ export const config = { maxDuration: 30 };
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Final design (fixed against official Qwen / OpenAI-compatible docs):
+// Qwen 3.6 27B for everything (chat, thinking, vision) — fixes applied from
+// Groq's own official Tool Use docs + Alibaba's own official example code:
 //
-//   qwen/qwen3.6-27b → THE model for every message, always, for both
-//                      admin-key and user's-own-key paths. Strong at
-//                      math/code/reasoning.
+//  1. Tool-decision call ALWAYS uses reasoning_effort "none", regardless of
+//     the user's thinkingMode toggle. Alibaba's own official function-
+//     calling example uses enable_thinking=False specifically for tool
+//     calls — thinking mode measurably hurts tool-call reliability for
+//     this model family. Thinking (if requested) is applied to the real,
+//     final answer instead — either the follow-up call after a tool
+//     result, or a second no-tools call when no search was needed.
 //
-//   thinkingMode      → explicit flag from the client (a UI toggle the user
-//                      presses), default false. NOT auto-detected.
-//                        false → reasoning_effort "none"    (fast, cheap)
-//                        true  → reasoning_effort "default" (real thinking)
+//  2. Tool result messages now include the required `name` field, matching
+//     Groq's own official example exactly:
+//       { role: "tool", tool_call_id, name, content }
+//     This was missing before — a confirmed, concrete bug.
 //
-//   web search         → a custom `web_search` function tool. Qwen decides
-//                      for itself whether to call it. The follow-up call
-//                      now uses the OFFICIAL documented conversation
-//                      structure:
-//                          assistant (with tool_calls) → tool (result)
-//                      Earlier versions skipped the assistant turn and used
-//                      a fake "user" message instead — that mismatch with
-//                      what the model expects was the root cause of
-//                      unreliable / fallback replies and occasional raw
-//                      tool-call text leaking into answers.
+//  3. The assistant's own tool_calls turn is included in the follow-up
+//     (never skipped), using the correct `role: "tool"` for results (never
+//     a fake "role: user" message) — the official documented structure.
+//
+//  4. A text-based `<tool_call>{"name":...}</tool_call>` fallback parser is
+//     kept as a genuine safety net, not a patch: Qwen's own docs recommend
+//     "Hermes-style" tool use, meaning the model is natively inclined to
+//     emit this exact tagged-JSON text format regardless of the API
+//     wrapper, so this fallback is expected to matter sometimes.
+//
+//  5. qwen/qwen3.6-27b has no Built-In Tools support on Groq (confirmed:
+//     console.groq.com/docs/tool-use/overview) — only Local Tool Calling,
+//     which is what this implements. groq/compound remains the search
+//     executor once Qwen requests it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const QWEN_MODEL     = "qwen/qwen3.6-27b";
@@ -44,10 +53,13 @@ if the app around you supports it. Inside this app you can:
 - Create images when asked to generate, draw, or design something.
 - Transcribe voice input.
 
+You DO have real web search access through your tool. Never say "I can't
+browse the internet", "I don't have access to real-time data", "I can't
+open links", or anything similar — that is false.
+
 How you answer:
 - Keep answers direct and to the point. Don't pad simple questions with unnecessary explanation.
 - If a question depends on current/live/recent facts (news, prices, scores, weather, "today", anything that could have changed recently or is after your training), call the web_search tool to check first rather than guessing from memory.
-- You DO have real web search access through your tool. Never say "I can't browse the internet", "I don't have access to real-time data", "I can't open links", or anything similar — that is false. If you're unsure whether you can answer from memory, call the web_search tool instead of claiming you can't.
 - After a tool result comes back, always write your final answer yourself in plain natural language — never show raw JSON, XML, tool syntax, or code blocks of tool output to the user.
 - Write math in plain, ordinary notation people can read normally: x^2, 1/x, sqrt(x), (a+b), >=, <=. Never output raw LaTeX commands like \\frac, \\sqrt{}, \\ge, or \\[ ... \\].
 - Never mention internal model names, backend routing, or tool implementation details unless the user explicitly asks how the app works technically.
@@ -73,70 +85,24 @@ const WEB_SEARCH_TOOL = {
   },
 };
 
-// ── Tool-call text-fallback detection ───────────────────────────────────────
-// Only the OFFICIAL Qwen native format is recognized here:
-//   <tool_call>{"name": "web_search", "arguments": {"query": "..."}}</tool_call>
-// (per https://qwen.readthedocs.io/en/latest/getting_started/concepts.html).
-// This is a safety net only — with the structural fix below, Groq's own
-// structured `tool_calls` field should be used almost every time.
-type ParsedCall = { query: string } | null;
-
-function parseToolCallFromText(text: string): ParsedCall {
-  if (!text) return null;
-
-  // Official tagged format: <tool_call>{"name":...,"arguments":{...}}</tool_call>
+// Official Hermes-style native format safety net:
+// <tool_call>{"name": "web_search", "arguments": {"query": "..."}}</tool_call>
+function parseToolCallFromText(text: string): { query: string } | null {
+  if (!text || !text.includes("<tool_call")) return null;
   const wrapped = text.match(/<tool_call>([\s\S]*?)<\/tool_call>/i);
-  if (wrapped) {
-    try {
-      const obj = JSON.parse(wrapped[1].trim());
-      let args = obj?.arguments ?? obj;
-      if (typeof args === "string") { try { args = JSON.parse(args); } catch {} }
-      return { query: String(args?.query || args?.q || "") };
-    } catch {
-      return { query: "" };
-    }
+  if (!wrapped) return null;
+  try {
+    const obj = JSON.parse(wrapped[1].trim());
+    let args = obj?.arguments ?? obj;
+    if (typeof args === "string") { try { args = JSON.parse(args); } catch {} }
+    return { query: String(args?.query || args?.q || "") };
+  } catch {
+    return { query: "" };
   }
-
-  // Defensive fallback: sometimes the tags are dropped entirely and a bare
-  // JSON object leaks into the content instead, e.g.
-  // {"name": "web_search", "arguments": {"query": "..."}}
-  const bareMatch = text.match(/\{[\s\S]*?"name"\s*:\s*"web_search"[\s\S]*?\}/i);
-  if (bareMatch) {
-    try {
-      const obj = JSON.parse(bareMatch[0]);
-      let args = obj?.arguments ?? obj;
-      if (typeof args === "string") { try { args = JSON.parse(args); } catch {} }
-      return { query: String(args?.query || args?.q || "") };
-    } catch {
-      return { query: "" };
-    }
-  }
-
-  return null;
-}
-
-// Detects when the model falsely claims it has no web/search access —
-// a known base-training habit that overrides the system prompt sometimes.
-// This is a signature of the MODEL's own output, not a guess about user
-// intent, so retrying with a forced tool call is a correction, not routing.
-function looksLikeFalseCapabilityDenial(text: string): boolean {
-  if (!text) return false;
-  const t = text.toLowerCase();
-  const denialPhrases = [
-    "can't browse", "cannot browse", "can't access the internet", "cannot access the internet",
-    "don't have access to real-time", "do not have access to real-time",
-    "can't open links", "cannot open links", "can't open web", "cannot open web",
-    "no internet access", "i am not able to browse", "i'm not able to browse",
-    "as an ai, i don't have", "as an ai i don't have",
-  ];
-  return denialPhrases.some((p) => t.includes(p));
 }
 
 function stripToolCallArtifacts(text: string): string {
-  return text
-    .replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, "")
-    .replace(/\{[\s\S]*?"name"\s*:\s*"web_search"[\s\S]*?\}/gi, "")
-    .trim();
+  return text.replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, "").trim();
 }
 
 async function executeWebSearch(query: string, apiKey: string): Promise<string> {
@@ -161,6 +127,18 @@ async function executeWebSearch(query: string, apiKey: string): Promise<string> 
 
 function sendDelta(res: VercelResponse, delta: Record<string, any>) {
   res.write(`data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`);
+}
+
+async function callGroq(apiKey: string, payload: Record<string, any>) {
+  const r = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ ...payload, stream: false }),
+  });
+  const raw = await r.text();
+  let data: any = null;
+  try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+  return { ok: r.ok, status: r.status, raw, data };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -231,7 +209,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // VISION MODE — Qwen 3.6 27B, no tool-calling involved
+    // VISION MODE — Qwen 3.6 27B
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "vision") {
       if (hasUserKey) return res.status(403).json({ error: "Image analysis is available only in admin mode" });
@@ -328,7 +306,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CHAT MODE — Qwen 3.6 27B, always, with correct tool-call handling
+    // CHAT MODE
     // ═══════════════════════════════════════════════════════════════════════
 
     const apiKey = hasUserKey ? keyFromClient : (process.env.GROQ_API_KEY || "");
@@ -337,45 +315,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const finalModelId = modelId && modelId !== "auto" ? modelId : QWEN_MODEL;
-    const isQwen = finalModelId === QWEN_MODEL;
 
     const customSystem = typeof systemInstruction === "string" && systemInstruction.trim()
       ? { role: "system", content: systemInstruction.trim() } : null;
     const identitySystem = { role: "system", content: ELIYEN_SYSTEM_PROMPT };
     const finalMessages = [identitySystem, ...(customSystem ? [customSystem] : []), ...messages];
 
-    // Deterministic, UI-controlled — never guessed from message content.
     const wantsThinking = thinkingMode === true;
-    const effort = wantsThinking ? "default" : "none";
 
-    const decisionRequest: Record<string, any> = {
+    // ── Step 1 — tool-decision call. Thinking is ALWAYS off here, matching
+    // Alibaba's own official example for reliable function calling. ────────
+    const decisionResult = await callGroq(apiKey, {
       model: finalModelId,
       messages: finalMessages,
       temperature: 0.7,
-      stream: false, // decision call is never streamed — needed for reliable parsing
-    };
-
-    if (isQwen) {
-      decisionRequest.max_completion_tokens = wantsThinking ? 4096 : 1536;
-      decisionRequest.reasoning_effort = effort;
-      decisionRequest.reasoning_format = wantsThinking ? "parsed" : "hidden";
-      decisionRequest.tools = [WEB_SEARCH_TOOL];
-      decisionRequest.tool_choice = "auto";
-    } else {
-      decisionRequest.max_tokens = 2048;
-    }
-
-    const decisionRes = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify(decisionRequest),
+      max_completion_tokens: 1536,
+      reasoning_effort: "none",
+      reasoning_format: "hidden",
+      tools: [WEB_SEARCH_TOOL],
+      tool_choice: "auto",
     });
-    const decisionText = await decisionRes.text();
-    let decisionData: any = null;
-    try { decisionData = decisionText ? JSON.parse(decisionText) : null; } catch { decisionData = null; }
 
-    if (!decisionRes.ok) {
-      const realMsg = decisionData?.error?.message || decisionData?.error || decisionText.slice(0, 300) || `Upstream error (HTTP ${decisionRes.status})`;
+    if (!decisionResult.ok || !decisionResult.data) {
+      const realMsg = decisionResult.data?.error?.message || decisionResult.data?.error || decisionResult.raw.slice(0, 300) || `Upstream error (HTTP ${decisionResult.status})`;
       if (mode === "chat" && stream) {
         res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
         sendDelta(res, { content: `⚠️ ${realMsg}` });
@@ -383,31 +345,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.end();
         return;
       }
-      return res.status(decisionRes.status || 502).json({ error: realMsg });
-    }
-    if (!decisionData) {
-      const realMsg = decisionText.slice(0, 300) || "Invalid response from provider";
-      if (mode === "chat" && stream) {
-        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-        sendDelta(res, { content: `⚠️ ${realMsg}` });
-        res.write("data: [DONE]\n\n");
-        res.end();
-        return;
-      }
-      return res.status(502).json({ error: realMsg });
+      return res.status(decisionResult.status || 502).json({ error: realMsg });
     }
 
-    const decisionMsg = decisionData?.choices?.[0]?.message;
+    const decisionMsg = decisionResult.data?.choices?.[0]?.message;
     let decisionContent = decisionMsg?.content;
     if (Array.isArray(decisionContent)) {
       decisionContent = decisionContent.map((p: any) => typeof p === "string" ? p : p?.text || p?.content || "").join("");
     }
     decisionContent = typeof decisionContent === "string" ? decisionContent : "";
-    let decisionReasoning = typeof decisionMsg?.reasoning === "string" ? decisionMsg.reasoning : "";
 
-    
-    // ── Detect tool-call intent — official structured field first, then
-    // the official <tool_call> text format, then a bare-JSON safety net. ────
     let toolCalls: any[] = Array.isArray(decisionMsg?.tool_calls) ? decisionMsg.tool_calls : [];
     let toolWasRequested = toolCalls.length > 0;
 
@@ -423,60 +370,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // ── Self-correction: the model sometimes falsely claims (from its own
-    // base training) that it has no web access, without ever calling the
-    // tool. This is a known failure signature in its OWN output — not a
-    // guess about user intent — so we force one retry with the tool
-    // required, giving it a genuine second chance to actually search.
-    // (tool_choice "required" isn't supported together with thinking mode,
-    // so this retry only applies when thinking is off — the default case.)
-    if (!toolWasRequested && !wantsThinking && looksLikeFalseCapabilityDenial(decisionContent)) {
-      const retryRequest: Record<string, any> = {
-        model: finalModelId,
-        messages: finalMessages,
-        temperature: 0.7,
-        stream: false,
-        max_completion_tokens: 1536,
-        reasoning_effort: "none",
-        reasoning_format: "hidden",
-        tools: [WEB_SEARCH_TOOL],
-        tool_choice: "required",
-      };
-      const retryRes = await fetch(GROQ_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify(retryRequest),
-      });
-      const retryText = await retryRes.text();
-      let retryData: any = null;
-      try { retryData = retryText ? JSON.parse(retryText) : null; } catch { retryData = null; }
-
-      if (retryRes.ok && retryData) {
-        const retryMsg = retryData?.choices?.[0]?.message;
-        const retryCalls = Array.isArray(retryMsg?.tool_calls) ? retryMsg.tool_calls : [];
-        if (retryCalls.length > 0) {
-          toolCalls = retryCalls;
-          toolWasRequested = true;
-          decisionContent = typeof retryMsg?.content === "string" ? retryMsg.content : "";
-          decisionReasoning = "";
-        }
-      }
-      // If the retry still didn't produce a tool call, fall through and
-      // answer with whatever the original (non-search) response was —
-      // better than blocking the user entirely.
-    }
-
-    // ── Case 1: no tool needed — the decision call IS the final answer ───────
+    // ── Case 1: no tool needed ────────────────────────────────────────────────
     if (!toolWasRequested) {
-      const cleanContent = stripToolCallArtifacts(decisionContent).trim() || "⚠️ Empty response from model";
+      // If the user asked for thinking mode, this no-think decision call
+      // isn't the answer they want yet — get a real, thought-out answer now.
+      if (wantsThinking) {
+        const thinkResult = await callGroq(apiKey, {
+          model: QWEN_MODEL,
+          messages: finalMessages,
+          temperature: 0.7,
+          max_completion_tokens: 4096,
+          reasoning_effort: "default",
+          reasoning_format: "parsed",
+        });
 
-      if (mode === "chat" && stream) {
-        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-        res.setHeader("Cache-Control", "no-cache, no-transform");
-        res.setHeader("Connection", "keep-alive");
-        if (decisionReasoning.trim()) sendDelta(res, { reasoning: decisionReasoning.trim() });
-        const chunkSize = 28;
-        for (let i = 0; i < cleanContent.length; i += chunkSize) {
+        if (!thinkResult.ok || !thinkResult.data) {
+          const realMsg = thinkResult.data?.error?.message || thinkResult.raw.slice(0, 300) || "Thinking call failed";
+          if (mode === "chat" && stream) {
+            res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+            sendDelta(res, { content: `⚠️ ${realMsg}` });
+            res.write("data: [DONE]\n\n");
+            res.end();
+            return;
+          }
+          return res.status(thinkResult.status || 502).json({ error: realMsg });
+        }
+
+        const thinkMsg = thinkResult.data?.choices?.[0]?.message;
+        let thinkContent = thinkMsg?.content;
+        if (Array.isArray(thinkContent)) {
+          thinkContent = thinkContent.map((p: any) => typeof p === "string" ? p : p?.text || p?.content || "").join("");
+        }
+        const cleanThink = stripToolCallArtifacts(typeof thinkContent === "string" ? thinkContent : "").trim() || "⚠️ Empty response from model";
+        const thinkReasoning = typeof thinkMsg?.reasoning === "string" ? thinkMsg.reasoning : "";
+
+        if (mode === "chat" && stream) {
+          res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+          res.setHeader("Cache-Control", "no-cache, no-transform");
+          res.setHeader("Connection", "keep-alive");
+          if (thinkReasoning.trim()) sendDelta(res, { reasoning: thinkReasoning.trim() });
+          const chunkSize = 28;
+  
+               for (let i = 0; i < cleanContent.length; i += chunkSize) {
           sendDelta(res, { content: cleanContent.slice(i, i + chunkSize) });
         }
         res.write("data: [DONE]\n\n");
@@ -486,10 +421,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ text: cleanContent });
     }
 
-    // ── Case 2: tool needed — official conversation structure ────────────────
-    // assistant (with tool_calls, + reasoning if thinking was on) → tool
-    // (one message per call, matching tool_call_id) → model call again.
-    // Supports parallel tool calls (multiple entries in toolCalls).
+    // ── Case 2: tool needed — official structure, WITH the required `name`
+    // field on each tool result message (the confirmed missing piece). ──────
     const searchResults = await Promise.all(
       toolCalls.map(async (call: any) => {
         let query = "";
@@ -499,7 +432,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           query = (typeof lastUser?.content === "string" ? lastUser.content : "").slice(0, 200) || "latest information";
         }
         const resultText = await executeWebSearch(query, apiKey);
-        return { tool_call_id: call.id, content: resultText };
+        return {
+          tool_call_id: call.id,
+          name: call.function?.name || "web_search",
+          content: resultText,
+        };
       })
     );
 
@@ -508,41 +445,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       content: decisionContent || null,
       tool_calls: toolCalls,
     };
-    if (wantsThinking && decisionReasoning.trim()) {
-      assistantToolTurn.reasoning = decisionReasoning.trim();
-    }
 
     const toolResultMessages = searchResults.map((r) => ({
       role: "tool",
       tool_call_id: r.tool_call_id,
+      name: r.name,
       content: r.content,
     }));
 
     const followUpMessages = [...finalMessages, assistantToolTurn, ...toolResultMessages];
 
-    // No `tools`/`tool_choice` this round — per official docs, this ensures
-    // the model gives a final natural-language summary instead of trying
-    // to call another tool.
-    const followUpRequest: Record<string, any> = {
+    // Thinking (if the user asked for it) applies here — the real answer,
+    // now grounded with search results. No tools this round, so the model
+    // must give a final natural-language answer.
+    const followUpPayload: Record<string, any> = {
       model: QWEN_MODEL,
       messages: followUpMessages,
       temperature: 0.7,
       max_completion_tokens: wantsThinking ? 4096 : 1536,
-      reasoning_effort: effort,
+      reasoning_effort: wantsThinking ? "default" : "none",
       reasoning_format: wantsThinking ? "parsed" : "hidden",
-      stream: Boolean(stream && mode === "chat"),
     };
-
-    const followUpRes = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify(followUpRequest),
-    });
 
     if (mode === "chat" && stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
+
+      const followUpRes = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ ...followUpPayload, stream: true }),
+      });
 
       if (!followUpRes.ok || !followUpRes.body) {
         const errText = await followUpRes.text();
@@ -566,17 +500,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    // Non-streaming follow-up
-    const followUpRaw = await followUpRes.text();
-    let followUpData: any = null;
-    try { followUpData = followUpRaw ? JSON.parse(followUpRaw) : null; } catch { followUpData = null; }
+    const followUpResult = await callGroq(apiKey, followUpPayload);
 
-    if (!followUpRes.ok || !followUpData) {
-      const realMsg = followUpData?.error?.message || followUpData?.error || followUpRaw.slice(0, 300) || "Search follow-up failed";
-      return res.status(followUpRes.status || 502).json({ error: realMsg });
+    if (!followUpResult.ok || !followUpResult.data) {
+      const realMsg = followUpResult.data?.error?.message || followUpResult.raw.slice(0, 300) || "Search follow-up failed";
+      return res.status(followUpResult.status || 502).json({ error: realMsg });
     }
 
-    let finalContent = followUpData?.choices?.[0]?.message?.content;
+    let finalContent = followUpResult.data?.choices?.[0]?.message?.content;
     if (Array.isArray(finalContent)) {
       finalContent = finalContent.map((p: any) => typeof p === "string" ? p : p?.text || p?.content || "").join("");
     }
@@ -586,4 +517,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-      }
+            }
