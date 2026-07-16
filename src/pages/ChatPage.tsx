@@ -148,12 +148,12 @@ const updatedConv: Conversation = conversation
     if (!id) navigate(`/chat/${currentId}`);
   };
 const isBangla = (text: string) => /[\u0980-\u09FF]/.test(text);
-  const AUTO_FLASH_ID = "mistral-medium-3-5";
-const AUTO_THINK_ID = "mistral-medium-3-5";
-const AUTO_WEB_ID = "mistral-medium-3-5";
-const ADMIN_DEFAULT_ID = "mistral-medium-3-5";
-const ADMIN_THINK_ID = "mistral-medium-3-5";
-const ADMIN_WEB_ID = "mistral-medium-3-5";
+  const AUTO_FLASH_ID = "auto"; // backend now defaults this to Mistral Medium 3.5
+const AUTO_THINK_ID = "qwen/qwen3-32b";
+const AUTO_WEB_ID = "groq/compound";
+const ADMIN_DEFAULT_ID = "auto"; // backend now defaults this to Mistral Medium 3.5
+const ADMIN_THINK_ID = "openai/gpt-oss-120b";
+const ADMIN_WEB_ID = "groq/compound";
 const shouldUseDeepSeek = (text: string) => {
   const t = (text || "").toLowerCase();
   const hasDigit = /[0-9০-৯]/.test(t);
@@ -599,7 +599,7 @@ updateConversation([...updatedMessages, botMessage]);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: Role.MODEL,
-        content: !navigator.onLine ? "No internet connection. Please check your internet connection." : `Error: ${((error as any)?.message || "Mistral API Error")}`,
+        content: !navigator.onLine ? "No internet connection. Please check your internet connection." : `Error: ${((error as any)?.message || "Groq API Error")}`,
         timestamp: Date.now()
       };
       updateConversation([...updatedMessages, errorMessage]);
@@ -623,7 +623,6 @@ updateConversation([...updatedMessages, botMessage]);
     updateConversation(updated);
   };
 
-                          
   const handleRegenerate = async () => {
     if (!conversation || conversation.messages.length < 2) return;
     const lastUserIndex = [...conversation.messages].reverse().findIndex(m => m.role === Role.USER);
@@ -946,3 +945,4 @@ updateConversation([...previousMessages, botMessage]);
 };
 
 export default ChatPage;      
+  
