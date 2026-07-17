@@ -3,101 +3,109 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 export const config = { maxDuration: 30 };
 
-const MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions";
+const MISTRAL_AGENTS_URL = "https://api.mistral.ai/v1/agents";
+const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/conversations";
+const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_MODEL = "mistral-medium-latest"; // currently resolves to Mistral Medium 3.5
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const COMPOUND_MODEL = "groq/compound";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CORRECTED — Mistral's built-in `{"type":"web_search"}` connector only
-// works on their Conversations/Agents API, NOT on the standard
-// `/v1/chat/completions` endpoint this file uses (confirmed directly from
-// Mistral's own docs — that's why every message was failing with
-// "WebSearchTool connector is not supported").
+// CORRECTED, using Mistral's REAL native web_search — no Groq involved for
+// search anymore. Confirmed from Mistral's own official docs:
+//   - web_search / web_search_premium only work on the Conversations API
+//     (/v1/conversations) and the Agents API — NOT on Chat Completions.
+//   - Tools like web_search are configured on an Agent (created once via
+//     POST /v1/agents), then every conversation uses that agent_id.
 //
-// Fix: standard CUSTOM function-calling instead (fully supported on
-// `/v1/chat/completions`, well documented, same simple stateless pattern
-// used everywhere else in this file). Mistral decides for itself whether
-// to call it — same "model decides" philosophy, just via a normal function
-// definition instead of the unsupported built-in connector. When it calls
-// the function, we execute the real search via groq/compound (already
-// proven reliable) and hand the result back.
+// This file auto-creates (and caches, per warm serverless instance) one
+// websearch-enabled agent, then sends every chat message through
+// POST /v1/conversations using that agent — no manual setup step needed.
+//
+// Each call is treated as a fresh, stateless "start" with the full message
+// history as `inputs` (store: false) — same stateless pattern as before;
+// the client (Android/web) still owns and resends full history, Mistral's
+// cloud never persists it.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ELIYEN_SYSTEM_PROMPT = `
+const ELIYEN_INSTRUCTIONS = `
 You are Eliyen, an AI assistant built by PROHOR AI.
 
 You always know your own capabilities — you never have to guess, hedge, or say
 "I can't do that" just because you personally don't perform a step directly,
 if the app around you supports it. Inside this app you can:
 - Hold normal conversations, help with writing, coding, math, study, translation, and social media content.
-- Search the web yourself when a question needs live, current, or recent information, by calling your web_search tool.
+- Search the web yourself when a question needs live, current, or recent information.
 - Read and analyze photos and PDF documents the user sends you.
 - Create images when asked to generate, draw, or design something.
 - Transcribe voice input.
 
 How you answer:
 - Keep answers direct and to the point. Don't pad simple questions with unnecessary explanation.
-- If a question depends on current/live/recent facts (news, prices, scores, weather, "today", anything that could have changed recently or is after your training), call the web_search tool to check first rather than guessing from memory.
-- After a tool result comes back, write your final answer yourself in plain natural language — never show raw JSON or tool syntax to the user.
+- If a question depends on current/live/recent facts (news, prices, scores, weather, "today", anything that could have changed recently or is after your training), search the web to check first rather than guessing from memory.
 - Write math in plain, ordinary notation people can read normally: x^2, 1/x, sqrt(x), (a+b), >=, <=. Never output raw LaTeX commands like \\frac, \\sqrt{}, \\ge, or \\[ ... \\].
 - Never mention internal model names, backend routing, or tool implementation details unless the user explicitly asks how the app works technically.
 - Be warm, direct, and genuinely helpful — like a sharp, knowledgeable friend, not a corporate script.
 `.trim();
 
-const WEB_SEARCH_TOOL = {
-  type: "function",
-  function: {
-    name: "web_search",
-    description:
-      "Search the live web for current, recent, or real-time information — news, prices, scores, dates, facts that may have changed recently, or anything your own knowledge might be outdated on. Only call this when the question genuinely needs it.",
-    parameters: {
-      type: "object",
-      properties: {
-        query: {
-          type: "string",
-          description: "A short, specific search query capturing what needs to be looked up.",
-        },
-      },
-      required: ["query"],
-    },
-  },
-};
+// Cached across warm invocations of the same serverless instance. On a cold
+// start this will be empty again and a fresh agent gets created — cheap and
+// harmless, just avoids needing any manual one-time setup step.
+let cachedAgentId: string | null = null;
 
-async function executeWebSearch(query: string, groqApiKey: string): Promise<string> {
-  try {
-    const r = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqApiKey}` },
-      body: JSON.stringify({
-        model: COMPOUND_MODEL,
-        messages: [{ role: "user", content: query }],
-        temperature: 0.3,
-      }),
-    });
-    const data = await r.json().catch(() => null);
-    const text = data?.choices?.[0]?.message?.content;
-    if (typeof text === "string" && text.trim()) return text.trim();
-    return `No results found for: ${query}`;
-  } catch (e: any) {
-    return `Web search request failed (${e?.message || "network error"}) for: ${query}`;
+async function getOrCreateWebsearchAgent(apiKey: string): Promise<string> {
+  if (cachedAgentId) return cachedAgentId;
+
+  const res = await fetch(MISTRAL_AGENTS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: MISTRAL_MODEL,
+      name: "Eliyen Agent",
+      description: "Eliyen's main assistant agent with live web search access.",
+      instructions: ELIYEN_INSTRUCTIONS,
+      tools: [{ type: "web_search" }],
+    }),
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.id) {
+    throw new Error(data?.message || data?.error?.message || `Failed to create agent (HTTP ${res.status})`);
   }
+
+  cachedAgentId = data.id;
+  return cachedAgentId;
 }
 
 function sendDelta(res: VercelResponse, delta: Record<string, any>) {
   res.write(`data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`);
 }
 
-async function callMistral(apiKey: string, payload: Record<string, any>) {
-  const r = await fetch(MISTRAL_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ ...payload, stream: false }),
-  });
-  const raw = await r.text();
-  let data: any = null;
-  try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
-  return { ok: r.ok, status: r.status, raw, data };
+function writeFakeStream(res: VercelResponse, content: string) {
+  const chunkSize = 28;
+  for (let i = 0; i < content.length; i += chunkSize) {
+    sendDelta(res, { content: content.slice(i, i + chunkSize) });
+  }
+  res.write("data: [DONE]\n\n");
+  res.end();
+}
+
+// Extracts plain text from a Conversations API response's `outputs` array —
+// pulls every `message.output` entry's text chunks and joins them.
+function extractConversationText(data: any): string {
+  const outputs = Array.isArray(data?.outputs) ? data.outputs : [];
+  const messageOutputs = outputs.filter((o: any) => o?.type === "message.output");
+  let text = "";
+  for (const out of messageOutputs) {
+    const content = out?.content;
+    if (typeof content === "string") {
+      text += content;
+    } else if (Array.isArray(content)) {
+      for (const chunk of content) {
+        if (typeof chunk === "string") text += chunk;
+        else if (chunk?.type === "text" && typeof chunk?.text === "string") text += chunk.text;
+      }
+    }
+  }
+  return text.trim();
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -168,7 +176,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // VISION MODE — Mistral Medium 3.5 (native multimodal, no tools needed)
+    // VISION MODE — plain Chat Completions (native multimodal, no search
+    // needed here, so the simpler endpoint is fine and faster). ─────────────
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "vision") {
       if (hasUserKey) return res.status(403).json({ error: "Image analysis is available only in admin mode" });
@@ -184,7 +193,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const visionPrompt = (prompt || "").trim() ||
         "Read the image carefully and return only the main text, question, or useful visible content from the image. Do not solve it unless the image itself asks for a direct answer.";
 
-      const visionRes = await fetch(MISTRAL_URL, {
+      const visionRes = await fetch(MISTRAL_CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${mistralApiKey}` },
         body: JSON.stringify({
@@ -262,38 +271,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CHAT MODE — Mistral Medium 3.5, custom function-calling for search
+    // CHAT MODE — Mistral Conversations API, real native web_search
     // ═══════════════════════════════════════════════════════════════════════
 
     const mistralApiKey = hasUserKey ? keyFromClient : (process.env.MISTRAL_API_KEY || "");
-    const groqApiKeyForSearch = process.env.GROQ_API_KEY || "";
     if (!mistralApiKey) {
       return res.status(400).json({ error: hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)" });
     }
 
-    const finalModelId = modelId && modelId !== "auto" ? modelId : MISTRAL_MODEL;
-
-    const customSystem = typeof systemInstruction === "string" && systemInstruction.trim()
-      ? { role: "system", content: systemInstruction.trim() } : null;
-    const identitySystem = { role: "system", content: ELIYEN_SYSTEM_PROMPT };
-    const finalMessages = [identitySystem, ...(customSystem ? [customSystem] : []), ...messages];
-
     const wantsThinking = thinkingMode === true;
 
-    // ── Step 1 — decision call, custom function tool (not the unsupported
-    // built-in connector). Mistral decides for itself whether to call it. ───
-    const decisionResult = await callMistral(mistralApiKey, {
-      model: finalModelId,
-      messages: finalMessages,
-      temperature: 0.7,
-      max_tokens: wantsThinking ? 4096 : 1536,
-      reasoning_effort: wantsThinking ? "high" : "none",
-      tools: [WEB_SEARCH_TOOL],
-      tool_choice: "auto",
+    let agentId: string;
+    try {
+      agentId = await getOrCreateWebsearchAgent(mistralApiKey);
+    } catch (e: any) {
+      const msg = e?.message || "Failed to prepare Mistral agent";
+      if (mode === "chat" && stream) {
+        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+        sendDelta(res, { content: `⚠️ ${msg}` });
+        res.write("data: [DONE]\n\n");
+        res.end();
+        return;
+      }
+      return res.status(502).json({ error: msg });
+    }
+
+    // Any per-request custom system content (e.g. category prompts from the
+    // client) is layered on top of the agent's own base instructions.
+    const customSystem = typeof systemInstruction === "string" && systemInstruction.trim()
+      ? [{ role: "system", content: systemInstruction.trim() }] : [];
+
+    const conversationInputs = [
+      ...customSystem,
+      ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+    ];
+
+    const conversationBody: Record<string, any> = {
+      agent_id: agentId,
+      inputs: conversationInputs,
+      store: false, // stateless — client already resends full history each time
+      completion_args: {
+        temperature: 0.7,
+        reasoning_effort: wantsThinking ? "high" : "none",
+      },
+    };
+
+    const convRes = await fetch(MISTRAL_CONVERSATIONS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${mistralApiKey}` },
+      body: JSON.stringify(conversationBody),
     });
 
-    if (!decisionResult.ok || !decisionResult.data) {
-      const realMsg = decisionResult.data?.error?.message || decisionResult.data?.message || decisionResult.raw.slice(0, 300) || `Upstream error (HTTP ${decisionResult.status})`;
+    const convRaw = await convRes.text();
+    let convData: any = null;
+    try { convData = convRaw ? JSON.parse(convRaw) : null; } catch { convData = null; }
+
+    if (!convRes.ok || !convData) {
+      const realMsg = convData?.message || convData?.error?.message || convRaw.slice(0, 300) || `Upstream error (HTTP ${convRes.status})`;
       if (mode === "chat" && stream) {
         res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
         sendDelta(res, { content: `⚠️ ${realMsg}` });
@@ -301,141 +335,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.end();
         return;
       }
-      return res.status(decisionResult.status || 502).json({ error: realMsg });
+      return res.status(convRes.status || 502).json({ error: realMsg });
     }
 
-    const decisionMsg = decisionResult.data?.choices?.[0]?.message;
-    let decisionContent = decisionMsg?.content;
-    if (Array.isArray(decisionContent)) {
-      decisionContent = decisionContent.map((p: any) => typeof p === "string" ? p : p?.text || "").join("");
-    }
-    decisionContent = typeof decisionContent === "string" ? decisionContent : "";
-
-    const toolCalls: any[] = Array.isArray(decisionMsg?.tool_calls) ? decisionMsg.tool_calls : [];
-    const toolWasRequested = toolCalls.length > 0;
-
-    // ── Case 1: no tool needed — the decision call IS the final answer ───────
-    if (!toolWasRequested) {
-      const cleanContent = decisionContent.trim() || "⚠️ Empty response from model";
-
-      if (mode === "chat" && stream) {
-        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-        res.setHeader("Cache-Control", "no-cache, no-transform");
-        res.setHeader("Connection", "keep-alive");
-        const chunkSize = 28;
-        for (let i = 0; i < cleanContent.length; i += chunkSize) {
-          sendDelta(res, { content: cleanContent.slice(i, i + chunkSize) });
-        }
-        res.write("data: [DONE]\n\n");
-        res.end();
-        return;
-      }
-      return res.status(200).json({ text: cleanContent });
-    }
-
-    // ── Case 2: tool needed — execute via groq/compound, then let Mistral
-    // write the real final answer with the official message structure. ──────
-    if (!groqApiKeyForSearch) {
-      const msg = "Web search is temporarily unavailable (missing GROQ_API_KEY for search execution).";
-      if (mode === "chat" && stream) {
-        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-        sendDelta(res, { content: msg });
-        res.write("data: [DONE]\n\n");
-        res.end();
-        return;
-      }
-      return res.status(200).json({ text: msg });
-    }
-
-    const searchResults = await Promise.all(
-      toolCalls.map(async (call: any) => {
-        let query = "";
-        try { query = JSON.parse(call.function?.arguments || "{}")?.query || ""; } catch {}
-        if (!query.trim()) {
-          const lastUser = [...messages].reverse().find((m: any) => m.role === "user");
-          query = (typeof lastUser?.content === "string" ? lastUser.content : "").slice(0, 200) || "latest information";
-        }
-        const resultText = await executeWebSearch(query, groqApiKeyForSearch);
-        return {
-          tool_call_id: call.id,
-          name: call.function?.name || "web_search",
-          content: resultText,
-        };
-      })
-    );
-
-    const assistantToolTurn: Record<string, any> = {
-      role: "assistant",
-      content: decisionContent || null,
-      tool_calls: toolCalls,
-    };
-
-    const toolResultMessages = searchResults.map((r) => ({
-      role: "tool",
-      tool_call_id: r.tool_call_id,
-      name: r.name,
-      content: r.content,
-    }));
-
-    const followUpMessages = [...finalMessages, assistantToolTurn, ...toolResultMessages];
-
-    const followUpPayload: Record<string, any> = {
-      model: finalModelId,
-      messages: followUpMessages,
-      temperature: 0.7,
-      max_tokens: wantsThinking ? 4096 : 1536,
-      reasoning_effort: wantsThinking ? "high" : "none",
-    };
+    const finalText = extractConversationText(convData) || "⚠️ Empty response from model";
 
     if (mode === "chat" && stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
-
-      const followUpRes = await fetch(MISTRAL_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${mistralApiKey}` },
-        body: JSON.stringify({ ...followUpPayload, stream: true }),
-      });
-
-      if (!followUpRes.ok || !followUpRes.body) {
-        const errText = await followUpRes.text();
-        sendDelta(res, { content: `⚠️ Search follow-up failed: ${errText.slice(0, 200) || followUpRes.status}` });
-        res.write("data: [DONE]\n\n");
-        res.end();
-        return;
-      }
-      const reader = followUpRes.body.getReader();
-      const decoder = new TextDecoder();
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          res.write(decoder.decode(value, { stream: true }));
-        }
-      } catch (e: any) {
-        sendDelta(res, { content: `\n\n[Connection error: ${e?.message || "stream interrupted"}]` });
-      }
-      res.end();
+      writeFakeStream(res, finalText);
       return;
     }
 
-    const followUpResult = await callMistral(mistralApiKey, followUpPayload);
-
-    if (!followUpResult.ok || !followUpResult.data) {
-      const realMsg = followUpResult.data?.error?.message || followUpResult.raw.slice(0, 300) || "Search follow-up failed";
-      return res.status(followUpResult.status || 502).json({ error: realMsg });
-    }
-
-    
-    let finalContent = followUpResult.data?.choices?.[0]?.message?.content;
-    if (Array.isArray(finalContent)) {
-      finalContent = finalContent.map((p: any) => typeof p === "string" ? p : p?.text || "").join("");
-    }
-    const cleanFinal = (typeof finalContent === "string" ? finalContent : "").trim() || "⚠️ Empty response from model";
-
-    return res.status(200).json({ text: cleanFinal });
+    return res.status(200).json({ text: finalText });
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-                        }
+  }
