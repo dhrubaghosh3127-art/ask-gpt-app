@@ -9,21 +9,18 @@ const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_MODEL = "mistral-medium-latest"; // currently resolves to Mistral Medium 3.5
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CORRECTED, using Mistral's REAL native web_search — no Groq involved for
-// search anymore. Confirmed from Mistral's own official docs:
-//   - web_search / web_search_premium only work on the Conversations API
-//     (/v1/conversations) and the Agents API — NOT on Chat Completions.
-//   - Tools like web_search are configured on an Agent (created once via
-//     POST /v1/agents), then every conversation uses that agent_id.
+// Mistral Medium 3.5 — real native web_search (official docs confirmed:
+// web_search only works on the Conversations API, /v1/conversations, via an
+// Agent that has the tool attached — not on plain Chat Completions).
 //
-// This file auto-creates (and caches, per warm serverless instance) one
-// websearch-enabled agent, then sends every chat message through
-// POST /v1/conversations using that agent — no manual setup step needed.
+// Same overall file shape/contract as before (mode branching, request/response
+// contract with Android & web, error handling pattern) — only the provider
+// underneath chat mode changed.
 //
-// Each call is treated as a fresh, stateless "start" with the full message
-// history as `inputs` (store: false) — same stateless pattern as before;
-// the client (Android/web) still owns and resends full history, Mistral's
-// cloud never persists it.
+// Agent: if MISTRAL_AGENT_ID is set (recommended — create it once, see
+// bottom of file for the one-time setup command), that's used directly —
+// zero extra API calls per message. If not set, one gets auto-created and
+// cached in memory for the life of this warm serverless instance.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ELIYEN_INSTRUCTIONS = `
@@ -46,12 +43,34 @@ How you answer:
 - Be warm, direct, and genuinely helpful — like a sharp, knowledgeable friend, not a corporate script.
 `.trim();
 
-// Cached across warm invocations of the same serverless instance. On a cold
-// start this will be empty again and a fresh agent gets created — cheap and
-// harmless, just avoids needing any manual one-time setup step.
+// ── Robust error-to-string — fixes "[object Object]" once and for all.
+// Upstream error bodies aren't always a flat string; this always returns
+// something readable no matter the shape. ───────────────────────────────────
+function safeErrorString(x: any, fallback: string): string {
+  if (typeof x === "string" && x.trim()) return x.trim();
+  if (Array.isArray(x) && x.length) {
+    // FastAPI/Pydantic-style validation errors: [{ msg, loc, type }, ...]
+    const first = x[0];
+    if (typeof first === "string") return first;
+    if (first?.msg) return String(first.msg);
+    try { return JSON.stringify(x).slice(0, 300); } catch { return fallback; }
+  }
+  if (x && typeof x === "object") {
+    if (typeof x.message === "string") return x.message;
+    if (typeof x.msg === "string") return x.msg;
+    if (typeof x.detail === "string") return x.detail;
+    if (x.detail) return safeErrorString(x.detail, fallback);
+    if (x.error) return safeErrorString(x.error, fallback);
+    try { return JSON.stringify(x).slice(0, 300); } catch { return fallback; }
+  }
+  return fallback;
+}
+
 let cachedAgentId: string | null = null;
 
-async function getOrCreateWebsearchAgent(apiKey: string): Promise<string> {
+async function getWebsearchAgentId(apiKey: string): Promise<string> {
+  const fromEnv = (process.env.MISTRAL_AGENT_ID || "").trim();
+  if (fromEnv) return fromEnv;
   if (cachedAgentId) return cachedAgentId;
 
   const res = await fetch(MISTRAL_AGENTS_URL, {
@@ -66,9 +85,12 @@ async function getOrCreateWebsearchAgent(apiKey: string): Promise<string> {
     }),
   });
 
-  const data = await res.json().catch(() => null);
+  const raw = await res.text();
+  let data: any = null;
+  try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+
   if (!res.ok || !data?.id) {
-    throw new Error(data?.message || data?.error?.message || `Failed to create agent (HTTP ${res.status})`);
+    throw new Error(safeErrorString(data, `Failed to create agent (HTTP ${res.status})`));
   }
 
   cachedAgentId = data.id;
@@ -88,8 +110,6 @@ function writeFakeStream(res: VercelResponse, content: string) {
   res.end();
 }
 
-// Extracts plain text from a Conversations API response's `outputs` array —
-// pulls every `message.output` entry's text chunks and joins them.
 function extractConversationText(data: any): string {
   const outputs = Array.isArray(data?.outputs) ? data.outputs : [];
   const messageOutputs = outputs.filter((o: any) => o?.type === "message.output");
@@ -106,6 +126,17 @@ function extractConversationText(data: any): string {
     }
   }
   return text.trim();
+}
+
+function sendErrorResponse(res: VercelResponse, status: number, message: string, isStream: boolean) {
+  if (isStream) {
+    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+    sendDelta(res, { content: `⚠️ ${message}` });
+    res.write("data: [DONE]\n\n");
+    res.end();
+    return;
+  }
+  res.status(status).json({ error: message });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -135,6 +166,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const keyFromClient = (userKey ?? userApiKey ?? "").trim();
     const hasUserKey = keyFromClient.length > 0;
+    const isStreamReq = mode === "chat" && Boolean(stream);
 
     // ═══════════════════════════════════════════════════════════════════════
     // IMAGE GENERATION MODE — unchanged (Gemini/Imagen)
@@ -162,9 +194,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
       const imageData = await imageRes.json().catch(() => null);
       if (!imageRes.ok) {
-        return res.status(imageRes.status).json({
-          error: imageData?.error?.message || imageData?.error || "Image generation failed",
-        });
+        return res.status(imageRes.status).json({ error: safeErrorString(imageData, "Image generation failed") });
       }
       const imageBytes =
         imageData?.predictions?.[0]?.bytesBase64Encoded ||
@@ -177,7 +207,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ═══════════════════════════════════════════════════════════════════════
     // VISION MODE — plain Chat Completions (native multimodal, no search
-    // needed here, so the simpler endpoint is fine and faster). ─────────────
+    // needed here, so the simpler endpoint is fine and faster).
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "vision") {
       if (hasUserKey) return res.status(403).json({ error: "Image analysis is available only in admin mode" });
@@ -214,9 +244,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try { visionData = visionRaw ? JSON.parse(visionRaw) : null; } catch { visionData = null; }
 
       if (!visionRes.ok) {
-        return res.status(visionRes.status).json({
-          error: visionData?.error?.message || visionData?.error || visionRaw.slice(0, 300) || "Image analysis failed",
-        });
+        return res.status(visionRes.status).json({ error: safeErrorString(visionData, "Image analysis failed") });
       }
 
       const visionMsg = visionData?.choices?.[0]?.message;
@@ -264,7 +292,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const sttRaw = await sttRes.text();
       let sttData: any = null;
       try { sttData = sttRaw ? JSON.parse(sttRaw) : null; } catch { sttData = { text: sttRaw }; }
-      if (!sttRes.ok) return res.status(sttRes.status).json({ error: sttData?.error?.message || sttData?.error || "Transcription failed" });
+      if (!sttRes.ok) return res.status(sttRes.status).json({ error: safeErrorString(sttData, "Transcription failed") });
 
       const text = typeof sttData?.text === "string" ? sttData.text.trim() : "";
       return res.status(200).json({ text, modelId: "whisper-large-v3-turbo" });
@@ -276,28 +304,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const mistralApiKey = hasUserKey ? keyFromClient : (process.env.MISTRAL_API_KEY || "");
     if (!mistralApiKey) {
-      return res.status(400).json({ error: hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)" });
+      return sendErrorResponse(res, 400, hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)", isStreamReq), undefined;
     }
 
     const wantsThinking = thinkingMode === true;
 
     let agentId: string;
     try {
-      agentId = await getOrCreateWebsearchAgent(mistralApiKey);
+      agentId = await getWebsearchAgentId(mistralApiKey);
     } catch (e: any) {
-      const msg = e?.message || "Failed to prepare Mistral agent";
-      if (mode === "chat" && stream) {
-        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-        sendDelta(res, { content: `⚠️ ${msg}` });
-        res.write("data: [DONE]\n\n");
-        res.end();
-        return;
-      }
-      return res.status(502).json({ error: msg });
+      return sendErrorResponse(res, 502, safeErrorString(e?.message, "Failed to prepare Mistral agent"), isStreamReq), undefined;
     }
 
-    // Any per-request custom system content (e.g. category prompts from the
-    // client) is layered on top of the agent's own base instructions.
     const customSystem = typeof systemInstruction === "string" && systemInstruction.trim()
       ? [{ role: "system", content: systemInstruction.trim() }] : [];
 
@@ -309,7 +327,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const conversationBody: Record<string, any> = {
       agent_id: agentId,
       inputs: conversationInputs,
-      store: false, // stateless — client already resends full history each time
+      store: false,
       completion_args: {
         temperature: 0.7,
         reasoning_effort: wantsThinking ? "high" : "none",
@@ -327,20 +345,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try { convData = convRaw ? JSON.parse(convRaw) : null; } catch { convData = null; }
 
     if (!convRes.ok || !convData) {
-      const realMsg = convData?.message || convData?.error?.message || convRaw.slice(0, 300) || `Upstream error (HTTP ${convRes.status})`;
-      if (mode === "chat" && stream) {
-        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-        sendDelta(res, { content: `⚠️ ${realMsg}` });
-        res.write("data: [DONE]\n\n");
-        res.end();
-        return;
-      }
-      return res.status(convRes.status || 502).json({ error: realMsg });
+      const realMsg = safeErrorString(convData, convRaw.slice(0, 300) || `Upstream error (HTTP ${convRes.status})`);
+      return sendErrorResponse(res, convRes.status || 502, realMsg, isStreamReq), undefined;
     }
 
     const finalText = extractConversationText(convData) || "⚠️ Empty response from model";
 
-    if (mode === "chat" && stream) {
+    if (isStreamReq) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
@@ -350,6 +361,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ text: finalText });
   } catch (err: any) {
-    return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
+    return res.status(500).json({ error: safeErrorString(err?.message, "Internal server error") });
   }
-  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ONE-TIME SETUP (recommended, optional) — create a permanent agent so the
+// backend never has to create one at runtime. Run this once from any device
+// (a website like reqbin.com, or curl on a computer), then copy the
+// returned "id" value into Vercel's environment variables as
+// MISTRAL_AGENT_ID.
+//
+// POST https://api.mistral.ai/v1/agents
+// Headers: Authorization: Bearer YOUR_MISTRAL_API_KEY, Content-Type: application/json
+// Body:
+// {
+//   "model": "mistral-medium-latest",
+//   "name": "Eliyen Agent",
+//   "description": "Eliyen's main assistant agent with live web search access.",
+//   "instructions": "You are Eliyen, an AI assistant built by PROHOR AI...",
+//   "tools": [{ "type": "web_search" }]
+// }
+// ─────────────────────────────────────────────────────────────────────────────
+    
