@@ -9,18 +9,25 @@ const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_MODEL = "mistral-medium-latest"; // currently resolves to Mistral Medium 3.5
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Mistral Medium 3.5 — real native web_search (official docs confirmed:
-// web_search only works on the Conversations API, /v1/conversations, via an
-// Agent that has the tool attached — not on plain Chat Completions).
+// Mistral Medium 3.5 — matches Mistral's own official Web Search Agent
+// example exactly (docs.mistral.ai/studio-api/agents/agents-api):
 //
-// Same overall file shape/contract as before (mode branching, request/response
-// contract with Android & web, error handling pattern) — only the provider
-// underneath chat mode changed.
+//   websearch_agent = client.beta.agents.create(
+//     model="mistral-medium-latest",
+//     instructions="...",
+//     tools=[{"type": "web_search"}],
+//     completion_args={...},
+//   )
+//   response = client.beta.conversations.start(
+//     agent_id=agent.id, inputs=[...], store=False,
+//   )
 //
-// Agent: if MISTRAL_AGENT_ID is set (recommended — create it once, see
-// bottom of file for the one-time setup command), that's used directly —
-// zero extra API calls per message. If not set, one gets auto-created and
-// cached in memory for the life of this warm serverless instance.
+// Fixed bug from the previous version: the official example only ever
+// shows `role: "user"` inside `inputs` — the agent's system prompt lives in
+// `instructions` at creation time, not as a per-message system-role entry.
+// Sending `role: "system"` inside `inputs` was likely being rejected or
+// mishandled. Any per-request custom context is now folded into the
+// outgoing user message itself instead.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ELIYEN_INSTRUCTIONS = `
@@ -43,13 +50,9 @@ How you answer:
 - Be warm, direct, and genuinely helpful — like a sharp, knowledgeable friend, not a corporate script.
 `.trim();
 
-// ── Robust error-to-string — fixes "[object Object]" once and for all.
-// Upstream error bodies aren't always a flat string; this always returns
-// something readable no matter the shape. ───────────────────────────────────
 function safeErrorString(x: any, fallback: string): string {
   if (typeof x === "string" && x.trim()) return x.trim();
   if (Array.isArray(x) && x.length) {
-    // FastAPI/Pydantic-style validation errors: [{ msg, loc, type }, ...]
     const first = x[0];
     if (typeof first === "string") return first;
     if (first?.msg) return String(first.msg);
@@ -82,6 +85,7 @@ async function getWebsearchAgentId(apiKey: string): Promise<string> {
       description: "Eliyen's main assistant agent with live web search access.",
       instructions: ELIYEN_INSTRUCTIONS,
       tools: [{ type: "web_search" }],
+      completion_args: { temperature: 0.7 },
     }),
   });
 
@@ -128,7 +132,7 @@ function extractConversationText(data: any): string {
   return text.trim();
 }
 
-function sendErrorResponse(res: VercelResponse, status: number, message: string, isStream: boolean) {
+function sendErrorResponse(res: VercelResponse, status: number, message: string, isStream: boolean): void {
   if (isStream) {
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     sendDelta(res, { content: `⚠️ ${message}` });
@@ -206,8 +210,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // VISION MODE — plain Chat Completions (native multimodal, no search
-    // needed here, so the simpler endpoint is fine and faster).
+    // VISION MODE — plain Chat Completions (native multimodal)
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "vision") {
       if (hasUserKey) return res.status(403).json({ error: "Image analysis is available only in admin mode" });
@@ -299,12 +302,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CHAT MODE — Mistral Conversations API, real native web_search
+    // CHAT MODE — Mistral Conversations API, matching official example
     // ═══════════════════════════════════════════════════════════════════════
 
     const mistralApiKey = hasUserKey ? keyFromClient : (process.env.MISTRAL_API_KEY || "");
     if (!mistralApiKey) {
-      return sendErrorResponse(res, 400, hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)", isStreamReq), undefined;
+      sendErrorResponse(res, 400, hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)", isStreamReq);
+      return;
     }
 
     const wantsThinking = thinkingMode === true;
@@ -313,20 +317,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       agentId = await getWebsearchAgentId(mistralApiKey);
     } catch (e: any) {
-      return sendErrorResponse(res, 502, safeErrorString(e?.message, "Failed to prepare Mistral agent"), isStreamReq), undefined;
+      sendErrorResponse(res, 502, safeErrorString(e?.message, "Failed to prepare Mistral agent"), isStreamReq);
+      return;
     }
 
-    const customSystem = typeof systemInstruction === "string" && systemInstruction.trim()
-      ? [{ role: "system", content: systemInstruction.trim() }] : [];
+    // ✅ FIX — no "role: system" inside inputs (official example never shows
+    // this). Per-request custom context folds into the last user message.
+    const customSystemText = typeof systemInstruction === "string" ? systemInstruction.trim() : "";
+    const historyMessages = messages.map((m: any) => ({ role: m.role, content: m.content }));
 
-    const conversationInputs = [
-      ...customSystem,
-      ...messages.map((m: any) => ({ role: m.role, content: m.content })),
-    ];
+    if (customSystemText && historyMessages.length > 0) {
+      const lastIdx = historyMessages.length - 1;
+      if (historyMessages[lastIdx].role === "user") {
+        historyMessages[lastIdx] = {
+          ...historyMessages[lastIdx],
+          content: `[Context: ${customSystemText}]\n\n${historyMessages[lastIdx].content}`,
+        };
+      }
+    }
 
     const conversationBody: Record<string, any> = {
       agent_id: agentId,
-      inputs: conversationInputs,
+      inputs: historyMessages,
       store: false,
       completion_args: {
         temperature: 0.7,
@@ -346,7 +358,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!convRes.ok || !convData) {
       const realMsg = safeErrorString(convData, convRaw.slice(0, 300) || `Upstream error (HTTP ${convRes.status})`);
-      return sendErrorResponse(res, convRes.status || 502, realMsg, isStreamReq), undefined;
+      sendErrorResponse(res, convRes.status || 502, realMsg, isStreamReq);
+      return;
     }
 
     const finalText = extractConversationText(convData) || "⚠️ Empty response from model";
@@ -363,24 +376,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: safeErrorString(err?.message, "Internal server error") });
   }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ONE-TIME SETUP (recommended, optional) — create a permanent agent so the
-// backend never has to create one at runtime. Run this once from any device
-// (a website like reqbin.com, or curl on a computer), then copy the
-// returned "id" value into Vercel's environment variables as
-// MISTRAL_AGENT_ID.
-//
-// POST https://api.mistral.ai/v1/agents
-// Headers: Authorization: Bearer YOUR_MISTRAL_API_KEY, Content-Type: application/json
-// Body:
-// {
-//   "model": "mistral-medium-latest",
-//   "name": "Eliyen Agent",
-//   "description": "Eliyen's main assistant agent with live web search access.",
-//   "instructions": "You are Eliyen, an AI assistant built by PROHOR AI...",
-//   "tools": [{ "type": "web_search" }]
-// }
-// ─────────────────────────────────────────────────────────────────────────────
-    
+  }
+         
