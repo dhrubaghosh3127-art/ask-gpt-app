@@ -129,6 +129,19 @@ function extractChatContent(content: any): { reasoning: string; text: string } {
   return { reasoning: reasoning.trim(), text: text.trim() };
 }
 
+// Mistral's `inputs` entries are strict: MessageInputEntry only accepts
+// role "user"/"assistant" (never "system") and exactly {role, content} —
+// no extra fields. Groq/OpenAI-style APIs tolerate a stray system entry
+// anywhere in the array, or extra client-side fields (id, timestamp, etc.);
+// Mistral rejects the whole request outright if either shows up. This
+// drops anything that isn't user/assistant and strips each entry down to
+// just the two fields Mistral actually accepts.
+function sanitizeInputs(messages: any[] | undefined): { role: string; content: any }[] {
+  return (Array.isArray(messages) ? messages : [])
+    .filter((m) => m?.role === "user" || m?.role === "assistant")
+    .map((m) => ({ role: m.role, content: m.content }));
+}
+
 // Same idea as extractChatContent above, but for the Conversations API's
 // response shape: a top-level `outputs` array where the entry with
 // `type === "message.output"` holds the reply. Confirmed directly against
@@ -331,7 +344,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         model: MISTRAL_MODEL,
         instructions: instructionsText,
-        inputs: messages,
+        inputs: sanitizeInputs(messages),
         stream: false,
         tools: [{ type: "web_search" }],
         completion_args: { reasoning_effort: effort },
@@ -362,7 +375,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (mode === "chat" && stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
-      res.setHeader("Connection", "keep-alive");
+ res.setHeader("Connection", "keep-alive");
       if (reasoning) sendDelta(res, { reasoning });
       const chunkSize = 28;
       for (let i = 0; i < cleanContent.length; i += chunkSize) {
