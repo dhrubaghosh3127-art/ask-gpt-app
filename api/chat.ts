@@ -15,19 +15,31 @@ export const config = { maxDuration: 30 };
 //                        true  → reasoning_effort "high"  (Mistral only has
 //                                "none" / "high" — there is no "default")
 //
-//   web search            → TEMPORARILY REMOVED. Mistral's native web_search
-//                      tool only works through the newer Conversations API
-//                      (/v1/conversations), not this Chat Completions API.
-//                      That's what broke last time (a request Mistral
-//                      rejected came back as an array of validation-error
-//                      objects, which got dropped straight into a template
-//                      string and printed as "[object Object],...").
-//                      Chat mode below now uses the plain, well-established
-//                      Chat Completions API (/v1/chat/completions) — same
-//                      shape Groq used, just a different model + reasoning
-//                      parameter. Once this is confirmed solid, web_search
-//                      goes back in via /v1/conversations, done carefully
-//                      and tested on its own.
+//   web search            → Mistral's native web_search tool, via the
+//                      Conversations API (/v1/conversations). This only
+//                      works there, not on Chat Completions.
+//
+//                      The first attempt at this broke chat entirely: extra
+//                      fields (completion_args.tool_choice, store, a
+//                      role:"system" entry inside inputs) that seemed
+//                      reasonable by analogy to the Agents API weren't
+//                      actually confirmed for this specific endpoint, and
+//                      Mistral rejected the request (422). This version
+//                      sends ONLY what Mistral's own cookbook example
+//                      confirms works — model, inputs, tools — plus exactly
+//                      two additions that are independently documented on
+//                      their own pages: `completion_args.reasoning_effort`
+//                      (from the reasoning-effort docs) and a top-level
+//                      `instructions` string for the system prompt (a
+//                      confirmed field of the /v1/conversations start body,
+//                      used instead of a role:"system" message in `inputs`
+//                      since no official example ever puts system there).
+//                      No tool_choice, no store — deliberately left out
+//                      until confirmed necessary.
+//
+//   vision                 → unchanged from the last version: Chat
+//                      Completions API, since web_search doesn't apply
+//                      there anyway and this path was never broken.
 //
 //   streaming              → Mistral is always called non-streamed
 //                      (stream:false), then we chunk the finished text
@@ -38,6 +50,7 @@ export const config = { maxDuration: 30 };
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
+const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/conversations";
 const MISTRAL_MODEL = "mistral-medium-latest";
 
 const ELIYEN_SYSTEM_PROMPT = `
@@ -47,13 +60,15 @@ You always know your own capabilities — you never have to guess, hedge, or say
 "I can't do that" just because you personally don't perform a step directly,
 if the app around you supports it. Inside this app you can:
 - Hold normal conversations, help with writing, coding, math, study, translation, and social media content.
+- Search the web yourself when a question needs live, current, or recent information — this happens automatically through your own judgment, never by writing a tool call out as visible text.
 - Read and analyze photos and PDF documents the user sends you.
 - Create images when asked to generate, draw, or design something.
 - Transcribe voice input.
 
 How you answer:
 - Keep answers direct and to the point. Don't pad simple questions with unnecessary explanation.
-- If a question depends on very current/live/recent facts (breaking news, today's prices, live scores, anything that could have changed after your training), say plainly that you can't check live information right now rather than guessing or making something up.
+- If a question depends on current/live/recent facts (news, prices, scores, weather, "today", anything that could have changed recently or is after your training), check the web for it first rather than guessing from memory.
+- You DO have real web search access. Never say "I can't browse the internet", "I don't have access to real-time data", "I can't open links", or anything similar — that is false.
 - After any tool result comes back, always write your final answer yourself in plain natural language — never show raw JSON, XML, tool syntax, or code blocks of tool output to the user.
 - Write math in plain, ordinary notation people can read normally: x^2, 1/x, sqrt(x), (a+b), >=, <=. Never output raw LaTeX commands like \\frac, \\sqrt{}, \\ge, or \\[ ... \\].
 - Never mention internal model names, backend routing, or tool implementation details unless the user explicitly asks how the app works technically.
@@ -110,6 +125,22 @@ function extractChatContent(content: any): { reasoning: string; text: string } {
     } else if (typeof chunk?.text === "string") {
       text += chunk.text; // defensive fallback for any other chunk type
     }
+  }
+  return { reasoning: reasoning.trim(), text: text.trim() };
+}
+
+// Same idea as extractChatContent above, but for the Conversations API's
+// response shape: a top-level `outputs` array where the entry with
+// `type === "message.output"` holds the reply. Confirmed directly against
+// Mistral's own cookbook `display_response` helper.
+function extractConversationOutput(outputs: any[]): { reasoning: string; text: string } {
+  let reasoning = "";
+  let text = "";
+  for (const entry of Array.isArray(outputs) ? outputs : []) {
+    if (entry?.type !== "message.output") continue;
+    const parsed = extractChatContent(entry.content);
+    reasoning += parsed.reasoning;
+    text += parsed.text;
   }
   return { reasoning: reasoning.trim(), text: text.trim() };
 }
@@ -269,9 +300,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CHAT MODE — Mistral Medium 3.5 via plain Chat Completions API.
-    // No tools/web search right now — being re-added separately once this
-    // is confirmed solid.
+    // CHAT MODE — Mistral Medium 3.5 via the Conversations API, with native
+    // web_search. Request shape follows Mistral's own cookbook example as
+    // closely as possible — see the header note for exactly what was added
+    // on top and why.
     // ═══════════════════════════════════════════════════════════════════════
 
     const apiKey = hasUserKey ? keyFromClient : (process.env.MISTRAL_API_KEY || "");
@@ -279,10 +311,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)" });
     }
 
-    const customSystem = typeof systemInstruction === "string" && systemInstruction.trim()
-      ? { role: "system", content: systemInstruction.trim() } : null;
-    const identitySystem = { role: "system", content: ELIYEN_SYSTEM_PROMPT };
-    const finalMessages = [identitySystem, ...(customSystem ? [customSystem] : []), ...messages];
+    // System prompt goes through the dedicated `instructions` field, not a
+    // role:"system" entry inside `inputs` — no official example ever puts
+    // system there, and `instructions` is confirmed as its own top-level
+    // field on the /v1/conversations start body.
+    const customSystemText = typeof systemInstruction === "string" ? systemInstruction.trim() : "";
+    const instructionsText = [ELIYEN_SYSTEM_PROMPT, customSystemText].filter(Boolean).join("\n\n");
 
     // Deterministic, UI-controlled — never guessed from message content.
     // Same behaviour as before: the Android app's attach-button toggle sends
@@ -291,15 +325,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const wantsThinking = thinkingMode === true;
     const effort = wantsThinking ? "high" : "none"; // Mistral only has none/high, no "default"
 
-    const chatRes = await fetch(MISTRAL_CHAT_URL, {
+    const chatRes = await fetch(MISTRAL_CONVERSATIONS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: MISTRAL_MODEL,
-        messages: finalMessages,
-        temperature: 0.7,
-        max_tokens: wantsThinking ? 4096 : 1536,
-        reasoning_effort: effort,
+        instructions: instructionsText,
+        inputs: messages,
+        stream: false,
+        tools: [{ type: "web_search" }],
+        completion_args: { reasoning_effort: effort },
       }),
     });
 
@@ -321,7 +356,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(chatRes.status || 502).json({ error: realMsg });
     }
 
-    const { reasoning, text } = extractChatContent(chatData?.choices?.[0]?.message?.content);
+    const { reasoning, text } = extractConversationOutput(chatData?.outputs);
     const cleanContent = text || "⚠️ Empty response from model";
 
     if (mode === "chat" && stream) {
