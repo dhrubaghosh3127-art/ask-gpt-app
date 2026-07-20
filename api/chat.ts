@@ -51,7 +51,7 @@ export const config = { maxDuration: 30 };
 
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/conversations";
-const MISTRAL_MODEL = "mistral-small-latest";
+const MISTRAL_MODEL = "mistral-small-2603";
 
 const ELIYEN_SYSTEM_PROMPT = `
 You are Eliyen, an AI assistant built by PROHOR AI.
