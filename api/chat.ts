@@ -117,9 +117,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const keyFromClient = (userKey ?? userApiKey ?? "").trim();
     const hasUserKey = keyFromClient.length > 0;
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // IMAGE GENERATION MODE
-    // ═══════════════════════════════════════════════════════════════════════
+    // ─── IMAGE MODE (unchanged) ───
     if (mode === "image") {
       const imagePrompt = (prompt || "").trim();
       if (hasUserKey) return res.status(403).json({ error: "Image generation is available only in admin mode" });
@@ -156,9 +154,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ imageUrl: `data:image/png;base64,${imageBytes}`, modelId: actualImageModel });
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // VISION MODE
-    // ═══════════════════════════════════════════════════════════════════════
+    // ─── VISION MODE (unchanged) ───
     if (mode === "vision") {
       if (hasUserKey) return res.status(403).json({ error: "Image analysis is available only in admin mode" });
 
@@ -202,9 +198,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ text: extracted, modelId: MISTRAL_MODEL });
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // TRANSCRIBE MODE
-    // ═══════════════════════════════════════════════════════════════════════
+    // ─── TRANSCRIBE MODE (unchanged) ───
     if (mode === "transcribe") {
       if (hasUserKey) return res.status(403).json({ error: "Voice transcription is available only in admin mode" });
 
@@ -240,10 +234,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ text, modelId: "whisper-large-v3-turbo" });
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // CHAT MODE — FIXED: Conversations API with stream: true
-    // ═══════════════════════════════════════════════════════════════════════
-
+    // ─── CHAT MODE ─── (শুধু stream: true এবং stream পার্স করা)
     const apiKey = hasUserKey ? keyFromClient : (process.env.MISTRAL_API_KEY || "");
     if (!apiKey) {
       return res.status(400).json({ error: hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)" });
@@ -255,6 +246,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const wantsThinking = thinkingMode === true;
     const effort = wantsThinking ? "high" : "none";
 
+    // এখন stream: true দিয়ে কল করব
     const chatRes = await fetch(MISTRAL_CONVERSATIONS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -262,23 +254,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         model: MISTRAL_MODEL,
         instructions: instructionsText,
         inputs: sanitizeInputs(messages),
-        stream: true,  // ✅ স্ট্রিমিং চালু
+        stream: true,   // ✅ স্ট্রিমিং চালু
         tools: [{ type: "web_search" }],
         completion_args: { reasoning_effort: effort },
       }),
     });
 
-    // Conversations API থেকে stream আসলে এটা SSE ফরম্যাটে আসে
-    // কিন্তু Mistral-এর Conversations API-র stream ফরম্যাট আলাদা — 
-    // এটা event: message, data: {...} ফরম্যাটে আসে
-
-    if (!chatRes.ok || !chatRes.body) {
-      const raw = await chatRes.text();
-      let data = null;
-      try { data = JSON.parse(raw); } catch { /* ignore */ }
-      const errMsg = formatMistralError(data, raw, chatRes.status);
-      
-      if (mode === "chat" && stream) {
+    // যদি স্ট্রিমিং রিকোয়েস্ট হয় এবং রেসপন্স ঠিক থাকে
+    if (mode === "chat" && stream === true) {
+      if (!chatRes.ok || !chatRes.body) {
+        const raw = await chatRes.text();
+        let data = null;
+        try { data = JSON.parse(raw); } catch { /* ignore */ }
+        const errMsg = formatMistralError(data, raw, chatRes.status);
         res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
         res.setHeader("Cache-Control", "no-cache, no-transform");
         res.setHeader("Connection", "keep-alive");
@@ -287,12 +275,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.end();
         return;
       }
-      return res.status(chatRes.status || 502).json({ error: errMsg });
-    }
 
-    // এখন আমরা Mistral-এর SSE stream থেকে ডেটা পার্স করব
-    // এবং ক্লায়েন্টের জন্য আমাদের নিজস্ব SSE ফরম্যাটে কনভার্ট করব
-    if (mode === "chat" && stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
@@ -310,30 +293,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           buffer = lines.pop() || "";
 
           for (const line of lines) {
-            // Mistral Conversations API stream: event: message, data: {...}
             if (line.startsWith("data: ")) {
               const payload = line.slice(6).trim();
               if (payload === "[DONE]" || payload === "") continue;
               try {
                 const parsed = JSON.parse(payload);
-                // Conversations API stream থেকে output আসে
-                if (parsed?.outputs) {
-                  const { reasoning, text } = extractConversationOutput(parsed.outputs);
-                  if (reasoning) sendDelta(res, { reasoning });
-                  if (text) sendDelta(res, { content: text });
+                // Conversations API থেকে আসা stream-এ outputs থাকে
+                if (parsed?.outputs && Array.isArray(parsed.outputs)) {
+                  // প্রতিটি output থেকে reasoning এবং text বের করি
+                  for (const out of parsed.outputs) {
+                    if (out?.type === "message.output") {
+                      const { reasoning, text } = extractChatContent(out.content);
+                      if (reasoning) sendDelta(res, { reasoning });
+                      if (text) sendDelta(res, { content: text });
+                    }
+                  }
                 }
-                // কখনো কখনো delta আকারেও আসতে পারে
+                // কখনো কখনো delta ফিল্ডেও আসতে পারে (Mistral-এর কিছু ভার্সনে)
                 if (parsed?.delta) {
-                  const delta = parsed.delta;
+                  const d = parsed.delta;
                   const deltaToSend: any = {};
-                  if (delta.reasoning) deltaToSend.reasoning = delta.reasoning;
-                  if (delta.content) deltaToSend.content = delta.content;
+                  if (d.reasoning) deltaToSend.reasoning = d.reasoning;
+                  if (d.content) deltaToSend.content = d.content;
                   if (Object.keys(deltaToSend).length > 0) {
                     sendDelta(res, deltaToSend);
                   }
                 }
               } catch (e) {
-                // malformed JSON skip
+                // JSON parse error হলে skip
               }
             }
           }
@@ -347,8 +334,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    // ── Non-streaming fallback ──
-    // stream: false বা stream না পাঠালে
+    // ── non-streaming fallback ──
+    const chatRaw = await chatRes.text();
+    let chatData: any = null;
+    try { chatData = chatRaw ? JSON.parse(chatRaw) : null; } catch { chatData = null; }
+
+    if (!chatRes.ok || !chatData) {
+      const realMsg = formatMistralError(chatData, chatRaw, chatRes.status);
+      return res.status(chatRes.status || 502).json({ error: realMsg });
+    }
+
     const { reasoning, text } = extractConversationOutput(chatData?.outputs);
     const cleanContent = text || "⚠️ Empty response from model";
 
