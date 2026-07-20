@@ -47,6 +47,17 @@ export const config = { maxDuration: 30 };
 //                      The Android app's SSE format is UNCHANGED — it still
 //                      receives `data: {choices:[{delta:{content|reasoning}}]}`
 //                      exactly like before, so no app-side changes needed.
+//
+//   sources                → NEW. When web_search fires, Mistral interleaves
+//                      {type:"tool_reference",title,url,source} chunks into
+//                      the answer content, alongside the normal {type:"text"}
+//                      chunks — confirmed on Mistral's own Websearch docs
+//                      page. These are pulled out, de-duplicated by URL, and
+//                      sent as ONE extra delta (`sources`, a JSON string)
+//                      before the reasoning/content deltas — same one-shot
+//                      pattern as `reasoning`. Never sent if no search
+//                      happened, so old app builds that ignore unknown delta
+//                      keys are unaffected.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
@@ -104,29 +115,50 @@ function sendDelta(res: VercelResponse, delta: Record<string, any>) {
   res.write(`data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`);
 }
 
-// Splits a Chat Completions `message.content` into the reasoning trace and
-// the actual answer. Content is a plain string when reasoning_effort is
-// "none", or an array of typed chunks when reasoning is on: {type:"thinking",
-// thinking:[{type:"text",text}]} for the reasoning trace, {type:"text",text}
-// for the answer — same content-chunk shape reasoning_effort uses everywhere
-// in Mistral's API, not just the Conversations endpoint.
-function extractChatContent(content: any): { reasoning: string; text: string } {
-  if (typeof content === "string") return { reasoning: "", text: content.trim() };
-  if (!Array.isArray(content)) return { reasoning: "", text: "" };
+type SourceRef = { title: string; url: string; source: string };
+
+function dedupeSources(sources: SourceRef[]): SourceRef[] {
+  const seen = new Set<string>();
+  return sources.filter((s) => {
+    if (!s.url || seen.has(s.url)) return false;
+    seen.add(s.url);
+    return true;
+  });
+}
+
+// Splits a Chat Completions `message.content` into the reasoning trace, the
+// actual answer, and any web_search citations. Content is a plain string
+// when reasoning_effort is "none", or an array of typed chunks when
+// reasoning is on: {type:"thinking",thinking:[{type:"text",text}]} for the
+// reasoning trace, {type:"text",text} for the answer, and (only via the
+// Conversations API) {type:"tool_reference",title,url,source} for a
+// citation — collected separately so it never leaks into the visible text.
+function extractChatContent(content: any): { reasoning: string; text: string; sources: SourceRef[] } {
+  if (typeof content === "string") return { reasoning: "", text: content.trim(), sources: [] };
+  if (!Array.isArray(content)) return { reasoning: "", text: "", sources: [] };
 
   let reasoning = "";
   let text = "";
+  const sources: SourceRef[] = [];
   for (const chunk of content) {
     if (chunk?.type === "thinking") {
       const inner = Array.isArray(chunk.thinking) ? chunk.thinking : [];
       reasoning += inner.map((x: any) => (typeof x?.text === "string" ? x.text : "")).join("");
+    } else if (chunk?.type === "tool_reference") {
+      if (typeof chunk.url === "string" && chunk.url) {
+        sources.push({
+          title: typeof chunk.title === "string" ? chunk.title : "",
+          url: chunk.url,
+          source: typeof chunk.source === "string" ? chunk.source : "",
+        });
+      }
     } else if (chunk?.type === "text" && typeof chunk.text === "string") {
       text += chunk.text;
     } else if (typeof chunk?.text === "string") {
       text += chunk.text; // defensive fallback for any other chunk type
     }
   }
-  return { reasoning: reasoning.trim(), text: text.trim() };
+  return { reasoning: reasoning.trim(), text: text.trim(), sources };
 }
 
 // Mistral's `inputs` entries are strict: MessageInputEntry only accepts
@@ -146,16 +178,18 @@ function sanitizeInputs(messages: any[] | undefined): { role: string; content: a
 // response shape: a top-level `outputs` array where the entry with
 // `type === "message.output"` holds the reply. Confirmed directly against
 // Mistral's own cookbook `display_response` helper.
-function extractConversationOutput(outputs: any[]): { reasoning: string; text: string } {
+function extractConversationOutput(outputs: any[]): { reasoning: string; text: string; sources: SourceRef[] } {
   let reasoning = "";
   let text = "";
+  const sources: SourceRef[] = [];
   for (const entry of Array.isArray(outputs) ? outputs : []) {
     if (entry?.type !== "message.output") continue;
     const parsed = extractChatContent(entry.content);
     reasoning += parsed.reasoning;
     text += parsed.text;
+    sources.push(...parsed.sources);
   }
-  return { reasoning: reasoning.trim(), text: text.trim() };
+  return { reasoning: reasoning.trim(), text: text.trim(), sources };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -335,6 +369,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Same behaviour as before: the Android app's attach-button toggle sends
     // thinkingMode:true for exactly one message, then goes back to false —
     // this backend just reads whatever it's sent per-request.
+
     const wantsThinking = thinkingMode === true;
     const effort = wantsThinking ? "high" : "none"; // Mistral only has none/high, no "default"
 
@@ -369,13 +404,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(chatRes.status || 502).json({ error: realMsg });
     }
 
-    const { reasoning, text } = extractConversationOutput(chatData?.outputs);
+    const { reasoning, text, sources: rawSources } = extractConversationOutput(chatData?.outputs);
+    const sources = dedupeSources(rawSources);
     const cleanContent = text || "⚠️ Empty response from model";
 
     if (mode === "chat" && stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
- res.setHeader("Connection", "keep-alive");
+      res.setHeader("Connection", "keep-alive");
+      // Sent first, one shot — mirrors how `reasoning` is sent whole before
+      // the content chunks. Empty array is never sent, so the app only ever
+      // sees this field when a search genuinely happened.
+      if (sources.length) sendDelta(res, { sources: JSON.stringify(sources) });
       if (reasoning) sendDelta(res, { reasoning });
       const chunkSize = 28;
       for (let i = 0; i < cleanContent.length; i += chunkSize) {
@@ -386,8 +426,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    return res.status(200).json({ text: cleanContent });
+    return res.status(200).json({ text: cleanContent, sources });
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-}
+        }
