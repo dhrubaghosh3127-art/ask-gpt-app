@@ -122,6 +122,26 @@ function sendDelta(res: VercelResponse, delta: Record<string, any>) {
   res.write(`data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`);
 }
 
+// Vercel's edge/reverse-proxy layer can buffer SSE responses — writing
+// chunks with res.write() but only delivering them all at once at the end —
+// unless told explicitly not to. `X-Accel-Buffering: no` is the standard,
+// widely-documented header for this (originally an Nginx directive, also
+// respected by Vercel's proxy layer); `no-transform` in Cache-Control
+// additionally stops any intermediary from recompressing/rebuffering the
+// stream. flushHeaders() sends the header block immediately instead of
+// waiting for the first write, which some proxies use as the signal to
+// start treating the connection as a real stream. None of this replaces
+// also setting the `VERCEL_FORCE_NODEJS_STREAMING=true` project environment
+// variable on Vercel's side — that's a platform-level switch this code
+// can't flip for you.
+function setSSEHeaders(res: VercelResponse) {
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  (res as any).flushHeaders?.();
+}
+
 type SourceRef = { title: string; url: string; source: string };
 
 function dedupeSources(sources: SourceRef[]): SourceRef[] {
@@ -226,9 +246,7 @@ async function relayMistralStream(
       body: JSON.stringify({ ...request, stream: true }),
     });
   } catch (err: any) {
-    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache, no-transform");
-    res.setHeader("Connection", "keep-alive");
+    setSSEHeaders(res);
     sendDelta(res, { content: `⚠️ ${err?.message || "Network error reaching Mistral"}` });
     res.write("data: [DONE]\n\n");
     res.end();
@@ -240,18 +258,14 @@ async function relayMistralStream(
     let data: any = null;
     try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
     const realMsg = formatMistralError(data, raw, upstream.status);
-    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache, no-transform");
-    res.setHeader("Connection", "keep-alive");
+    setSSEHeaders(res);
     sendDelta(res, { content: `⚠️ ${realMsg}` });
     res.write("data: [DONE]\n\n");
     res.end();
     return;
   }
 
-  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-  res.setHeader("Cache-Control", "no-cache, no-transform");
-  res.setHeader("Connection", "keep-alive");
+  setSSEHeaders(res);
 
   const sources: SourceRef[] = [];
   let sourcesSent = false;
@@ -549,4 +563,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-  }
+        }
