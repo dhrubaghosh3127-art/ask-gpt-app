@@ -266,6 +266,7 @@ async function relayMistralStream(
   }
 
   setSSEHeaders(res);
+  console.log(`[mistral-stream] t=${Date.now()} type=upstream.connected`);
 
   const sources: SourceRef[] = [];
   let sourcesSent = false;
@@ -326,6 +327,20 @@ async function relayMistralStream(
 
         let evt: any = null;
         try { evt = JSON.parse(jsonStr); } catch { continue; } // malformed/partial — skip, never crash the stream
+
+        // TEMPORARY diagnostic — visible in Vercel's function logs (Project →
+        // Deployments → a request → Logs). Shows the real event type/size and
+        // arrival time, so we can see directly whether Mistral itself is
+        // sending many small pieces over time (real token streaming) or a
+        // few large ones close together (Mistral-side batching) — rather
+        // than guessing further. Safe to remove once confirmed either way.
+        console.log(
+          `[mistral-stream] t=${Date.now()} type=${evt?.type} contentLen=${
+            typeof evt?.content === "string" ? evt.content.length
+            : Array.isArray(evt?.content) ? `array(${evt.content.length})`
+            : typeof evt?.content
+          }`,
+        );
 
         if (evt?.type === "message.output.delta") {
           relayContent(evt.content);
@@ -563,4 +578,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-        }
+          }
