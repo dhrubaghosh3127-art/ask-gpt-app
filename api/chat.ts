@@ -6,35 +6,70 @@ export const config = { maxDuration: 30 };
 // ─────────────────────────────────────────────────────────────────────────────
 // MIGRATION NOTE: Groq (Qwen 3.6 27B) → Mistral AI
 //
-//   mistral-small-2603 → THE one model for chat AND vision, always.
+//   mistral-medium-latest (Mistral Medium 3.5) → THE one model for chat AND
+//                      vision, always. It's natively multimodal, so no
+//                      separate vision model is needed.
 //
 //   thinkingMode         → same explicit client flag as before, default false.
 //                        false → reasoning_effort "none"
-//                        true  → reasoning_effort "high"
+//                        true  → reasoning_effort "high"  (Mistral only has
+//                                "none" / "high" — there is no "default")
 //
 //   web search            → Mistral's native web_search tool, via the
-//                      Conversations API (/v1/conversations).
+//                      Conversations API (/v1/conversations). This only
+//                      works there, not on Chat Completions.
 //
-//   vision                 → unchanged: Chat Completions API.
+//                      The first attempt at this broke chat entirely: extra
+//                      fields (completion_args.tool_choice, store, a
+//                      role:"system" entry inside inputs) that seemed
+//                      reasonable by analogy to the Agents API weren't
+//                      actually confirmed for this specific endpoint, and
+//                      Mistral rejected the request (422). This version
+//                      sends ONLY what Mistral's own cookbook example
+//                      confirms works — model, inputs, tools — plus exactly
+//                      two additions that are independently documented on
+//                      their own pages: `completion_args.reasoning_effort`
+//                      (from the reasoning-effort docs) and a top-level
+//                      `instructions` string for the system prompt (a
+//                      confirmed field of the /v1/conversations start body,
+//                      used instead of a role:"system" message in `inputs`
+//                      since no official example ever puts system there).
+//                      No tool_choice, no store — deliberately left out
+//                      until confirmed necessary.
 //
-//   streaming              → ✅ NOW REAL. Conversations API called with
-//                      stream:true, real SSE from Mistral read and
-//                      forwarded live. The exact event schema for this
-//                      endpoint isn't fully pinned down in public docs
-//                      (only the SDK call signature is confirmed), so the
-//                      parser below checks every plausible field shape a
-//                      streamed event could carry text in, using the SAME
-//                      content-chunk extraction already proven correct for
-//                      the non-streaming path — an event type it doesn't
-//                      recognize is safely skipped, never crashes the
-//                      stream. The Android app's SSE format is UNCHANGED —
-//                      still `data: {choices:[{delta:{content|reasoning}}]}`
-//                      exactly like before, so no app-side changes needed.
+//   vision                 → unchanged from the last version: Chat
+//                      Completions API, since web_search doesn't apply
+//                      there anyway and this path was never broken.
+//
+//   streaming              → NOW REAL. Mistral's own /v1/conversations SSE
+//                      stream (confirmed against Mistral's official raw
+//                      event dump: `event: message.output.delta` / `data:
+//                      {"type":"message.output.delta",...,"content":"..."}`,
+//                      ending in `conversation.response.done`) is relayed
+//                      straight through token-by-token, turned into the
+//                      exact same delta shape the app already reads
+//                      (`{choices:[{delta:{content|reasoning|sources}}]}`).
+//                      Replaces the earlier fetch-the-whole-thing-then-
+//                      simulate-chunks approach. The non-streaming
+//                      (stream:false) path is kept as-is below it, unused by
+//                      the app today but left in place as a working
+//                      fallback.
+//
+//   sources                → NEW. When web_search fires, Mistral interleaves
+//                      {type:"tool_reference",title,url,source} chunks into
+//                      the answer content, alongside the normal {type:"text"}
+//                      chunks — confirmed on Mistral's own Websearch docs
+//                      page. These are pulled out, de-duplicated by URL, and
+//                      sent as ONE extra delta (`sources`, a JSON string)
+//                      before the reasoning/content deltas — same one-shot
+//                      pattern as `reasoning`. Never sent if no search
+//                      happened, so old app builds that ignore unknown delta
+//                      keys are unaffected.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/conversations";
-const MISTRAL_MODEL = "mistral-small-2603";
+const MISTRAL_MODEL = "mistral-medium-latest";
 
 const ELIYEN_SYSTEM_PROMPT = `
 You are Eliyen, an AI assistant built by PROHOR AI.
@@ -62,7 +97,8 @@ How you answer:
 // invalid request) an array of {loc, msg, type} validation-error objects —
 // one per bad field. Dropping that array straight into a template string
 // prints "[object Object],[object Object],..." because JS calls .toString()
-// on each object. This turns either shape into one readable line.
+// on each object. This turns either shape into one readable line, and is the
+// direct fix for that bug.
 function formatMistralError(data: any, raw: string, status: number): string {
   const m = data?.message ?? data?.error;
   if (typeof m === "string" && m.trim()) return m.trim();
@@ -86,99 +122,212 @@ function sendDelta(res: VercelResponse, delta: Record<string, any>) {
   res.write(`data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`);
 }
 
-// Splits a `content` field into the reasoning trace and the actual answer.
-// Content is a plain string when reasoning_effort is "none", or an array of
-// typed chunks when reasoning is on: {type:"thinking", thinking:[{type:"text",text}]}
-// for the reasoning trace, {type:"text",text} for the answer — same shape
-// used everywhere in Mistral's API, streaming or not.
-function extractChatContent(content: any): { reasoning: string; text: string } {
-  if (typeof content === "string") return { reasoning: "", text: content };
-  if (!Array.isArray(content)) return { reasoning: "", text: "" };
+type SourceRef = { title: string; url: string; source: string };
+
+function dedupeSources(sources: SourceRef[]): SourceRef[] {
+  const seen = new Set<string>();
+  return sources.filter((s) => {
+    if (!s.url || seen.has(s.url)) return false;
+    seen.add(s.url);
+    return true;
+  });
+}
+
+// Splits a Chat Completions `message.content` into the reasoning trace, the
+// actual answer, and any web_search citations. Content is a plain string
+// when reasoning_effort is "none", or an array of typed chunks when
+// reasoning is on: {type:"thinking",thinking:[{type:"text",text}]} for the
+// reasoning trace, {type:"text",text} for the answer, and (only via the
+// Conversations API) {type:"tool_reference",title,url,source} for a
+// citation — collected separately so it never leaks into the visible text.
+function extractChatContent(content: any): { reasoning: string; text: string; sources: SourceRef[] } {
+  if (typeof content === "string") return { reasoning: "", text: content.trim(), sources: [] };
+  if (!Array.isArray(content)) return { reasoning: "", text: "", sources: [] };
 
   let reasoning = "";
   let text = "";
+  const sources: SourceRef[] = [];
   for (const chunk of content) {
     if (chunk?.type === "thinking") {
       const inner = Array.isArray(chunk.thinking) ? chunk.thinking : [];
       reasoning += inner.map((x: any) => (typeof x?.text === "string" ? x.text : "")).join("");
+    } else if (chunk?.type === "tool_reference") {
+      if (typeof chunk.url === "string" && chunk.url) {
+        sources.push({
+          title: typeof chunk.title === "string" ? chunk.title : "",
+          url: chunk.url,
+          source: typeof chunk.source === "string" ? chunk.source : "",
+        });
+      }
     } else if (chunk?.type === "text" && typeof chunk.text === "string") {
       text += chunk.text;
     } else if (typeof chunk?.text === "string") {
       text += chunk.text; // defensive fallback for any other chunk type
     }
   }
-  return { reasoning, text };
+  return { reasoning: reasoning.trim(), text: text.trim(), sources };
 }
 
 // Mistral's `inputs` entries are strict: MessageInputEntry only accepts
-// role "user"/"assistant" (never "system") and exactly {role, content}.
+// role "user"/"assistant" (never "system") and exactly {role, content} —
+// no extra fields. Groq/OpenAI-style APIs tolerate a stray system entry
+// anywhere in the array, or extra client-side fields (id, timestamp, etc.);
+// Mistral rejects the whole request outright if either shows up. This
+// drops anything that isn't user/assistant and strips each entry down to
+// just the two fields Mistral actually accepts.
 function sanitizeInputs(messages: any[] | undefined): { role: string; content: any }[] {
   return (Array.isArray(messages) ? messages : [])
     .filter((m) => m?.role === "user" || m?.role === "assistant")
     .map((m) => ({ role: m.role, content: m.content }));
 }
 
-// Same idea as extractChatContent, for the Conversations API's non-streaming
+// Same idea as extractChatContent above, but for the Conversations API's
 // response shape: a top-level `outputs` array where the entry with
-// `type === "message.output"` holds the reply.
-function extractConversationOutput(outputs: any[]): { reasoning: string; text: string } {
+// `type === "message.output"` holds the reply. Confirmed directly against
+// Mistral's own cookbook `display_response` helper.
+function extractConversationOutput(outputs: any[]): { reasoning: string; text: string; sources: SourceRef[] } {
   let reasoning = "";
   let text = "";
+  const sources: SourceRef[] = [];
   for (const entry of Array.isArray(outputs) ? outputs : []) {
     if (entry?.type !== "message.output") continue;
     const parsed = extractChatContent(entry.content);
     reasoning += parsed.reasoning;
     text += parsed.text;
+    sources.push(...parsed.sources);
   }
-  return { reasoning: reasoning.trim(), text: text.trim() };
+  return { reasoning: reasoning.trim(), text: text.trim(), sources };
 }
 
-// ── Real streaming reader for the Conversations API ─────────────────────────
-// Reads the actual upstream SSE response and forwards text live as it
-// arrives. The exact per-event schema for this endpoint isn't publicly
-// pinned down beyond the SDK call signature, so every plausible
-// content-bearing field is checked; unrecognized events are skipped safely.
-async function pipeConversationStream(upstreamBody: ReadableStream<Uint8Array>, res: VercelResponse) {
-  const reader = upstreamBody.getReader();
+// Relays Mistral's OWN live SSE stream straight through, turning it into the
+// exact same delta format the app already reads (`{choices:[{delta:{...}}]}`)
+// — real token-by-token pacing this time, not the old fetch-then-simulate-
+// chunks approach. Confirmed directly against Mistral's own docs raw event
+// dump: `event: message.output.delta` / `data:{"type":"message.output.delta",
+// ...,"content":"..."}`, ending in `conversation.response.done`. `content` on
+// each delta can be a plain string OR (during reasoning) one of the same
+// {type:"thinking"|"text"|"tool_reference"} chunks the non-streaming path
+// already handles — same extraction logic, just applied per-delta instead
+// of to one final blob.
+async function relayMistralStream(
+  apiKey  : string,
+  request : Record<string, any>,
+  res     : VercelResponse,
+): Promise<void> {
+  let upstream: Response;
+  try {
+    upstream = await fetch(MISTRAL_CONVERSATIONS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ ...request, stream: true }),
+    });
+  } catch (err: any) {
+    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    sendDelta(res, { content: `⚠️ ${err?.message || "Network error reaching Mistral"}` });
+    res.write("data: [DONE]\n\n");
+    res.end();
+    return;
+  }
+
+  if (!upstream.ok || !upstream.body) {
+    const raw = await upstream.text().catch(() => "");
+    let data: any = null;
+    try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+    const realMsg = formatMistralError(data, raw, upstream.status);
+    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    sendDelta(res, { content: `⚠️ ${realMsg}` });
+    res.write("data: [DONE]\n\n");
+    res.end();
+    return;
+  }
+
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+
+  const sources: SourceRef[] = [];
+  let sourcesSent = false;
+  const flushSources = () => {
+    if (sourcesSent) return;
+    const deduped = dedupeSources(sources);
+    if (deduped.length) sendDelta(res, { sources: JSON.stringify(deduped) });
+    sourcesSent = true;
+  };
+
+  // One already-JSON-parsed delta's `content` value — string, single chunk
+  // object, or array of chunks. Sources are held back and flushed (once)
+  // right before the first real visible content, same one-shot-first
+  // ordering the old simulated path used.
+  const relayContent = (content: any) => {
+    if (typeof content === "string") {
+      if (content) { flushSources(); sendDelta(res, { content }); }
+      return;
+    }
+    const chunks = Array.isArray(content) ? content : content ? [content] : [];
+    for (const chunk of chunks) {
+      if (chunk?.type === "thinking") {
+        const inner = Array.isArray(chunk.thinking) ? chunk.thinking : [];
+        const piece = inner.map((x: any) => (typeof x?.text === "string" ? x.text : "")).join("");
+        if (piece) sendDelta(res, { reasoning: piece });
+      } else if (chunk?.type === "tool_reference") {
+        if (typeof chunk.url === "string" && chunk.url) {
+          sources.push({
+            title: typeof chunk.title === "string" ? chunk.title : "",
+            url: chunk.url,
+            source: typeof chunk.source === "string" ? chunk.source : "",
+          });
+        }
+      } else if (typeof chunk?.text === "string" && chunk.text) {
+        flushSources();
+        sendDelta(res, { content: chunk.text });
+      }
+    }
+  };
+
+  const reader = upstream.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const payload = trimmed.slice(5).trim();
-      if (!payload || payload === "[DONE]") continue;
+      let nl: number;
+      while ((nl = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (!line.startsWith("data:")) continue; // skips blank lines and "event: ..." lines — type is inside the JSON too
+        const jsonStr = line.slice(5).trim();
+        if (!jsonStr || jsonStr === "[DONE]") continue;
 
-      let evt: any;
-      try { evt = JSON.parse(payload); } catch { continue; }
+        let evt: any = null;
+        try { evt = JSON.parse(jsonStr); } catch { continue; } // malformed/partial — skip, never crash the stream
 
-      const outputEntry = Array.isArray(evt?.outputs)
-        ? evt.outputs.find((o: any) => o?.type === "message.output")
-        : undefined;
-
-      const candidates = [
-        evt?.content,
-        evt?.delta?.content,
-        evt?.output?.content,
-        evt?.data?.content,
-        outputEntry?.content,
-      ];
-
-      for (const c of candidates) {
-        if (c === undefined || c === null) continue;
-        const { reasoning, text } = extractChatContent(c);
-        if (reasoning) sendDelta(res, { reasoning });
-        if (text) sendDelta(res, { content: text });
+        if (evt?.type === "message.output.delta") {
+          relayContent(evt.content);
+        } else if (evt?.type === "conversation.response.done") {
+          flushSources();
+        }
+        // conversation.response.started / tool.execution.started / .done — no client-facing action needed
       }
     }
+  } catch {
+    // upstream connection dropped mid-stream — end gracefully below rather than hanging the client
   }
+
+  flushSources();
+  res.write("data: [DONE]\n\n");
+  res.end();
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -210,7 +359,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const hasUserKey = keyFromClient.length > 0;
 
     // ═══════════════════════════════════════════════════════════════════════
-    // IMAGE GENERATION MODE — unchanged (Gemini/Imagen)
+    // IMAGE GENERATION MODE — untouched (Gemini/Imagen)
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "image") {
       const imagePrompt = (prompt || "").trim();
@@ -249,7 +398,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // VISION MODE — Chat Completions (unchanged)
+    // VISION MODE — Mistral Medium 3.5 (natively multimodal), Chat Completions
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "vision") {
       if (hasUserKey) return res.status(403).json({ error: "Image analysis is available only in admin mode" });
@@ -261,7 +410,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!cleanImageBase64) return res.status(400).json({ error: "imageBase64 is required" });
 
       const actualMimeType = (mimeType || "image/jpeg").trim() || "image/jpeg";
-      const imageUrl = `data:${actualMimeType};base64,${cleanImageBase64}`;
+      const imageDataUrl = `data:${actualMimeType};base64,${cleanImageBase64}`;
       const visionPrompt = (prompt || "").trim() ||
         "Read the image carefully and return only the main text, question, or useful visible content from the image. Do not solve it unless the image itself asks for a direct answer.";
 
@@ -271,11 +420,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         body: JSON.stringify({
           model: MISTRAL_MODEL,
           temperature: 0.1,
+          reasoning_effort: "none",
           messages: [
             { role: "system", content: "You only analyze the image and extract the useful visible text, question, or content. Keep it clean and concise. Do not add extra explanation unless necessary." },
             { role: "user", content: [
               { type: "text", text: visionPrompt },
-              { type: "image_url", image_url: imageUrl },
+              // Mistral takes image_url as a plain string, NOT a {url:...}
+              // object the way the old Groq/OpenAI-style call did.
+              { type: "image_url", image_url: imageDataUrl },
             ]},
           ],
         }),
@@ -286,17 +438,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try { visionData = visionRaw ? JSON.parse(visionRaw) : null; } catch { visionData = null; }
 
       if (!visionRes.ok) {
-        return res.status(visionRes.status).json({
-          error: visionData?.error?.message || visionData?.error || visionRaw.slice(0, 300) || "Image analysis failed",
-        });
+        return res.status(visionRes.status).json({ error: formatMistralError(visionData, visionRaw, visionRes.status) });
       }
 
-      const { text: extracted } = extractChatContent(visionData?.choices?.[0]?.message?.content);
-      return res.status(200).json({ text: extracted.trim(), modelId: MISTRAL_MODEL });
+      const extracted = extractChatContent(visionData?.choices?.[0]?.message?.content).text;
+
+      return res.status(200).json({ text: extracted, modelId: MISTRAL_MODEL });
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // TRANSCRIBE MODE — unchanged (Groq Whisper)
+    // TRANSCRIBE MODE — untouched (Groq Whisper)
     // ═══════════════════════════════════════════════════════════════════════
     if (mode === "transcribe") {
       if (hasUserKey) return res.status(403).json({ error: "Voice transcription is available only in admin mode" });
@@ -334,8 +485,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CHAT MODE — Mistral via the Conversations API, native web_search,
-    // now with REAL streaming.
+    // CHAT MODE — Mistral Medium 3.5 via the Conversations API, with native
+    // web_search. Request shape follows Mistral's own cookbook example as
+    // closely as possible — see the header note for exactly what was added
+    // on top and why.
     // ═══════════════════════════════════════════════════════════════════════
 
     const apiKey = hasUserKey ? keyFromClient : (process.env.MISTRAL_API_KEY || "");
@@ -343,60 +496,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: hasUserKey ? "Missing API key (userKey)" : "Missing API key (MISTRAL_API_KEY)" });
     }
 
+    // System prompt goes through the dedicated `instructions` field, not a
+    // role:"system" entry inside `inputs` — no official example ever puts
+    // system there, and `instructions` is confirmed as its own top-level
+    // field on the /v1/conversations start body.
     const customSystemText = typeof systemInstruction === "string" ? systemInstruction.trim() : "";
     const instructionsText = [ELIYEN_SYSTEM_PROMPT, customSystemText].filter(Boolean).join("\n\n");
 
+    // Deterministic, UI-controlled — never guessed from message content.
+    // Same behaviour as before: the Android app's attach-button toggle sends
+    // thinkingMode:true for exactly one message, then goes back to false —
+    // this backend just reads whatever it's sent per-request.
     const wantsThinking = thinkingMode === true;
-    const effort = wantsThinking ? "high" : "none";
+    const effort = wantsThinking ? "high" : "none"; // Mistral only has none/high, no "default"
 
-    const isStreamReq = mode === "chat" && stream === true;
-
-    const requestPayload = {
+    const requestBody = {
       model: MISTRAL_MODEL,
       instructions: instructionsText,
       inputs: sanitizeInputs(messages),
-      stream: isStreamReq,
       tools: [{ type: "web_search" }],
       completion_args: { reasoning_effort: effort },
     };
 
-    // ── Real streaming path ───────────────────────────────────────────────
-    if (isStreamReq) {
-      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-      res.setHeader("Cache-Control", "no-cache, no-transform");
-      res.setHeader("Connection", "keep-alive");
-
-      const upstream = await fetch(MISTRAL_CONVERSATIONS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify(requestPayload),
-      });
-
-      if (!upstream.ok || !upstream.body) {
-        const errRaw = await upstream.text();
-        let errData: any = null;
-        try { errData = errRaw ? JSON.parse(errRaw) : null; } catch { errData = null; }
-        sendDelta(res, { content: `⚠️ ${formatMistralError(errData, errRaw, upstream.status)}` });
-        res.write("data: [DONE]\n\n");
-        res.end();
-        return;
-      }
-
-      try {
-        await pipeConversationStream(upstream.body, res);
-      } catch (e: any) {
-        sendDelta(res, { content: `\n\n[Connection error: ${e?.message || "stream interrupted"}]` });
-      }
-      res.write("data: [DONE]\n\n");
-      res.end();
+    // Real, live, token-by-token streaming — Mistral's own pacing relayed
+    // straight through, not the old fetch-then-simulate-chunks approach.
+    if (mode === "chat" && stream) {
+      await relayMistralStream(apiKey, requestBody, res);
       return;
     }
 
-    // ── Non-streaming path — unchanged ────────────────────────────────────
+    // Non-streaming fallback (stream:false) — unchanged from before.
     const chatRes = await fetch(MISTRAL_CONVERSATIONS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify(requestPayload),
+      body: JSON.stringify({ ...requestBody, stream: false }),
     });
 
     const chatRaw = await chatRes.text();
@@ -408,11 +541,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(chatRes.status || 502).json({ error: realMsg });
     }
 
-    const { text } = extractConversationOutput(chatData?.outputs);
+    const { reasoning, text, sources: rawSources } = extractConversationOutput(chatData?.outputs);
+    const sources = dedupeSources(rawSources);
     const cleanContent = text || "⚠️ Empty response from model";
 
-    return res.status(200).json({ text: cleanContent });
+    return res.status(200).json({ text: cleanContent, sources });
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-}
+  }
