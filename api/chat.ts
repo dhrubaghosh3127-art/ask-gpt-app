@@ -370,12 +370,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
     const {
       modelId, messages, userKey, userApiKey, prompt, systemInstruction, mode,
-      audioBase64, imageBase64, mimeType, language, stream, thinkingMode,
+      audioBase64, imageBase64, pdfBase64, mimeType, language, stream, thinkingMode,
     } = body as {
       modelId?: string; messages?: any[]; userKey?: string; userApiKey?: string;
       prompt?: string; systemInstruction?: string;
-      mode?: "chat" | "image" | "transcribe" | "vision";
-      audioBase64?: string; imageBase64?: string; mimeType?: string;
+      mode?: "chat" | "image" | "transcribe" | "vision" | "pdf";
+      audioBase64?: string; imageBase64?: string; pdfBase64?: string; mimeType?: string;
       language?: string; stream?: boolean;
       thinkingMode?: boolean;
     };
@@ -473,6 +473,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const extracted = extractChatContent(visionData?.choices?.[0]?.message?.content).text;
 
       return res.status(200).json({ text: extracted, modelId: MISTRAL_MODEL });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PDF MODE — Mistral Medium 3.5, plain Chat Completions API. Mirrors
+    // vision mode exactly, just `document_url` instead of `image_url` —
+    // confirmed directly against Mistral's own cookbook + a real
+    // client-python example: a normal chat completion message can include
+    // {type:"document_url", document_url:"data:application/pdf;base64,..."}
+    // right alongside {type:"text"}, same as image_url does for pictures.
+    // No separate OCR endpoint needed.
+    // ═══════════════════════════════════════════════════════════════════════
+    if (mode === "pdf") {
+      if (hasUserKey) return res.status(403).json({ error: "PDF analysis is available only in admin mode" });
+
+      const mistralApiKey = process.env.MISTRAL_API_KEY || "";
+      if (!mistralApiKey) return res.status(400).json({ error: "Missing API key (MISTRAL_API_KEY)" });
+
+      const cleanPdfBase64 = (pdfBase64 || "").replace(/^data:.*;base64,/, "").trim();
+      if (!cleanPdfBase64) return res.status(400).json({ error: "pdfBase64 is required" });
+
+      const pdfDataUrl = `data:application/pdf;base64,${cleanPdfBase64}`;
+      const pdfPrompt = (prompt || "").trim() ||
+        "Read the document carefully and return only the main text, question, or useful content from the document. Do not solve it unless the document itself asks for a direct answer.";
+
+      const pdfRes = await fetch(MISTRAL_CHAT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${mistralApiKey}` },
+        body: JSON.stringify({
+          model: MISTRAL_MODEL,
+          temperature: 0.1,
+          reasoning_effort: "none",
+          messages: [
+            { role: "system", content: "You only analyze the document and extract the useful content, question, or summary. Keep it clean and concise. Do not add extra explanation unless necessary." },
+            { role: "user", content: [
+              { type: "text", text: pdfPrompt },
+              { type: "document_url", document_url: pdfDataUrl },
+            ]},
+          ],
+        }),
+      });
+
+      const pdfRaw = await pdfRes.text();
+      let pdfData: any = null;
+      try { pdfData = pdfRaw ? JSON.parse(pdfRaw) : null; } catch { pdfData = null; }
+
+      if (!pdfRes.ok) {
+        return res.status(pdfRes.status).json({ error: formatMistralError(pdfData, pdfRaw, pdfRes.status) });
+      }
+
+      const extractedPdf = extractChatContent(pdfData?.choices?.[0]?.message?.content).text;
+
+      return res.status(200).json({ text: extractedPdf, modelId: MISTRAL_MODEL });
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -578,4 +630,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-          }
+}
