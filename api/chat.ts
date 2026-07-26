@@ -93,6 +93,24 @@ How you answer:
 - Be warm, direct, and genuinely helpful — like a sharp, knowledgeable friend, not a corporate script.
 `.trim();
 
+// Was: "You only analyze the image and extract the useful visible text...
+// Do not add extra explanation unless necessary." — written for OCR/document
+// extraction, not general photo Q&A. Mistral's own docs treat those as two
+// different things (Vision vs Document AI) with different expected prompting.
+// A narrow "just extract, don't explain" instruction against an open-ended
+// question like "how does this look?" left the model with no clear task,
+// and it would sometimes fall back to just repeating the question — this
+// prompt removes that ambiguity directly.
+const VISION_SYSTEM_PROMPT = `
+You are Eliyen, an AI assistant built by PROHOR AI, looking at a photo the user just sent.
+
+Respond naturally and helpfully to whatever they're asking about the image — describe it, answer a question about it, solve a problem shown in it, explain it, or discuss it, whatever fits their message. Give a complete, clear, genuinely useful answer. Never just repeat the user's own question or message back as if it were the answer — if you are unsure what they mean, describe the image and make your best attempt at what they likely want to know.
+
+Write math in plain, ordinary notation people can read normally: x^2, 1/x, sqrt(x), (a+b), >=, <=. Never output raw LaTeX commands like \\frac, \\sqrt{}, \\ge, or \\[ ... \\].
+
+Be warm, direct, and genuinely helpful — like a sharp, knowledgeable friend, not a corporate script.
+`.trim();
+
 // Mistral returns errors as either a plain string message, OR (on a rejected/
 // invalid request) an array of {loc, msg, type} validation-error objects —
 // one per bad field. Dropping that array straight into a template string
@@ -359,6 +377,84 @@ async function relayMistralStream(
   res.end();
 }
 
+// Relays Mistral's Chat Completions SSE stream through — used by vision mode.
+// Simpler than relayMistralStream above: Chat Completions is the standard
+// OpenAI-compatible `data: {"choices":[{"delta":{"content":"..."}}]}` shape
+// directly, ending in `data: [DONE]` — no message.output.delta / conversation.
+// response.done event wrapper to translate, since that's specific to the
+// Conversations API. Reuses the same sendDelta/setSSEHeaders/formatMistralError
+// helpers so both relay functions emit the identical delta format the app reads.
+async function relayMistralChatStream(
+  apiKey  : string,
+  request : Record<string, any>,
+  res     : VercelResponse,
+): Promise<void> {
+  let upstream: Response;
+  try {
+    upstream = await fetch(MISTRAL_CHAT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ ...request, stream: true }),
+    });
+  } catch (err: any) {
+    setSSEHeaders(res);
+    sendDelta(res, { content: `⚠️ ${err?.message || "Network error reaching Mistral"}` });
+    res.write("data: [DONE]\n\n");
+    res.end();
+    return;
+  }
+
+  if (!upstream.ok || !upstream.body) {
+    const raw = await upstream.text().catch(() => "");
+    let data: any = null;
+    try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+    const realMsg = formatMistralError(data, raw, upstream.status);
+    setSSEHeaders(res);
+    sendDelta(res, { content: `⚠️ ${realMsg}` });
+    res.write("data: [DONE]\n\n");
+    res.end();
+    return;
+  }
+
+  setSSEHeaders(res);
+
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let nl: number;
+      while ((nl = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (!line.startsWith("data:")) continue;
+        const jsonStr = line.slice(5).trim();
+        if (!jsonStr || jsonStr === "[DONE]") continue;
+
+        let evt: any = null;
+        try { evt = JSON.parse(jsonStr); } catch { continue; } // malformed/partial — skip, never crash the stream
+
+        const piece = evt?.choices?.[0]?.delta?.content;
+        if (typeof piece === "string" && piece) sendDelta(res, { content: piece });
+      }
+    }
+  } catch {
+    // upstream connection dropped mid-stream — end gracefully rather than hang the client
+  }
+
+  res.write("data: [DONE]\n\n");
+  res.end();
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -441,38 +537,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const actualMimeType = (mimeType || "image/jpeg").trim() || "image/jpeg";
       const imageDataUrl = `data:${actualMimeType};base64,${cleanImageBase64}`;
       const visionPrompt = (prompt || "").trim() ||
-        "Read the image carefully and return only the main text, question, or useful visible content from the image. Do not solve it unless the image itself asks for a direct answer.";
+        "Describe this image in detail — what's shown, and anything notable about it.";
 
-      const visionRes = await fetch(MISTRAL_CHAT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${mistralApiKey}` },
-        body: JSON.stringify({
-          model: MISTRAL_MODEL,
-          temperature: 0.1,
-          reasoning_effort: "none",
-          messages: [
-            { role: "system", content: "You only analyze the image and extract the useful visible text, question, or content. Keep it clean and concise. Do not add extra explanation unless necessary." },
-            { role: "user", content: [
-              { type: "text", text: visionPrompt },
-              // Mistral takes image_url as a plain string, NOT a {url:...}
-              // object the way the old Groq/OpenAI-style call did.
-              { type: "image_url", image_url: imageDataUrl },
-            ]},
-          ],
-        }),
-      });
-
-      const visionRaw = await visionRes.text();
-      let visionData: any = null;
-      try { visionData = visionRaw ? JSON.parse(visionRaw) : null; } catch { visionData = null; }
-
-      if (!visionRes.ok) {
-        return res.status(visionRes.status).json({ error: formatMistralError(visionData, visionRaw, visionRes.status) });
-      }
-
-      const extracted = extractChatContent(visionData?.choices?.[0]?.message?.content).text;
-
-      return res.status(200).json({ text: extracted, modelId: MISTRAL_MODEL });
+      await relayMistralChatStream(mistralApiKey, {
+        model: MISTRAL_MODEL,
+        temperature: 0.7,
+        reasoning_effort: "none",
+        messages: [
+          { role: "system", content: VISION_SYSTEM_PROMPT },
+          { role: "user", content: [
+            { type: "text", text: visionPrompt },
+            // Mistral takes image_url as a plain string, NOT a {url:...}
+            // object the way the old Groq/OpenAI-style call did.
+            { type: "image_url", image_url: imageDataUrl },
+          ]},
+        ],
+      }, res);
+      return;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -578,4 +659,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-}
+      }
+       
