@@ -71,6 +71,9 @@ const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/conversations";
 const MISTRAL_MODEL = "mistral-medium-latest";
 
+// Mistral's own documented limit for images in a single request.
+const MAX_VISION_IMAGES = 8;
+
 const ELIYEN_SYSTEM_PROMPT = `
 You are Eliyen, an AI assistant built by PROHOR AI.
 
@@ -466,12 +469,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
     const {
       modelId, messages, userKey, userApiKey, prompt, systemInstruction, mode,
-      audioBase64, imageBase64, mimeType, language, stream, thinkingMode,
+      audioBase64, imageBase64, images, mimeType, language, stream, thinkingMode,
     } = body as {
       modelId?: string; messages?: any[]; userKey?: string; userApiKey?: string;
       prompt?: string; systemInstruction?: string;
       mode?: "chat" | "image" | "transcribe" | "vision";
-      audioBase64?: string; imageBase64?: string; mimeType?: string;
+      audioBase64?: string; imageBase64?: string;
+      images?: { data?: string; mimeType?: string }[];
+      mimeType?: string;
       language?: string; stream?: boolean;
       thinkingMode?: boolean;
     };
@@ -531,13 +536,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const mistralApiKey = process.env.MISTRAL_API_KEY || "";
       if (!mistralApiKey) return res.status(400).json({ error: "Missing API key (MISTRAL_API_KEY)" });
 
-      const cleanImageBase64 = (imageBase64 || "").replace(/^data:.*;base64,/, "").trim();
-      if (!cleanImageBase64) return res.status(400).json({ error: "imageBase64 is required" });
+      // images[] is the current shape (multi-image). imageBase64 is read too,
+      // as a single-image fallback, purely so an older client build can't
+      // silently send nothing — the app always sends images[] now.
+      const rawImages = Array.isArray(images) && images.length > 0
+        ? images
+        : (imageBase64 ? [{ data: imageBase64, mimeType }] : []);
 
-      const actualMimeType = (mimeType || "image/jpeg").trim() || "image/jpeg";
-      const imageDataUrl = `data:${actualMimeType};base64,${cleanImageBase64}`;
+      if (rawImages.length === 0) return res.status(400).json({ error: "images is required" });
+
+      // Mistral's own documented limit is 8 images per request — enforced
+      // here too (defense in depth; the app already stops the user at 8).
+      if (rawImages.length > MAX_VISION_IMAGES) {
+        return res.status(400).json({ error: `Too many images — max ${MAX_VISION_IMAGES} per message` });
+      }
+
+      const imageContentBlocks = rawImages
+        .map((img) => {
+          const clean = (img.data || "").replace(/^data:.*;base64,/, "").trim();
+          if (!clean) return null;
+          const mt = (img.mimeType || "image/jpeg").trim() || "image/jpeg";
+          // Mistral takes image_url as a plain string, NOT a {url:...}
+          // object the way the old Groq/OpenAI-style call did.
+          return { type: "image_url", image_url: `data:${mt};base64,${clean}` };
+        })
+        .filter((block): block is { type: string; image_url: string } => block !== null);
+
+      if (imageContentBlocks.length === 0) return res.status(400).json({ error: "No valid image data" });
+
       const visionPrompt = (prompt || "").trim() ||
-        "Describe this image in detail — what's shown, and anything notable about it.";
+        (imageContentBlocks.length > 1
+          ? "Describe these images in detail — what's shown in each, and anything notable."
+          : "Describe this image in detail — what's shown, and anything notable about it.");
 
       await relayMistralChatStream(mistralApiKey, {
         model: MISTRAL_MODEL,
@@ -547,9 +577,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           { role: "system", content: VISION_SYSTEM_PROMPT },
           { role: "user", content: [
             { type: "text", text: visionPrompt },
-            // Mistral takes image_url as a plain string, NOT a {url:...}
-            // object the way the old Groq/OpenAI-style call did.
-            { type: "image_url", image_url: imageDataUrl },
+            ...imageContentBlocks,
           ]},
         ],
       }, res);
@@ -659,5 +687,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-      }
-       
+}
