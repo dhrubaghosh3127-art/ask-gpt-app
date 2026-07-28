@@ -104,10 +104,17 @@ How you answer:
 // question like "how does this look?" left the model with no clear task,
 // and it would sometimes fall back to just repeating the question — this
 // prompt removes that ambiguity directly.
+const NEEDS_SEARCH_MARKER = "NEEDS_SEARCH:";
+
 const VISION_SYSTEM_PROMPT = `
 You are Eliyen, an AI assistant built by PROHOR AI, looking at a photo the user just sent.
 
 Respond naturally and helpfully to whatever they're asking about the image — describe it, answer a question about it, solve a problem shown in it, explain it, or discuss it, whatever fits their message. Give a complete, clear, genuinely useful answer. Never just repeat the user's own question or message back as if it were the answer — if you are unsure what they mean, describe the image and make your best attempt at what they likely want to know.
+
+You cannot browse the web from here, so answer fully from what you can see in the image and what you already know. Only in the rare case where answering properly truly needs current, real-time, or web-verifiable information you cannot know (recent events, live prices or status, whether something specific still exists or is open, verifying a fact tied to what's shown) — instead of guessing, respond with ONLY this one line and nothing else, on its own:
+${NEEDS_SEARCH_MARKER} <a clear, self-contained search query, written as if the image were not available — include any names, text, or details from the image that the query needs>
+
+Do not use that line for anything else, and do not use it just because a question is hard — only when it truly needs live/current information.
 
 Write math in plain, ordinary notation people can read normally: x^2, 1/x, sqrt(x), (a+b), >=, <=. Never output raw LaTeX commands like \\frac, \\sqrt{}, \\ge, or \\[ ... \\].
 
@@ -380,17 +387,52 @@ async function relayMistralStream(
   res.end();
 }
 
-// Relays Mistral's Chat Completions SSE stream through — used by vision mode.
-// Simpler than relayMistralStream above: Chat Completions is the standard
-// OpenAI-compatible `data: {"choices":[{"delta":{"content":"..."}}]}` shape
-// directly, ending in `data: [DONE]` — no message.output.delta / conversation.
-// response.done event wrapper to translate, since that's specific to the
-// Conversations API. Reuses the same sendDelta/setSSEHeaders/formatMistralError
-// helpers so both relay functions emit the identical delta format the app reads.
-async function relayMistralChatStream(
-  apiKey  : string,
-  request : Record<string, any>,
-  res     : VercelResponse,
+// Step 2 of the vision pipeline — only reached when the vision step itself
+// flagged (via NEEDS_SEARCH_MARKER) that it needs current/verifiable info it
+// can't get from the image alone. Text-only Conversations API call with
+// tools:[web_search] always available — exactly the same pattern normal chat
+// already uses below (see wantsThinking/effort) — Mistral's own reasoning
+// decides whether to actually invoke the search, this doesn't force it.
+async function runVisionSearchFollowUp(
+  apiKey        : string,
+  originalPrompt: string,
+  searchQuery   : string,
+  effort        : "none" | "high",
+  res           : VercelResponse,
+): Promise<void> {
+  const requestBody = {
+    model: MISTRAL_MODEL,
+    instructions: VISION_SYSTEM_PROMPT,
+    inputs: [
+      { role: "user", content:
+          `The user sent a photo and asked: "${originalPrompt}"\n\n` +
+          `Looking at the photo, answering this properly needs current information: ${searchQuery}\n\n` +
+          `Search for what's needed and answer the user's original question fully.`,
+      },
+    ],
+    tools: [{ type: "web_search" }],
+    completion_args: { reasoning_effort: effort },
+  };
+  await relayMistralStream(apiKey, requestBody, res);
+}
+
+// Vision pipeline entry point: streams the Chat Completions vision analysis
+// while watching for the NEEDS_SEARCH_MARKER line. Two possible outcomes:
+//  - Normal answer → buffered start + the rest of the stream relayed live
+//    (small initial delay while we confirm it's not the marker, real
+//    streaming after that).
+//  - Marker seen → this stream's output is discarded entirely (none of it
+//    reaches the client) and control hands off to runVisionSearchFollowUp,
+//    which does the actual real-time web search and streams that instead.
+// IMPORTANT: setSSEHeaders is deliberately NOT called until we know which of
+// the two outcomes we're in — calling it twice (once here, once inside
+// relayMistralStream during the handoff) would throw "headers already sent".
+async function handleVisionRequest(
+  apiKey      : string,
+  imageBlocks : { type: string; image_url: string }[],
+  visionPrompt: string,
+  effort      : "none" | "high",
+  res         : VercelResponse,
 ): Promise<void> {
   let upstream: Response;
   try {
@@ -401,7 +443,16 @@ async function relayMistralChatStream(
         "Accept": "text/event-stream",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ ...request, stream: true }),
+      body: JSON.stringify({
+        model: MISTRAL_MODEL,
+        temperature: 0.7,
+        reasoning_effort: effort,
+        stream: true,
+        messages: [
+          { role: "system", content: VISION_SYSTEM_PROMPT },
+          { role: "user", content: [{ type: "text", text: visionPrompt }, ...imageBlocks] },
+        ],
+      }),
     });
   } catch (err: any) {
     setSSEHeaders(res);
@@ -415,45 +466,90 @@ async function relayMistralChatStream(
     const raw = await upstream.text().catch(() => "");
     let data: any = null;
     try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
-    const realMsg = formatMistralError(data, raw, upstream.status);
     setSSEHeaders(res);
-    sendDelta(res, { content: `⚠️ ${realMsg}` });
+    sendDelta(res, { content: `⚠️ ${formatMistralError(data, raw, upstream.status)}` });
     res.write("data: [DONE]\n\n");
     res.end();
     return;
   }
 
-  setSSEHeaders(res);
-
   const reader = upstream.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = "";
+  let sseBuffer  = "";                                   // raw SSE line buffer
+  let textBuffer = "";                                    // accumulated content, for marker detection
+  let inPassthrough = false;
+  let headersSet = false;
+
+  const flushAsPassthrough = () => {
+    if (!headersSet) { setSSEHeaders(res); headersSet = true; }
+    if (textBuffer) sendDelta(res, { content: textBuffer });
+    textBuffer = "";
+    inPassthrough = true;
+  };
 
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+      sseBuffer += decoder.decode(value, { stream: true });
 
       let nl: number;
-      while ((nl = buffer.indexOf("\n")) !== -1) {
-        const line = buffer.slice(0, nl).trim();
-        buffer = buffer.slice(nl + 1);
+      while ((nl = sseBuffer.indexOf("\n")) !== -1) {
+        const line = sseBuffer.slice(0, nl).trim();
+        sseBuffer = sseBuffer.slice(nl + 1);
         if (!line.startsWith("data:")) continue;
         const jsonStr = line.slice(5).trim();
         if (!jsonStr || jsonStr === "[DONE]") continue;
 
         let evt: any = null;
-        try { evt = JSON.parse(jsonStr); } catch { continue; } // malformed/partial — skip, never crash the stream
-
+        try { evt = JSON.parse(jsonStr); } catch { continue; }
         const piece = evt?.choices?.[0]?.delta?.content;
-        if (typeof piece === "string" && piece) sendDelta(res, { content: piece });
+        if (typeof piece !== "string" || !piece) continue;
+
+        if (inPassthrough) {
+          sendDelta(res, { content: piece });
+          continue;
+        }
+
+        textBuffer += piece;
+        if (textBuffer.length < NEEDS_SEARCH_MARKER.length) continue; // not enough yet to know either way
+
+        if (!textBuffer.startsWith(NEEDS_SEARCH_MARKER)) {
+          flushAsPassthrough();
+          continue;
+        }
+
+        // Starts with the marker — wait for the full query line, then hand off.
+        const lineEnd = textBuffer.indexOf("\n");
+        if (lineEnd === -1) continue; // query line not finished arriving yet
+
+        try { await reader.cancel(); } catch { /* ignore */ }
+        const query = textBuffer.slice(NEEDS_SEARCH_MARKER.length, lineEnd).trim();
+        await runVisionSearchFollowUp(apiKey, visionPrompt, query, effort, res);
+        return;
       }
     }
   } catch {
-    // upstream connection dropped mid-stream — end gracefully rather than hang the client
+    // upstream dropped mid-stream — finalize with whatever we have below
   }
 
+  // Stream ended while still "detecting" — e.g. a short answer with no
+  // trailing newline, or a marker line with no newline before the stream
+  // closed. Whatever's buffered is real model output either way; use it
+  // rather than silently dropping it.
+  if (!inPassthrough && textBuffer) {
+    if (textBuffer.startsWith(NEEDS_SEARCH_MARKER)) {
+      const query = textBuffer.slice(NEEDS_SEARCH_MARKER.length).trim();
+      await runVisionSearchFollowUp(apiKey, visionPrompt, query, effort, res);
+      return;
+    }
+    flushAsPassthrough();
+  }
+
+  if (!headersSet) {
+    // Model produced literally nothing, or dropped before any content arrived
+    setSSEHeaders(res);
+  }
   res.write("data: [DONE]\n\n");
   res.end();
 }
@@ -569,18 +665,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ? "Describe these images in detail — what's shown in each, and anything notable."
           : "Describe this image in detail — what's shown, and anything notable about it.");
 
-      await relayMistralChatStream(mistralApiKey, {
-        model: MISTRAL_MODEL,
-        temperature: 0.7,
-        reasoning_effort: "none",
-        messages: [
-          { role: "system", content: VISION_SYSTEM_PROMPT },
-          { role: "user", content: [
-            { type: "text", text: visionPrompt },
-            ...imageContentBlocks,
-          ]},
-        ],
-      }, res);
+      // Same rule as normal chat below (wantsThinking/effort): the attach-bar
+      // toggle sends thinkingMode:true for exactly one message, then resets —
+      // this just reads whatever it's sent per-request. none/high are the
+      // only two levels Mistral exposes.
+      const visionEffort = thinkingMode === true ? "high" : "none";
+
+      await handleVisionRequest(mistralApiKey, imageContentBlocks, visionPrompt, visionEffort, res);
       return;
     }
 
@@ -687,4 +778,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-}
+  }
