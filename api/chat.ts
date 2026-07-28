@@ -379,7 +379,7 @@ async function relayMistralStream(
       }
     }
   } catch {
-    // upstream connection dropped mid-stream — end gracefully below rather than hanging the client
+      // upstream connection dropped mid-stream — end gracefully below rather than hanging the client
   }
 
   flushSources();
@@ -512,19 +512,20 @@ async function handleVisionRequest(
         }
 
         textBuffer += piece;
-        if (textBuffer.length < NEEDS_SEARCH_MARKER.length) continue; // not enough yet to know either way
+        const trimmedForCheck = textBuffer.trimStart();
+        if (trimmedForCheck.length < NEEDS_SEARCH_MARKER.length) continue; // not enough yet to know either way
 
-        if (!textBuffer.startsWith(NEEDS_SEARCH_MARKER)) {
+        if (!trimmedForCheck.startsWith(NEEDS_SEARCH_MARKER)) {
           flushAsPassthrough();
           continue;
         }
 
         // Starts with the marker — wait for the full query line, then hand off.
-        const lineEnd = textBuffer.indexOf("\n");
+        const lineEnd = trimmedForCheck.indexOf("\n");
         if (lineEnd === -1) continue; // query line not finished arriving yet
 
         try { await reader.cancel(); } catch { /* ignore */ }
-        const query = textBuffer.slice(NEEDS_SEARCH_MARKER.length, lineEnd).trim();
+        const query = trimmedForCheck.slice(NEEDS_SEARCH_MARKER.length, lineEnd).trim();
         await runVisionSearchFollowUp(apiKey, visionPrompt, query, effort, res);
         return;
       }
@@ -538,8 +539,9 @@ async function handleVisionRequest(
   // closed. Whatever's buffered is real model output either way; use it
   // rather than silently dropping it.
   if (!inPassthrough && textBuffer) {
-    if (textBuffer.startsWith(NEEDS_SEARCH_MARKER)) {
-      const query = textBuffer.slice(NEEDS_SEARCH_MARKER.length).trim();
+    const trimmedFinal = textBuffer.trimStart();
+    if (trimmedFinal.startsWith(NEEDS_SEARCH_MARKER)) {
+      const query = trimmedFinal.slice(NEEDS_SEARCH_MARKER.length).trim();
       await runVisionSearchFollowUp(apiKey, visionPrompt, query, effort, res);
       return;
     }
@@ -662,8 +664,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const visionPrompt = (prompt || "").trim() ||
         (imageContentBlocks.length > 1
-          ? "Describe these images in detail — what's shown in each, and anything notable."
-          : "Describe this image in detail — what's shown, and anything notable about it.");
+          ? "If these images contain a question, problem, or task, work through it and give the actual answer. Otherwise, describe what's shown in detail and anything notable."
+          : "If this image contains a question, problem, or task, work through it and give the actual answer — don't just describe that a question exists. Otherwise, describe what's shown in detail and anything notable.");
 
       // Same rule as normal chat below (wantsThinking/effort): the attach-bar
       // toggle sends thinkingMode:true for exactly one message, then resets —
@@ -778,4 +780,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-  }
+}
