@@ -111,10 +111,13 @@ You are Eliyen, an AI assistant built by PROHOR AI, looking at a photo the user 
 
 Respond naturally and helpfully to whatever they're asking about the image — describe it, answer a question about it, solve a problem shown in it, explain it, or discuss it, whatever fits their message. Give a complete, clear, genuinely useful answer. Never just repeat the user's own question or message back as if it were the answer — if you are unsure what they mean, describe the image and make your best attempt at what they likely want to know.
 
-You cannot browse the web from here, so answer fully from what you can see in the image and what you already know. Only in the rare case where answering properly truly needs current, real-time, or web-verifiable information you cannot know (recent events, live prices or status, whether something specific still exists or is open, verifying a fact tied to what's shown) — instead of guessing, respond with ONLY this one line and nothing else, on its own:
+You cannot browse the web from here, so answer fully from what you can see in the image and what you already know. Only in the rare case where answering properly truly needs current, real-time, or web-verifiable information you cannot know (recent events, live prices or status, whether something specific still exists or is open, verifying a fact tied to what's shown), do this instead of guessing:
+1. In 2-5 short lines, say what you see in the image relevant to the question, and mention plainly that you'll check current information for it (e.g. "I can see you're asking about X — that needs current data, let me check.").
+2. Then, on its own line by itself, write exactly:
 ${NEEDS_SEARCH_MARKER} <a clear, self-contained search query, written as if the image were not available — include any names, text, or details from the image that the query needs>
+3. Write nothing after that line — the search and the rest of the answer happen next, on their own.
 
-Do not use that line for anything else, and do not use it just because a question is hard — only when it truly needs live/current information.
+Only do this when the answer truly needs live/current information, not just because a question is hard.
 
 Write math in plain, ordinary notation people can read normally: x^2, 1/x, sqrt(x), (a+b), >=, <=. Never output raw LaTeX commands like \\frac, \\sqrt{}, \\ge, or \\[ ... \\].
 
@@ -258,9 +261,10 @@ function extractConversationOutput(outputs: any[]): { reasoning: string; text: s
 // already handles — same extraction logic, just applied per-delta instead
 // of to one final blob.
 async function relayMistralStream(
-  apiKey  : string,
-  request : Record<string, any>,
-  res     : VercelResponse,
+  apiKey     : string,
+  request    : Record<string, any>,
+  res        : VercelResponse,
+  skipHeaders: boolean = false,
 ): Promise<void> {
   let upstream: Response;
   try {
@@ -274,7 +278,7 @@ async function relayMistralStream(
       body: JSON.stringify({ ...request, stream: true }),
     });
   } catch (err: any) {
-    setSSEHeaders(res);
+    if (!skipHeaders) setSSEHeaders(res);
     sendDelta(res, { content: `⚠️ ${err?.message || "Network error reaching Mistral"}` });
     res.write("data: [DONE]\n\n");
     res.end();
@@ -286,14 +290,14 @@ async function relayMistralStream(
     let data: any = null;
     try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
     const realMsg = formatMistralError(data, raw, upstream.status);
-    setSSEHeaders(res);
+    if (!skipHeaders) setSSEHeaders(res);
     sendDelta(res, { content: `⚠️ ${realMsg}` });
     res.write("data: [DONE]\n\n");
     res.end();
     return;
   }
 
-  setSSEHeaders(res);
+  if (!skipHeaders) setSSEHeaders(res);
   console.log(`[mistral-stream] t=${Date.now()} type=upstream.connected`);
 
   const sources: SourceRef[] = [];
@@ -379,7 +383,7 @@ async function relayMistralStream(
       }
     }
   } catch {
-      // upstream connection dropped mid-stream — end gracefully below rather than hanging the client
+    // upstream connection dropped mid-stream — end gracefully below rather than hanging the client
   }
 
   flushSources();
@@ -393,40 +397,48 @@ async function relayMistralStream(
 // tools:[web_search] always available — exactly the same pattern normal chat
 // already uses below (see wantsThinking/effort) — Mistral's own reasoning
 // decides whether to actually invoke the search, this doesn't force it.
+// skipHeaders=true in the normal case: the vision step already streamed its
+// own short, real acknowledgment to the user before handing off here, so
+// this continues that same message rather than starting a fresh SSE response.
+const VISION_SEARCH_FOLLOWUP_INSTRUCTIONS = (
+  "You are Eliyen, an AI assistant built by PROHOR AI. You were just looking at a " +
+  "photo a user sent and told them you'd check current information. Search the web " +
+  "for what's needed and continue naturally into the full answer to their question — " +
+  "don't restart or re-introduce yourself, just continue where you left off. " +
+  "Write math in plain notation (x^2, 1/x, sqrt(x), >=, <=), never raw LaTeX."
+);
+
 async function runVisionSearchFollowUp(
   apiKey        : string,
   originalPrompt: string,
   searchQuery   : string,
   effort        : "none" | "high",
   res           : VercelResponse,
+  skipHeaders   : boolean,
 ): Promise<void> {
   const requestBody = {
     model: MISTRAL_MODEL,
-    instructions: VISION_SYSTEM_PROMPT,
+    instructions: VISION_SEARCH_FOLLOWUP_INSTRUCTIONS,
     inputs: [
       { role: "user", content:
           `The user sent a photo and asked: "${originalPrompt}"\n\n` +
-          `Looking at the photo, answering this properly needs current information: ${searchQuery}\n\n` +
-          `Search for what's needed and answer the user's original question fully.`,
+          `You need this current information to finish answering: ${searchQuery}\n\n` +
+          `Search for it now and continue straight into the full answer.`,
       },
     ],
     tools: [{ type: "web_search" }],
     completion_args: { reasoning_effort: effort },
   };
-  await relayMistralStream(apiKey, requestBody, res);
+  await relayMistralStream(apiKey, requestBody, res, skipHeaders);
 }
 
 // Vision pipeline entry point: streams the Chat Completions vision analysis
-// while watching for the NEEDS_SEARCH_MARKER line. Two possible outcomes:
-//  - Normal answer → buffered start + the rest of the stream relayed live
-//    (small initial delay while we confirm it's not the marker, real
-//    streaming after that).
-//  - Marker seen → this stream's output is discarded entirely (none of it
-//    reaches the client) and control hands off to runVisionSearchFollowUp,
-//    which does the actual real-time web search and streams that instead.
-// IMPORTANT: setSSEHeaders is deliberately NOT called until we know which of
-// the two outcomes we're in — calling it twice (once here, once inside
-// relayMistralStream during the handoff) would throw "headers already sent".
+// line-by-line. Any natural-language text the model writes (e.g. a short "I
+// can see X, checking current data for this" acknowledgment) streams straight
+// to the client and stays visible — only the exact NEEDS_SEARCH_MARKER line
+// itself is intercepted and hidden. When that line appears, control hands off
+// to runVisionSearchFollowUp, which continues the SAME message with a real
+// web-search-backed answer rather than replacing what was already shown.
 async function handleVisionRequest(
   apiKey      : string,
   imageBlocks : { type: string; image_url: string }[],
@@ -475,30 +487,48 @@ async function handleVisionRequest(
 
   const reader = upstream.body.getReader();
   const decoder = new TextDecoder();
-  let sseBuffer  = "";                                   // raw SSE line buffer
-  let textBuffer = "";                                    // accumulated content, for marker detection
-  let inPassthrough = false;
+  let sseBuffer  = "";     // raw SSE frame buffer (data: {...} lines)
+  let lineBuffer = "";     // accumulated visible text not yet resolved into a complete line
   let headersSet = false;
+  let handedOff  = false;
 
-  const flushAsPassthrough = () => {
-    if (!headersSet) { setSSEHeaders(res); headersSet = true; }
-    if (textBuffer) sendDelta(res, { content: textBuffer });
-    textBuffer = "";
-    inPassthrough = true;
+  const ensureHeaders = () => { if (!headersSet) { setSSEHeaders(res); headersSet = true; } };
+  const flushText = (text: string) => { if (text) { ensureHeaders(); sendDelta(res, { content: text }); } };
+
+  // A partial (no newline yet) line is only worth holding back if it could
+  // still turn into the marker — otherwise flush it immediately so normal
+  // text streams with no perceptible delay.
+  const couldStillBecomeMarker = (s: string) => {
+    const t = s.trimStart();
+    return t.length === 0 || NEEDS_SEARCH_MARKER.startsWith(t) || t.startsWith(NEEDS_SEARCH_MARKER);
+  };
+
+  const handleCompleteLine = async (line: string): Promise<boolean> => {
+    // Returns true if this line was the marker (caller should stop after this).
+    const trimmed = line.trimStart();
+    if (trimmed.startsWith(NEEDS_SEARCH_MARKER)) {
+      const query = trimmed.slice(NEEDS_SEARCH_MARKER.length).trim();
+      try { await reader.cancel(); } catch { /* ignore */ }
+      handedOff = true;
+      await runVisionSearchFollowUp(apiKey, visionPrompt, query, effort, res, headersSet);
+      return true;
+    }
+    flushText(line);
+    return false;
   };
 
   try {
-    while (true) {
+    outer: while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       sseBuffer += decoder.decode(value, { stream: true });
 
       let nl: number;
       while ((nl = sseBuffer.indexOf("\n")) !== -1) {
-        const line = sseBuffer.slice(0, nl).trim();
+        const sseLine = sseBuffer.slice(0, nl).trim();
         sseBuffer = sseBuffer.slice(nl + 1);
-        if (!line.startsWith("data:")) continue;
-        const jsonStr = line.slice(5).trim();
+        if (!sseLine.startsWith("data:")) continue;
+        const jsonStr = sseLine.slice(5).trim();
         if (!jsonStr || jsonStr === "[DONE]") continue;
 
         let evt: any = null;
@@ -506,54 +536,36 @@ async function handleVisionRequest(
         const piece = evt?.choices?.[0]?.delta?.content;
         if (typeof piece !== "string" || !piece) continue;
 
-        if (inPassthrough) {
-          sendDelta(res, { content: piece });
-          continue;
+        lineBuffer += piece;
+
+        let textNl: number;
+        while ((textNl = lineBuffer.indexOf("\n")) !== -1) {
+          const completeLine = lineBuffer.slice(0, textNl + 1); // keep \n for natural spacing
+          lineBuffer = lineBuffer.slice(textNl + 1);
+          if (await handleCompleteLine(completeLine)) break outer;
         }
 
-        textBuffer += piece;
-        const trimmedForCheck = textBuffer.trimStart();
-        if (trimmedForCheck.length < NEEDS_SEARCH_MARKER.length) continue; // not enough yet to know either way
-
-        if (!trimmedForCheck.startsWith(NEEDS_SEARCH_MARKER)) {
-          flushAsPassthrough();
-          continue;
+        // Trailing partial line (no \n yet) — flush now unless it could still
+        // grow into the marker, so ordinary text has no artificial delay.
+        if (lineBuffer && !couldStillBecomeMarker(lineBuffer)) {
+          flushText(lineBuffer);
+          lineBuffer = "";
         }
-
-        // Starts with the marker — wait for the full query line, then hand off.
-        const lineEnd = trimmedForCheck.indexOf("\n");
-        if (lineEnd === -1) continue; // query line not finished arriving yet
-
-        try { await reader.cancel(); } catch { /* ignore */ }
-        const query = trimmedForCheck.slice(NEEDS_SEARCH_MARKER.length, lineEnd).trim();
-        await runVisionSearchFollowUp(apiKey, visionPrompt, query, effort, res);
-        return;
       }
     }
   } catch {
-    // upstream dropped mid-stream — finalize with whatever we have below
+    // upstream dropped mid-stream — finalize with whatever's left below
   }
 
-  // Stream ended while still "detecting" — e.g. a short answer with no
-  // trailing newline, or a marker line with no newline before the stream
-  // closed. Whatever's buffered is real model output either way; use it
-  // rather than silently dropping it.
-  if (!inPassthrough && textBuffer) {
-    const trimmedFinal = textBuffer.trimStart();
-    if (trimmedFinal.startsWith(NEEDS_SEARCH_MARKER)) {
-      const query = trimmedFinal.slice(NEEDS_SEARCH_MARKER.length).trim();
-      await runVisionSearchFollowUp(apiKey, visionPrompt, query, effort, res);
-      return;
-    }
-    flushAsPassthrough();
+  if (!handedOff && lineBuffer) {
+    await handleCompleteLine(lineBuffer);
   }
 
-  if (!headersSet) {
-    // Model produced literally nothing, or dropped before any content arrived
-    setSSEHeaders(res);
+  if (!handedOff) {
+    ensureHeaders();
+    res.write("data: [DONE]\n\n");
+    res.end();
   }
-  res.write("data: [DONE]\n\n");
-  res.end();
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -780,4 +792,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-}
+      }
