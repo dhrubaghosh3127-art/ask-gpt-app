@@ -69,6 +69,7 @@ export const config = { maxDuration: 30 };
 
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/conversations";
+const MISTRAL_OCR_URL = "https://api.mistral.ai/v1/ocr";
 const MISTRAL_MODEL = "mistral-medium-latest";
 
 // Mistral's own documented limit for images in a single request.
@@ -370,126 +371,7 @@ async function relayMistralStream(
           `[mistral-stream] t=${Date.now()} type=${evt?.type} contentLen=${
             typeof evt?.content === "string" ? evt.content.length
             : Array.isArray(evt?.content) ? `array(${evt.content.length})`
-            : typeof evt?.content
-          }`,
-        );
-
-        if (evt?.type === "message.output.delta") {
-          relayContent(evt.content);
-        } else if (evt?.type === "conversation.response.done") {
-          flushSources();
-        }
-        // conversation.response.started / tool.execution.started / .done — no client-facing action needed
-      }
-    }
-  } catch {
-    // upstream connection dropped mid-stream — end gracefully below rather than hanging the client
-  }
-
-  flushSources();
-  res.write("data: [DONE]\n\n");
-  res.end();
-}
-
-// Step 2 of the vision pipeline — only reached when the vision step itself
-// flagged (via NEEDS_SEARCH_MARKER) that it needs current/verifiable info it
-// can't get from the image alone. Text-only Conversations API call with
-// tools:[web_search] always available — exactly the same pattern normal chat
-// already uses below (see wantsThinking/effort) — Mistral's own reasoning
-// decides whether to actually invoke the search, this doesn't force it.
-// skipHeaders=true in the normal case: the vision step already streamed its
-// own short, real acknowledgment to the user before handing off here, so
-// this continues that same message rather than starting a fresh SSE response.
-const VISION_SEARCH_FOLLOWUP_INSTRUCTIONS = (
-  "You are Eliyen, an AI assistant built by PROHOR AI. You were just looking at a " +
-  "photo a user sent and told them you'd check current information. Search the web " +
-  "for what's needed and continue naturally into the full answer to their question — " +
-  "don't restart or re-introduce yourself, just continue where you left off. " +
-  "Write math in plain notation (x^2, 1/x, sqrt(x), >=, <=), never raw LaTeX."
-);
-
-async function runVisionSearchFollowUp(
-  apiKey        : string,
-  originalPrompt: string,
-  searchQuery   : string,
-  effort        : "none" | "high",
-  res           : VercelResponse,
-  skipHeaders   : boolean,
-): Promise<void> {
-  const requestBody = {
-    model: MISTRAL_MODEL,
-    instructions: VISION_SEARCH_FOLLOWUP_INSTRUCTIONS,
-    inputs: [
-      { role: "user", content:
-          `The user sent a photo and asked: "${originalPrompt}"\n\n` +
-          `You need this current information to finish answering: ${searchQuery}\n\n` +
-          `Search for it now and continue straight into the full answer.`,
-      },
-    ],
-    tools: [{ type: "web_search" }],
-    completion_args: { reasoning_effort: effort },
-  };
-  await relayMistralStream(apiKey, requestBody, res, skipHeaders);
-}
-
-// Vision pipeline entry point: streams the Chat Completions vision analysis
-// line-by-line. Any natural-language text the model writes (e.g. a short "I
-// can see X, checking current data for this" acknowledgment) streams straight
-// to the client and stays visible — only the exact NEEDS_SEARCH_MARKER line
-// itself is intercepted and hidden. When that line appears, control hands off
-// to runVisionSearchFollowUp, which continues the SAME message with a real
-// web-search-backed answer rather than replacing what was already shown.
-async function handleVisionRequest(
-  apiKey      : string,
-  imageBlocks : { type: string; image_url: string }[],
-  visionPrompt: string,
-  effort      : "none" | "high",
-  res         : VercelResponse,
-): Promise<void> {
-  let upstream: Response;
-  try {
-    upstream = await fetch(MISTRAL_CHAT_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "text/event-stream",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: MISTRAL_MODEL,
-        temperature: 0.7,
-        reasoning_effort: effort,
-        stream: true,
-        messages: [
-          { role: "system", content: VISION_SYSTEM_PROMPT },
-          { role: "user", content: [{ type: "text", text: visionPrompt }, ...imageBlocks] },
-        ],
-      }),
-    });
-  } catch (err: any) {
-    setSSEHeaders(res);
-    sendDelta(res, { content: `⚠️ ${err?.message || "Network error reaching Mistral"}` });
-    res.write("data: [DONE]\n\n");
-    res.end();
-    return;
-  }
-
-  if (!upstream.ok || !upstream.body) {
-    const raw = await upstream.text().catch(() => "");
-    let data: any = null;
-    try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
-    setSSEHeaders(res);
-    sendDelta(res, { content: `⚠️ ${formatMistralError(data, raw, upstream.status)}` });
-    res.write("data: [DONE]\n\n");
-    res.end();
-    return;
-  }
-
-  const reader = upstream.body.getReader();
-  const decoder = new TextDecoder();
-  let sseBuffer  = "";     // raw SSE frame buffer (data: {...} lines)
-  let lineBuffer = "";     // accumulated visible text not yet resolved into a complete line
-  let headersSet = false;
+            = false;
   let handedOff  = false;
 
   const ensureHeaders = () => { if (!headersSet) { setSSEHeaders(res); headersSet = true; } };
@@ -579,14 +461,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
     const {
       modelId, messages, userKey, userApiKey, prompt, systemInstruction, mode,
-      audioBase64, imageBase64, images, mimeType, language, stream, thinkingMode,
+      audioBase64, imageBase64, images, mimeType, document, language, stream, thinkingMode,
     } = body as {
       modelId?: string; messages?: any[]; userKey?: string; userApiKey?: string;
       prompt?: string; systemInstruction?: string;
-      mode?: "chat" | "image" | "transcribe" | "vision";
+      mode?: "chat" | "image" | "transcribe" | "vision" | "document";
       audioBase64?: string; imageBase64?: string;
       images?: { data?: string; mimeType?: string }[];
       mimeType?: string;
+      document?: { data?: string; mimeType?: string; fileName?: string };
       language?: string; stream?: boolean;
       thinkingMode?: boolean;
     };
@@ -728,6 +611,78 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // DOCUMENT MODE — Mistral OCR (dedicated endpoint, up to 1000 pages —
+    // deliberately NOT sending document_url straight to Chat Completions,
+    // which caps much lower per request and isn't enough for a real "big
+    // file, extract everything" need), then handed off into the exact same
+    // Conversations API pipeline normal chat uses below. Once extraction is
+    // done this is a genuinely normal text turn, so history, web_search, and
+    // thinkingMode all just work — no separate streaming/marker logic
+    // needed the way vision required.
+    // ═══════════════════════════════════════════════════════════════════════
+    if (mode === "document") {
+      if (hasUserKey) return res.status(403).json({ error: "Document analysis is available only in admin mode" });
+
+      const mistralApiKey = process.env.MISTRAL_API_KEY || "";
+      if (!mistralApiKey) return res.status(400).json({ error: "Missing API key (MISTRAL_API_KEY)" });
+
+      const cleanDocBase64 = (document?.data || "").replace(/^data:.*;base64,/, "").trim();
+      if (!cleanDocBase64) return res.status(400).json({ error: "document.data is required" });
+
+      const docMimeType = (document?.mimeType || "application/pdf").trim() || "application/pdf";
+      const fileLabel   = (document?.fileName || "the attached document").trim();
+      const documentDataUrl = `data:${docMimeType};base64,${cleanDocBase64}`;
+
+      let extractedText = "";
+      try {
+        const ocrRes = await fetch(MISTRAL_OCR_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${mistralApiKey}` },
+          body: JSON.stringify({
+            model: "mistral-ocr-latest",
+            document: { type: "document_url", document_url: documentDataUrl },
+          }),
+        });
+        const ocrRaw = await ocrRes.text();
+        let ocrData: any = null;
+        try { ocrData = ocrRaw ? JSON.parse(ocrRaw) : null; } catch { ocrData = null; }
+        if (!ocrRes.ok) {
+          return res.status(ocrRes.status).json({ error: formatMistralError(ocrData, ocrRaw, ocrRes.status) });
+        }
+        // Official response shape: { pages: [{ index, markdown, ... }, ...] }
+        const pages = Array.isArray(ocrData?.pages) ? ocrData.pages : [];
+        extractedText = pages
+          .map((p: any) => (typeof p?.markdown === "string" ? p.markdown : ""))
+          .filter(Boolean)
+          .join("\n\n")
+          .trim();
+      } catch (err: any) {
+        return res.status(502).json({ error: `Document extraction failed: ${err?.message || "network error"}` });
+      }
+
+      if (!extractedText) {
+        return res.status(422).json({ error: "Could not extract any text from this document" });
+      }
+
+      const docPrompt = (prompt || "").trim() || "Summarize this document and explain the key points.";
+      const wantsThinkingDoc = thinkingMode === true;
+      const docEffort = wantsThinkingDoc ? "high" : "none";
+
+      const combinedTurn =
+        `The user attached a file (${fileLabel}) and asked: "${docPrompt}"\n\n` +
+        `Here is the extracted content of the document:\n\n${extractedText}`;
+
+      await relayMistralStream(mistralApiKey, {
+        model: MISTRAL_MODEL,
+        instructions: ELIYEN_SYSTEM_PROMPT,
+        inputs: [...sanitizeInputs(messages), { role: "user", content: combinedTurn }],
+        tools: [{ type: "web_search" }],
+        completion_args: { reasoning_effort: docEffort },
+      }, res);
+      return;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // CHAT MODE — Mistral Medium 3.5 via the Conversations API, with native
     // web_search. Request shape follows Mistral's own cookbook example as
     // closely as possible — see the header note for exactly what was added
@@ -792,4 +747,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
-      }
+            }
