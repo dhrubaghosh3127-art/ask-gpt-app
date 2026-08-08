@@ -1,7 +1,5 @@
 // /api/chat.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-// ⚠️ ASSUMED PATH — confirm/fix this against your actual project structure.
-import { messaging } from "../lib/firebaseAdmin";
 
 export const config = { maxDuration: 30 };
 
@@ -152,16 +150,7 @@ function formatMistralError(data: any, raw: string, status: number): string {
 }
 
 function sendDelta(res: VercelResponse, delta: Record<string, any>) {
-  // Wrapped: once the client disconnects, further writes to it fail —
-  // previously that failure would bubble up and break out of the read
-  // loop below, stopping generation early. Swallowing it here means the
-  // loop keeps reading Mistral's stream to completion regardless, which
-  // is what lets the "reply ready" push notification fire correctly.
-  try {
-    res.write(`data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`);
-  } catch {
-    // client already gone — fine, generation continues regardless
-  }
+  res.write(`data: ${JSON.stringify({ choices: [{ delta, finish_reason: null }] })}\n\n`);
 }
 
 // Vercel's edge/reverse-proxy layer can buffer SSE responses — writing
@@ -271,44 +260,12 @@ function extractConversationOutput(outputs: any[]): { reasoning: string; text: s
 // {type:"thinking"|"text"|"tool_reference"} chunks the non-streaming path
 // already handles — same extraction logic, just applied per-delta instead
 // of to one final blob.
-// Fires once, only when the client disconnected before the reply finished
-// and a device token was provided. Uses FCM's "notification" payload (not
-// data-only) so Android displays it automatically even if the app process
-// isn't running — no app-side code has to wake up to show it. Never throws
-// outward; a failed push should never affect the request/response cycle
-// that's already finished by the time this runs.
-async function sendCompletionPush(token: string, replyText: string): Promise<void> {
-  const SNIPPET_LEN = 150;
-  const snippet = replyText.length > SNIPPET_LEN
-    ? replyText.slice(0, SNIPPET_LEN).trim() + "…"
-    : replyText;
-  try {
-    await messaging.send({
-      token,
-      notification: { title: "Eliyen replied", body: snippet },
-    });
-  } catch (err) {
-    console.log(`[fcm-push] failed: ${(err as any)?.message || err}`);
-  }
-}
-
 async function relayMistralStream(
   apiKey     : string,
   request    : Record<string, any>,
   res        : VercelResponse,
   skipHeaders: boolean = false,
-  fcmToken   : string | undefined = undefined,
 ): Promise<void> {
-  // Tracks whether the client is still there. res's own 'close' event also
-  // fires on a completely normal finish (after res.end()) — checking
-  // writableEnded at that moment is what tells apart "client actually left
-  // early" from "we were already done anyway".
-  let clientConnected = true;
-  res.on("close", () => {
-    if (!res.writableEnded) clientConnected = false;
-  });
-  let fullText = "";
-
   let upstream: Response;
   try {
     upstream = await fetch(MISTRAL_CONVERSATIONS_URL, {
@@ -358,7 +315,7 @@ async function relayMistralStream(
   // ordering the old simulated path used.
   const relayContent = (content: any) => {
     if (typeof content === "string") {
-      if (content) { flushSources(); fullText += content; sendDelta(res, { content }); }
+      if (content) { flushSources(); sendDelta(res, { content }); }
       return;
     }
     const chunks = Array.isArray(content) ? content : content ? [content] : [];
@@ -377,7 +334,6 @@ async function relayMistralStream(
         }
       } else if (typeof chunk?.text === "string" && chunk.text) {
         flushSources();
-        fullText += chunk.text;
         sendDelta(res, { content: chunk.text });
       }
     }
@@ -417,7 +373,7 @@ async function relayMistralStream(
             : typeof evt?.content
           }`,
         );
-  if (evt?.type === "message.output.delta") {
+   if (evt?.type === "message.output.delta") {
           relayContent(evt.content);
         } else if (evt?.type === "conversation.response.done") {
           flushSources();
@@ -430,20 +386,8 @@ async function relayMistralStream(
   }
 
   flushSources();
-
-  // Client left before the reply finished — the full text is fully
-  // assembled now, so send the "reply ready" push. Never sent while the
-  // client is still connected (they're already watching it stream live).
-  if (!clientConnected && fcmToken && fullText.trim()) {
-    await sendCompletionPush(fcmToken, fullText.trim());
-  }
-
-  try {
-    res.write("data: [DONE]\n\n");
-    res.end();
-  } catch {
-    // client already gone — nothing left to finish
-  }
+  res.write("data: [DONE]\n\n");
+  res.end();
 }
 
 // Step 2 of the vision pipeline — only reached when the vision step itself
@@ -635,7 +579,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const {
       modelId, messages, userKey, userApiKey, prompt, systemInstruction, mode,
       audioBase64, imageBase64, images, mimeType, language, stream, thinkingMode,
-      fcmToken,
     } = body as {
       modelId?: string; messages?: any[]; userKey?: string; userApiKey?: string;
       prompt?: string; systemInstruction?: string;
@@ -645,10 +588,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       mimeType?: string;
       language?: string; stream?: boolean;
       thinkingMode?: boolean;
-      // Current FCM token for this device — optional. Only used if the
-      // client disconnects before the reply finishes, to push a "reply
-      // ready" notification. Absent/omitted → behaves exactly as before.
-      fcmToken?: string;
     };
 
     if (mode === "chat" && !Array.isArray(messages)) {
@@ -811,7 +750,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // thinkingMode:true for exactly one message, then goes back to false —
     // this backend just reads whatever it's sent per-request.
     const wantsThinking = thinkingMode === true;
-        const effort = wantsThinking ? "high" : "none"; // Mistral only has none/high, no "default"
+    const effort = wantsThinking ? "high" : "none"; // Mistral only has none/high, no "default"
 
     const requestBody = {
       model: MISTRAL_MODEL,
@@ -824,7 +763,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Real, live, token-by-token streaming — Mistral's own pacing relayed
     // straight through, not the old fetch-then-simulate-chunks approach.
     if (mode === "chat" && stream) {
-      await relayMistralStream(apiKey, requestBody, res, false, fcmToken);
+      await relayMistralStream(apiKey, requestBody, res);
       return;
     }
 
@@ -853,5 +792,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: err?.message || String(err) || "Internal server error" });
   }
 }
-        
-        
