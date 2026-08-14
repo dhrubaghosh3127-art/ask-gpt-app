@@ -373,12 +373,17 @@ async function relayMistralStream(
             : typeof evt?.content
           }`,
         );
-   if (evt?.type === "message.output.delta") {
+      if (evt?.type === "message.output.delta") {
           relayContent(evt.content);
         } else if (evt?.type === "conversation.response.done") {
           flushSources();
+        } else if (evt?.type === "tool.execution.started" && evt?.name === "web_search") {
+          // New, additive delta key so the client can show a real "searching"
+          // status live instead of guessing. Nothing else changes shape —
+          // app builds that don't read `phase` simply ignore this delta.
+          sendDelta(res, { phase: "web_search" });
         }
-        // conversation.response.started / tool.execution.started / .done — no client-facing action needed
+        // conversation.response.started / tool.execution.done — no client-facing action needed
       }
     }
   } catch {
