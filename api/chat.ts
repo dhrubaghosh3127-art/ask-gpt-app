@@ -301,19 +301,23 @@ async function relayMistralStream(
   console.log(`[mistral-stream] t=${Date.now()} type=upstream.connected`);
 
   const sources: SourceRef[] = [];
-  let sourcesSent = false;
+  let lastSentSourceCount = 0;
   const flushSources = () => {
-    if (sourcesSent) return;
     const deduped = dedupeSources(sources);
-    console.log(`[mistral-stream] flushSources: ${sources.length} raw -> ${deduped.length} deduped`);
-    if (deduped.length) sendDelta(res, { sources: JSON.stringify(deduped) });
-    sourcesSent = true;
+    if (deduped.length > lastSentSourceCount) {
+      console.log(`[mistral-stream] flushSources: ${sources.length} raw -> ${deduped.length} deduped (was ${lastSentSourceCount})`);
+      sendDelta(res, { sources: JSON.stringify(deduped) });
+      lastSentSourceCount = deduped.length;
+    }
   };
 
   // One already-JSON-parsed delta's `content` value — string, single chunk
-  // object, or array of chunks. Sources are held back and flushed (once)
-  // right before the first real visible content, same one-shot-first
-  // ordering the old simulated path used.
+  // object, or array of chunks. Real Mistral traffic doesn't guarantee
+  // sources arrive before the visible answer text — a live capture showed
+  // all tool_reference chunks landing AFTER most of the answer had already
+  // streamed — so flushSources() is now safe to call as often as needed
+  // (it only ever sends when there's genuinely new data since the last
+  // send) rather than once-and-done.
   const relayContent = (content: any) => {
     if (typeof content === "string") {
       if (content) { flushSources(); sendDelta(res, { content }); }
@@ -333,6 +337,7 @@ async function relayMistralStream(
             url: chunk.url,
             source: typeof chunk.source === "string" ? chunk.source : "",
           });
+          flushSources(); // send as soon as found — don't wait for text that may never come, or may already be done
         }
       } else if (typeof chunk?.text === "string" && chunk.text) {
         flushSources();
@@ -791,7 +796,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const chatRaw = await chatRes.text();
     let chatData: any = null;
-    try { chatData = chatRaw ? JSON.parse(chatRaw) : null; } catch { chatData = null; }
+   try { chatData = chatRaw ? JSON.parse(chatRaw) : null; } catch { chatData = null; }
 
     if (!chatRes.ok || !chatData) {
       const realMsg = formatMistralError(chatData, chatRaw, chatRes.status);
@@ -800,7 +805,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { reasoning, text, sources: rawSources } = extractConversationOutput(chatData?.outputs);
     const sources = dedupeSources(rawSources);
-  const cleanContent = text || "⚠️ Empty response from model";
+    const cleanContent = text || "⚠️ Empty response from model";
 
     return res.status(200).json({ text: cleanContent, sources });
   } catch (err: any) {
