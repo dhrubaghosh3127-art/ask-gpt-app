@@ -69,7 +69,7 @@ export const config = { maxDuration: 30 };
 
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/conversations";
-const MISTRAL_MODEL = "mistral-small-2603";
+const MISTRAL_MODEL = "mistral-medium-latest";
 
 // Mistral's own documented limit for images in a single request.
 const MAX_VISION_IMAGES = 8;
@@ -305,6 +305,7 @@ async function relayMistralStream(
   const flushSources = () => {
     if (sourcesSent) return;
     const deduped = dedupeSources(sources);
+    console.log(`[mistral-stream] flushSources: ${sources.length} raw -> ${deduped.length} deduped`);
     if (deduped.length) sendDelta(res, { sources: JSON.stringify(deduped) });
     sourcesSent = true;
   };
@@ -325,6 +326,7 @@ async function relayMistralStream(
         const piece = inner.map((x: any) => (typeof x?.text === "string" ? x.text : "")).join("");
         if (piece) sendDelta(res, { reasoning: piece });
       } else if (chunk?.type === "tool_reference") {
+        console.log(`[mistral-stream] tool_reference seen: title=${chunk.title} url=${chunk.url} source=${chunk.source}`);
         if (typeof chunk.url === "string" && chunk.url) {
           sources.push({
             title: typeof chunk.title === "string" ? chunk.title : "",
@@ -373,7 +375,7 @@ async function relayMistralStream(
             : typeof evt?.content
           }`,
         );
-      if (evt?.type === "message.output.delta") {
+   if (evt?.type === "message.output.delta") {
           relayContent(evt.content);
         } else if (evt?.type === "conversation.response.done") {
           flushSources();
@@ -382,6 +384,14 @@ async function relayMistralStream(
           // status live instead of guessing. Nothing else changes shape —
           // app builds that don't read `phase` simply ignore this delta.
           sendDelta(res, { phase: "web_search" });
+        } else if (evt?.type === "function.call.delta") {
+          // Diagnostic only. Mistral's docs describe FunctionCallEntry as
+          // carrying name/arguments/tool_call_id — if this actually fires
+          // for the plain `web_search` tool (as opposed to only function-
+          // style/premium tools), the log line below will show real
+          // arguments and confirms the query text is recoverable; if it
+          // never appears in the logs, it isn't, for this tool config.
+          console.log(`[mistral-stream] function.call.delta: ${JSON.stringify(evt).slice(0, 300)}`);
         }
         // conversation.response.started / tool.execution.done — no client-facing action needed
       }
@@ -790,7 +800,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { reasoning, text, sources: rawSources } = extractConversationOutput(chatData?.outputs);
     const sources = dedupeSources(rawSources);
-    const cleanContent = text || "⚠️ Empty response from model";
+  const cleanContent = text || "⚠️ Empty response from model";
 
     return res.status(200).json({ text: cleanContent, sources });
   } catch (err: any) {
