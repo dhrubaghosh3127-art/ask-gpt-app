@@ -209,6 +209,7 @@ function extractChatContent(content: any): { reasoning: string; text: string; so
           url: chunk.url,
           source: typeof chunk.source === "string" ? chunk.source : "",
         });
+        text += `[[cite:${encodeURIComponent(chunk.url)}]]`;
       }
     } else if (chunk?.type === "text" && typeof chunk.text === "string") {
       text += chunk.text;
@@ -338,6 +339,12 @@ async function relayMistralStream(
             source: typeof chunk.source === "string" ? chunk.source : "",
           });
           flushSources(); // send as soon as found — don't wait for text that may never come, or may already be done
+          // Inline marker, sent as a normal `content` delta at this exact
+          // point in the stream — no new delta type, no new plumbing
+          // anywhere downstream. MarkdownText (AiMessageBubble.kt) is the
+          // only place that knows what [[cite:URL]] means; everything
+          // between here and there just relays it as ordinary text.
+          sendDelta(res, { content: `[[cite:${encodeURIComponent(chunk.url)}]]` });
         }
       } else if (typeof chunk?.text === "string" && chunk.text) {
         flushSources();
@@ -360,7 +367,7 @@ async function relayMistralStream(
       while ((nl = buffer.indexOf("\n")) !== -1) {
         const line = buffer.slice(0, nl).trim();
         buffer = buffer.slice(nl + 1);
-        if (!line.startsWith("data:")) continue; // skips blank lines and "event: ..." lines — type is inside the JSON too
+      if (!line.startsWith("data:")) continue; // skips blank lines and "event: ..." lines — type is inside the JSON too
         const jsonStr = line.slice(5).trim();
         if (!jsonStr || jsonStr === "[DONE]") continue;
 
@@ -796,7 +803,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const chatRaw = await chatRes.text();
     let chatData: any = null;
-   try { chatData = chatRaw ? JSON.parse(chatRaw) : null; } catch { chatData = null; }
+    try { chatData = chatRaw ? JSON.parse(chatRaw) : null; } catch { chatData = null; }
 
     if (!chatRes.ok || !chatData) {
       const realMsg = formatMistralError(chatData, chatRaw, chatRes.status);
