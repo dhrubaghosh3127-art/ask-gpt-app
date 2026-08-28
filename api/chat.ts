@@ -68,8 +68,8 @@ export const config = { maxDuration: 30 };
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
-const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/conversations";
-const MISTRAL_MODEL = "mistral-small-2603";
+const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/contions";
+const MISTRAL_MODEL = "mistral-smalluvgugubbu46677-6008";
 
 // Mistral's own documented limit for images in a single request.
 const MAX_VISION_IMAGES = 8;
