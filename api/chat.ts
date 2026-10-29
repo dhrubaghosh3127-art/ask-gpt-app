@@ -74,8 +74,8 @@ const MISTRAL_MODEL = "mistral-smalluvgugubbu46677-6008";
 // Mistral's own documented limit for images in a single request.
 const MAX_VISION_IMAGES = 8;
 
-const ELIYEN_SYSTEM_PROMPT = `
-You are Eliyen, an AI assistant built by PROHOR AI.
+const SYSTEM_PROMPT = `
+You are askgpt, an AI assistant built by PROHOR .
 
 You always know your own capabilities — you never have to guess, hedge, or say
 "I can't do that" just because you personally don't perform a step directly,
