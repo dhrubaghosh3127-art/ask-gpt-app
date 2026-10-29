@@ -3,70 +3,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 export const config = { maxDuration: 30 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MIGRATION NOTE: Groq (Qwen 3.6 27B) → Mistral AI
-//
-//   mistral-medium-latest (Mistral Medium 3.5) → THE one model for chat AND
-//                      vision, always. It's natively multimodal, so no
-//                      separate vision model is needed.
-//
-//   thinkingMode         → same explicit client flag as before, default false.
-//                        false → reasoning_effort "none"
-//                        true  → reasoning_effort "high"  (Mistral only has
-//                                "none" / "high" — there is no "default")
-//
-//   web search            → Mistral's native web_search tool, via the
-//                      Conversations API (/v1/conversations). This only
-//                      works there, not on Chat Completions.
-//
-//                      The first attempt at this broke chat entirely: extra
-//                      fields (completion_args.tool_choice, store, a
-//                      role:"system" entry inside inputs) that seemed
-//                      reasonable by analogy to the Agents API weren't
-//                      actually confirmed for this specific endpoint, and
-//                      Mistral rejected the request (422). This version
-//                      sends ONLY what Mistral's own cookbook example
-//                      confirms works — model, inputs, tools — plus exactly
-//                      two additions that are independently documented on
-//                      their own pages: `completion_args.reasoning_effort`
-//                      (from the reasoning-effort docs) and a top-level
-//                      `instructions` string for the system prompt (a
-//                      confirmed field of the /v1/conversations start body,
-//                      used instead of a role:"system" message in `inputs`
-//                      since no official example ever puts system there).
-//                      No tool_choice, no store — deliberately left out
-//                      until confirmed necessary.
-//
-//   vision                 → unchanged from the last version: Chat
-//                      Completions API, since web_search doesn't apply
-//                      there anyway and this path was never broken.
-//
-//   streaming              → NOW REAL. Mistral's own /v1/conversations SSE
-//                      stream (confirmed against Mistral's official raw
-//                      event dump: `event: message.output.delta` / `data:
-//                      {"type":"message.output.delta",...,"content":"..."}`,
-//                      ending in `conversation.response.done`) is relayed
-//                      straight through token-by-token, turned into the
-//                      exact same delta shape the app already reads
-//                      (`{choices:[{delta:{content|reasoning|sources}}]}`).
-//                      Replaces the earlier fetch-the-whole-thing-then-
-//                      simulate-chunks approach. The non-streaming
-//                      (stream:false) path is kept as-is below it, unused by
-//                      the app today but left in place as a working
-//                      fallback.
-//
-//   sources                → NEW. When web_search fires, Mistral interleaves
-//                      {type:"tool_reference",title,url,source} chunks into
-//                      the answer content, alongside the normal {type:"text"}
-//                      chunks — confirmed on Mistral's own Websearch docs
-//                      page. These are pulled out, de-duplicated by URL, and
-//                      sent as ONE extra delta (`sources`, a JSON string)
-//                      before the reasoning/content deltas — same one-shot
-//                      pattern as `reasoning`. Never sent if no search
-//                      happened, so old app builds that ignore unknown delta
-//                      keys are unaffected.
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ─────────
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_CONVERSATIONS_URL = "https://api.mistral.ai/v1/contions";
 const MISTRAL_MODEL = "mistral-smalluvgugubbu46677-6008";
