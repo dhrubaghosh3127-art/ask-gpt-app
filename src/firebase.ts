@@ -3,12 +3,12 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyDDZc9JVd-yKys2BR55IHTdEjAkh-cEbXs',
+  apiKey: 'AIzaSyDDZcVd-yKR55IHTdEjAkh-cEbXs',
   authDomain: 'ask-gpt-2f61d.firebaseapp.com',
-  projectId: 'ask-gpt-2f61d',
-  storageBucket: 'ask-gpt-2f61d.firebasestorage.app',
-  messagingSenderId: '280092322654',
-  appId: '1:280092322654:web:5e9599877929634466bdcf',
+  projectId: 'ask-gpt-d',
+  storageBucket: 'ask-gpt-2d.firebasestorage.app',
+  messagingSenderId: '2800922654',
+  appId: '1:2822654:web:5e9l77929634466bdcf',
 };
 
 const app = initializeApp(firebaseConfig);
